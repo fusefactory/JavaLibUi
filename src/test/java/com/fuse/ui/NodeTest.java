@@ -10,12 +10,12 @@ import java.util.ArrayList;
 import processing.core.*;
 
 /**
- * Unit test for com.fuse.utils.Event.
- */
+* Unit test for com.fuse.utils.Event.
+*/
 public class NodeTest {
 
     private void _start(String name){
-      // System.out.println("TEST: "+name);
+        // System.out.println("TEST: "+name);
     }
 
     @Test public void setSize(){
@@ -26,13 +26,13 @@ public class NodeTest {
 
     @Test public void setVisible(){
 
-         Node node = new Node();
-         assertEquals(node.isVisible(), true);
-         node.setVisible(false);
-         assertEquals(node.isVisible(), false);
-         node.setVisible(true);
-         assertEquals(node.isVisible(), true);
-     }
+        Node node = new Node();
+        assertEquals(node.isVisible(), true);
+        node.setVisible(false);
+        assertEquals(node.isVisible(), false);
+        node.setVisible(true);
+        assertEquals(node.isVisible(), true);
+    }
 
     @Test public void loadSubtreeList(){
 
@@ -171,6 +171,31 @@ public class NodeTest {
         assertEquals(node.getChildWithName("foofoo #123"), null);
         node.addChild(c1);
         assertEquals(node.getChildWithName("foofoo #123"), c1);
+    }
+
+    @Test public void getChildrenWithName(){
+        Node node = new Node();
+        assertEquals(node.getChildrenWithName("aa").size(), 0);
+
+        Node c = new Node();
+        c.setName("aa");
+        node.addChild(c);
+        assertEquals(node.getChildrenWithName("aa").size(), 1);
+
+        c = new Node();
+        c.setName("aa");
+        node.addChild(c);
+        assertEquals(node.getChildrenWithName("aa").size(), 2);
+
+        c = new Node();
+        c.setName("ac");
+        node.addChild(c);
+        assertEquals(node.getChildrenWithName("aa").size(), 2);
+
+        Node c2 = new Node();
+        c2.setName("aa");
+        c.addChild(c2);
+        assertEquals(node.getChildrenWithName("aa").size(), 3);
     }
 
     @Test public void getParent(){

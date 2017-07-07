@@ -291,6 +291,23 @@ public class Node extends TouchReceiver {
     return null;
   }
 
+  public List<Node> getChildrenWithName(String name){
+	  return getChildrenWithName(name, -1);
+  }
+
+  public List<Node> getChildrenWithName(String name, int maxDepth){
+    List<Node> result = new ArrayList<>();
+
+    for(Node childNode : childNodes){
+      if(childNode.getName().equals(name))
+        result.add(childNode);
+
+      if(maxDepth != 0)
+        result.addAll(childNode.getChildrenWithName(name, maxDepth-1));
+    }
+
+    return result;
+  }
 
   public List<Node> getChildNodes(){
     return childNodes;
