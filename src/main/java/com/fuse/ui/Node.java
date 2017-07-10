@@ -18,41 +18,50 @@ import processing.core.PMatrix3D;
  */
 public class Node extends TouchReceiver {
 
+  /** PApplet instance, accessible to all Node instances (and instances of its inheriting classes) */
   public static PApplet papplet;
-  public static PGraphics pg;
+  /** PGraphics instance, accessible to all Node instances (and instances of its inheriting classes) */
+  protected static PGraphics pg;
 
-  public static void setPApplet(PApplet newPapplet){
-    papplet = newPapplet;
-  }
+  public static void setPApplet(PApplet newPapplet){ papplet = newPapplet; }
+  public static PApplet getPApplet(){ return papplet; }
+  public static void setPGraphics(PGraphics newPg){ pg = newPg; }
+  public static PGraphics getPGraphics(){ return pg; }
 
-  public static void setPGraphics(PGraphics newPg){
-    pg = newPg;
-  }
 
   private List<Node> childNodes;
   private Node parentNode;
-  /// should it be rendered?
-  private boolean bVisible;
-  /// should it react to touch events?
-  private boolean bInteractive;
-  /// is the node currently being touched
-  private boolean bTouched;
-  /// 2D position and size attributes (pixel based)
-  private PVector position, size;
+  /** The name of this node, which can be used to find specific child-nodes */
   private String name;
+  /** Flag that specifies if the node should be included in the render-loop */
+  private boolean bVisible;
+  /** Flag that specifies if the node should receive touch events */
+  private boolean bInteractive;
+  /** Flag that specifies if the node currently being touched */
+  private boolean bTouched;
+  /** Position of the node (pixel based); only the 2D (x and y) attributes are consideren in the for handling touch events */
+  private PVector position;
+  /** Size of the node (pixel based); only the 2D (x and y) attributes are consideren in the for handling touch events */
+  private PVector size;
+  /** Rotation of this node along the three axis */
   private PVector rotation;
+  /** 3D Matrix that matches with the position, size and rotation attributes */
   private PMatrix3D localTransformMatrix;
 
-  /// simple float attribute which is used to sort elements before rendering them.
-  // Nodes with a higher plane number are rendered later and thus end up 'on top' (like z-index in CSS)
+  /** Float-based z-level attribute used for re-ordering Nodes in the render-queue;
+   * a higher plane value will put the Node later in the queue, which means
+   * it is rendered 'on top' of Nodes with a lower plance value.
+   */
   private float plane;
 
   public Event<Node> newParentEvent;
 
+  /** Comparator for ordering a list of Nodes from lower plane to higher plane (used for rendering) */
   static public Comparator<Node> bottomPlaneFirst = (a,b) -> {
     return Float.valueOf(a.getPlane()).compareTo(b.getPlane());
   };
 
+  /** Comparator for ordering a list of Nodes from higher plane to lower plane (used by TouchManager) */
   static public Comparator<Node> topPlaneFirst = (a,b) -> {
     return Float.valueOf(b.getPlane()).compareTo(a.getPlane());
   };
