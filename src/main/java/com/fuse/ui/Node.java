@@ -372,7 +372,7 @@ public class Node extends TouchReceiver {
 
   /**
    * Renders components and subtree, see render() for more info.
-   * @param forceAll Ignores nodes' visiblity flags if true
+   * @param forceAll Ignores nodes' visibility flags if true
    */
   public void render(boolean forceAll){
     // Get order list of subtree nodes
@@ -382,9 +382,9 @@ public class Node extends TouchReceiver {
     for(Node node : nodes){
       Node clipNode = node.getClippingNode();
       if(clipNode != null){
-        //pg.applyMatrix(clipNode.getGlobalTransformMatrix());
         PVector scrPos = clipNode.getGlobalPosition();
-        pg.clip(0.0f, 0.0f, pg.width*0.5f, pg.height*0.5f);
+        PVector size = clipNode.getSize();
+        pg.clip(scrPos.x, scrPos.y, scrPos.x+size.x, scrPos.y+size.y);
       }
 
       pg.pushMatrix();
