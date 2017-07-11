@@ -162,6 +162,10 @@ public class NodeTest {
         Node node = new Node();
         node.setPosition(100f, 50f);
         assertEquals(node.toGlobal(new PVector(10f, 10f, 0f)), new PVector(110f, 60f));
+        Node c1 = new Node();
+        c1.setPosition(100f, 30f);
+        node.addChild(c1);
+        assertEquals(c1.toGlobal(new PVector(10f, 10f, 0f)), new PVector(210f, 90f));
     }
 
     @Test public void getChildWithName(){
@@ -267,7 +271,7 @@ public class NodeTest {
         assertEquals(strings.size(), 4);
     }
 
-    @Test public void setCLipContet(){
+    @Test public void setClipContent(){
         Node parent = new Node();
 
         Node c1 = new Node();
@@ -294,5 +298,22 @@ public class NodeTest {
         Node c3 = new Node();
         parent.addChild(c3);
         assertEquals(c3.getClippingNode(), null);
+    }
+
+    @Test public void getGlobalPosition(){
+        Node root = new Node();
+        root.setPosition(10.0f, 0.0f);
+        // assertEquals(root.getGlobalPosition().x, 10.0f, 0.00001f);
+
+        Node c1 = new Node();
+        c1.setPosition(10.0f, 0.0f);
+        assertEquals(c1.getGlobalPosition(), new PVector(10.0f, 0.0f, 0.0f));
+        root.addChild(c1);
+        assertEquals(c1.getGlobalPosition(), new PVector(20.0f, 0.0f, 0.0f));
+
+        Node c2 = new Node();
+        c2.setPosition(15.0f, 20.0f);
+        c1.addChild(c2);
+        assertEquals(c2.getGlobalPosition(), new PVector(35.0f, 20.0f, 0.0f));
     }
 }

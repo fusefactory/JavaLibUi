@@ -162,7 +162,7 @@ public class Node extends TouchReceiver {
   }
 
   public PVector getGlobalPosition(){
-    return toGlobal(position);
+    return toGlobal(new PVector(0.0f, 0.0f, 0.0f));
   }
 
   public void setX(float newX){
@@ -380,12 +380,24 @@ public class Node extends TouchReceiver {
 
     // call draw on each node
     for(Node node : nodes){
+      Node clipNode = node.getClippingNode();
+      if(clipNode != null){
+        //pg.applyMatrix(clipNode.getGlobalTransformMatrix());
+        PVector scrPos = clipNode.getGlobalPosition();
+        pg.clip(0.0f, 0.0f, pg.width*0.5f, pg.height*0.5f);
+      }
+
       pg.pushMatrix();
       {
         pg.applyMatrix(node.getGlobalTransformMatrix());
         node.draw();
       }
       pg.popMatrix();
+
+      if(clipNode != null){
+        pg.noClip();
+        // pg.popMatrix();
+      }
     }
   }
 
