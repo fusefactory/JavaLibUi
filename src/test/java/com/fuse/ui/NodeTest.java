@@ -1,61 +1,41 @@
 package com.fuse.ui;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+import org.junit.Test;
 
 import java.util.List;
 import java.util.ArrayList;
 import processing.core.*;
 
 /**
- * Unit test for com.fuse.utils.Event.
- */
-public class NodeTest extends TestCase
-{
+* Unit test for com.fuse.utils.Event.
+*/
+public class NodeTest {
+
     private void _start(String name){
-      System.out.println("TEST: "+name);
+        // System.out.println("TEST: "+name);
     }
 
-    /**
-     * Create the test case
-     *
-     * @param testName name of the test case
-     */
-    public NodeTest( String testName )
-    {
-        super( testName );
-    }
-
-    /**
-     * @return the suite of tests being tested
-     */
-    public static Test suite()
-    {
-        return new TestSuite( NodeTest.class );
-    }
-
-    /**
-     * Test Logic
-     */
-    public void testApp()
-    {
-      { _start("setSize");
+    @Test public void setSize(){
         Node node = new Node();
         node.setSize(100,200);
         assertEquals(node.getSize(), new PVector(100, 200, 0));
-      }
+    }
 
-      { _start("setVisible");
-         Node node = new Node();
-         assertEquals(node.isVisible(), true);
-         node.setVisible(false);
-         assertEquals(node.isVisible(), false);
-         node.setVisible(true);
-         assertEquals(node.isVisible(), true);
-       }
+    @Test public void setVisible(){
 
-      { _start("loadSubtreeList");
+        Node node = new Node();
+        assertEquals(node.isVisible(), true);
+        node.setVisible(false);
+        assertEquals(node.isVisible(), false);
+        node.setVisible(true);
+        assertEquals(node.isVisible(), true);
+    }
+
+    @Test public void loadSubtreeList(){
+
         Node node = new Node();
         node.setName("scene");
         Node c1 = new Node();
@@ -87,7 +67,7 @@ public class NodeTest extends TestCase
         assertEquals(list.get(5), c2_1);
         assertEquals(list.get(6), c3);
 
-        _start("loadSubtreeList with hidden child");
+        //_start("loadSubtreeList with hidden child");
         c1.setVisible(false);
 
         // reload
@@ -100,7 +80,7 @@ public class NodeTest extends TestCase
         assertEquals(list.get(2), c2_1);
         assertEquals(list.get(3), c3);
 
-        _start("loadSubtreeList with forceAll=true");
+        //_start("loadSubtreeList with forceAll=true");
         list.clear();
         node.loadSubtreeList(list, false /* also invisible */);
         assertEquals(list.size(), 7);
@@ -112,7 +92,7 @@ public class NodeTest extends TestCase
         assertEquals(list.get(5), c2_1);
         assertEquals(list.get(6), c3);
 
-        _start("loadSubtreeList unhidden child and removed child");
+        //_start("loadSubtreeList unhidden child and removed child");
         c1.setVisible(true);
         c2.removeChild(c2_1);
 
@@ -126,7 +106,7 @@ public class NodeTest extends TestCase
         assertEquals(list.get(4).getName(), "c2");
         assertEquals(list.get(5).getName(), "c3");
 
-        _start("loadSubtreeList with custom plane value");
+        //_start("loadSubtreeList with custom plane value");
         c1_2.setPlane(1.0f);
         c1_1.setPlane(-5.0f);
 
@@ -138,30 +118,35 @@ public class NodeTest extends TestCase
         assertEquals(list.get(3).getName(), "c2");
         assertEquals(list.get(4).getName(), "c3");
         assertEquals(list.get(5).getName(), "c1_2");
-      }
 
-      { _start("isInside");
+    }
+
+    @Test public void isInside(){
+
         Node node = new Node();
         node.setPosition(10f,10f);
         node.setSize(100f, 100f);
-        this.assertTrue(node.isInside(new PVector(10f,10f,0f)));
-        this.assertTrue(node.isInside(new PVector(50f,50f,0f)));
-        this.assertFalse(node.isInside(new PVector(0f,50f,0f)));
-        this.assertFalse(node.isInside(new PVector(50f,00f,0f)));
-        this.assertFalse(node.isInside(new PVector(0f,0f,0f)));
-        this.assertFalse(node.isInside(new PVector(110f,110f,0f)));
-      }
+        assertTrue(node.isInside(new PVector(10f,10f,0f)));
+        assertTrue(node.isInside(new PVector(50f,50f,0f)));
+        assertFalse(node.isInside(new PVector(0f,50f,0f)));
+        assertFalse(node.isInside(new PVector(50f,00f,0f)));
+        assertFalse(node.isInside(new PVector(0f,0f,0f)));
+        assertFalse(node.isInside(new PVector(110f,110f,0f)));
 
-      { _start("toLocal");
+    }
+
+    @Test public void toLocal(){
+
         Node node = new Node();
         node.setPosition(100f,0f);
         node.setSize(100f, 50f);
         node.rotate(90f / 180.0f * (float)Math.PI); // 90 degrees clockwise around origin (top left corner)
         assertEquals(node.toLocal(new PVector(100f, 0f, 0f)), new PVector(0f, 0f, 0f));
         assertEquals(node.toLocal(new PVector(90f, 120f, 0f)).dist(new PVector(120f, 10f,0f)) < 0.0001f, true);
-      }
 
-      { _start("isInside with rotation");
+    }
+
+    @Test public void isInside_with_rotation(){
         Node node = new Node();
         node.setPosition(100f,0f);
         node.setSize(100f, 50f);
@@ -171,39 +156,164 @@ public class NodeTest extends TestCase
         assertEquals(node.isInside(new PVector(60f, 20f, 0f)), true);
         assertEquals(node.isInside(new PVector(60f, 99f, 0f)), true);
         assertEquals(node.isInside(new PVector(60f, 101f, 0f)), false);
-      }
+    }
 
-      { _start("toGlobal");
+    @Test public void toGlobal(){
         Node node = new Node();
         node.setPosition(100f, 50f);
         assertEquals(node.toGlobal(new PVector(10f, 10f, 0f)), new PVector(110f, 60f));
-      }
+        Node c1 = new Node();
+        c1.setPosition(100f, 30f);
+        node.addChild(c1);
+        assertEquals(c1.toGlobal(new PVector(10f, 10f, 0f)), new PVector(210f, 90f));
+    }
 
-      { _start("getChildWithName");
+    @Test public void getChildWithName(){
         Node node = new Node();
         Node c1 = new Node();
         c1.setName("foofoo #123");
         assertEquals(node.getChildWithName("foofoo #123"), null);
         node.addChild(c1);
         assertEquals(node.getChildWithName("foofoo #123"), c1);
-      }
+    }
 
-      { _start("getParent");
+    @Test public void getChildrenWithName(){
+        Node node = new Node();
+        assertEquals(node.getChildrenWithName("aa").size(), 0);
+
+        Node c = new Node();
+        c.setName("aa");
+        node.addChild(c);
+        assertEquals(node.getChildrenWithName("aa").size(), 1);
+
+        c = new Node();
+        c.setName("aa");
+        node.addChild(c);
+        assertEquals(node.getChildrenWithName("aa").size(), 2);
+
+        c = new Node();
+        c.setName("ac");
+        node.addChild(c);
+        assertEquals(node.getChildrenWithName("aa").size(), 2);
+
+        Node c2 = new Node();
+        c2.setName("aa");
+        c.addChild(c2);
+        assertEquals(node.getChildrenWithName("aa").size(), 3);
+    }
+
+    @Test public void getParent(){
         Node parent = new Node();
         Node child = new Node();
         assertEquals(child.getParent(), null);
         parent.addChild(child);
         assertEquals(child.getParent(), parent);
-      }
+    }
 
-      { _start("toLocal with parent and child translation");
+    @Test public void toLocal_with_parent_and_child_translation(){
         Node parent = new Node();
         parent.setPosition(10f, 10f);
         Node child = new Node();
         child.setPosition(10f, 10f);
         parent.addChild(child);
         assertEquals(child.toLocal(new PVector(30.0f, 30.0f, 0.0f)), new PVector(10.0f, 10.0f, 0.0f));
-      }
+    }
 
+    @Test public void forAllChildren(){
+        Node parent = new Node();
+        Node c1 = new Node();
+        c1.setName("c1");
+        parent.addChild(c1);
+
+        List<String> strings = new ArrayList<>();
+        parent.forAllChildren((Node n) -> strings.add("New kid: "+n.getName()));
+
+        assertEquals(strings.get(0), "New kid: c1");
+
+        Node c2 = new Node();
+        c2.setName("c2");
+        parent.addChild(c2);
+
+        assertEquals(strings.get(1), "New kid: c2");
+    }
+
+    @Test public void forAllOffspring(){
+        Node parent = new Node();
+        Node c1 = new Node();
+        c1.setName("c1");
+        Node d1 = new Node();
+        d1.setName("d1");
+        c1.addChild(d1);
+        parent.addChild(c1);
+
+        List<String> strings = new ArrayList<>();
+        parent.forAllOffspring((Node n) -> { strings.add("New kid: "+n.getName()); });
+
+        assertEquals(strings.get(0), "New kid: c1");
+        assertEquals(strings.get(1), "New kid: d1");
+
+        Node c2 = new Node();
+        c2.setName("c2");
+        Node d2 = new Node();
+        d2.setName("d2");
+        c2.addChild(d2);
+        parent.addChild(c2);
+
+        assertEquals(strings.get(2), "New kid: c2");
+        assertEquals(strings.get(3), "New kid: d2");
+
+        parent.removeChild(c2);
+
+        Node e2 = new Node();
+        e2.setName("e2");
+        c2.addChild(e2);
+
+        assertEquals(strings.size(), 4);
+    }
+
+    @Test public void setClipContent(){
+        Node parent = new Node();
+
+        Node c1 = new Node();
+        parent.addChild(c1);
+        Node c1_1 = new Node();
+        c1.addChild(c1_1);
+
+        assertEquals(c1.getClippingNode(), null);
+        assertEquals(c1_1.getClippingNode(), null);
+        parent.setClipContent(true);
+        assertEquals(c1.getClippingNode(), parent);
+        assertEquals(c1_1.getClippingNode(), parent);
+
+        Node c2 = new Node();
+        assertEquals(c2.getClippingNode(), null);
+        parent.addChild(c2);
+        assertEquals(c2.getClippingNode(), parent);
+
+        parent.setClipContent(false);
+        assertEquals(c1.getClippingNode(), null);
+        assertEquals(c1_1.getClippingNode(), null);
+        assertEquals(c2.getClippingNode(), null);
+
+        Node c3 = new Node();
+        parent.addChild(c3);
+        assertEquals(c3.getClippingNode(), null);
+    }
+
+    @Test public void getGlobalPosition(){
+        Node root = new Node();
+        root.setPosition(10.0f, 0.0f);
+        // assertEquals(root.getGlobalPosition().x, 10.0f, 0.00001f);
+
+        Node c1 = new Node();
+        c1.setPosition(10.0f, 0.0f);
+        assertEquals(c1.getGlobalPosition(), new PVector(10.0f, 0.0f, 0.0f));
+        root.addChild(c1);
+        assertEquals(c1.getGlobalPosition(), new PVector(20.0f, 0.0f, 0.0f));
+
+        Node c2 = new Node();
+        c2.setPosition(15.0f, 20.0f);
+        c1.addChild(c2);
+        assertEquals(c2.getGlobalPosition(), new PVector(35.0f, 20.0f, 0.0f));
     }
 }

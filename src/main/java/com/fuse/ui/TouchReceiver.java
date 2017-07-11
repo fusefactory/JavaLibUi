@@ -3,8 +3,9 @@ package com.fuse.ui;
 import java.util.logging.*;
 import java.util.Map;
 import java.util.HashMap;
-import com.fuse.utils.Event; // TODO: fix ugly dependcy on higher level class
+import com.fuse.utils.Event;
 
+/** Base class for both Node and TouchManager; it provides touch events and method for receiving them */
 public class TouchReceiver {
 
   public Event<TouchEvent>

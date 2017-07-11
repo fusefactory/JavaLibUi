@@ -3,6 +3,7 @@ package com.fuse.ui;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.function.Consumer;
 import java.util.List;
 
 import com.fuse.utils.Event;
@@ -18,41 +19,57 @@ import processing.core.PMatrix3D;
  */
 public class Node extends TouchReceiver {
 
+  /** PApplet instance, accessible to all Node instances (and instances of its inheriting classes) */
   public static PApplet papplet;
-  public static PGraphics pg;
+  /** PGraphics instance, accessible to all Node instances (and instances of its inheriting classes) */
+  protected static PGraphics pg;
 
-  public static void setPApplet(PApplet newPapplet){
-    papplet = newPapplet;
-  }
+  public static void setPApplet(PApplet newPapplet){ papplet = newPapplet; }
+  public static PApplet getPApplet(){ return papplet; }
+  public static void setPGraphics(PGraphics newPg){ pg = newPg; }
+  public static PGraphics getPGraphics(){ return pg; }
 
-  public static void setPGraphics(PGraphics newPg){
-    pg = newPg;
-  }
 
   private List<Node> childNodes;
   private Node parentNode;
-  /// should it be rendered?
-  private boolean bVisible;
-  /// should it react to touch events?
-  private boolean bInteractive;
-  /// is the node currently being touched
-  private boolean bTouched;
-  /// 2D position and size attributes (pixel based)
-  private PVector position, size;
+  /** The name of this node, which can be used to find specific child-nodes */
   private String name;
+  /** Flag that specifies if the node should be included in the render-loop */
+  private boolean bVisible;
+  /** Flag that specifies if the node should receive touch events */
+  private boolean bInteractive;
+  /** Flag that specifies if the node currently being touched */
+  private boolean bTouched;
+  /** Position of the node (pixel based); only the 2D (x and y) attributes are consideren in the for handling touch events */
+  private PVector position;
+  /** Size of the node (pixel based); only the 2D (x and y) attributes are consideren in the for handling touch events */
+  private PVector size;
+  /** Rotation of this node along the three axis */
   private PVector rotation;
+  /** 3D Matrix that matches with the position, size and rotation attributes */
   private PMatrix3D localTransformMatrix;
+  /** Makes sure all offspring Node render within this node's boundaries */
+  private boolean clipContent;
+  private Node clippingNode;
 
-  /// simple float attribute which is used to sort elements before rendering them.
-  // Nodes with a higher plane number are rendered later and thus end up 'on top' (like z-index in CSS)
+  /** Float-based z-level attribute used for re-ordering Nodes in the render-queue;
+   * a higher plane value will put the Node later in the queue, which means
+   * it is rendered 'on top' of Nodes with a lower plance value.
+   */
   private float plane;
 
   public Event<Node> newParentEvent;
+  /** Triggered when a -direct- child is added to this node */
+  public Event<Node> newChildEvent;
+  /** Triggered when a child is added to this node, or any of its offspring */
+  public Event<Node> newOffspringEvent;
 
+  /** Comparator for ordering a list of Nodes from lower plane to higher plane (used for rendering) */
   static public Comparator<Node> bottomPlaneFirst = (a,b) -> {
     return Float.valueOf(a.getPlane()).compareTo(b.getPlane());
   };
 
+  /** Comparator for ordering a list of Nodes from higher plane to lower plane (used by TouchManager) */
   static public Comparator<Node> topPlaneFirst = (a,b) -> {
     return Float.valueOf(b.getPlane()).compareTo(a.getPlane());
   };
@@ -69,6 +86,8 @@ public class Node extends TouchReceiver {
     localTransformMatrix = new PMatrix3D();
     name = "";
     newParentEvent = new Event<>();
+    newChildEvent = new Event<>();
+    newOffspringEvent = new Event<>();
 
     touchDownEvent.addListener((TouchEvent e) -> {
       bTouched = true;
@@ -143,7 +162,7 @@ public class Node extends TouchReceiver {
   }
 
   public PVector getGlobalPosition(){
-    return toGlobal(position);
+    return toGlobal(new PVector(0.0f, 0.0f, 0.0f));
   }
 
   public void setX(float newX){
@@ -257,10 +276,19 @@ public class Node extends TouchReceiver {
   public void addChild(Node newChildNode){
     childNodes.add(newChildNode);
     newChildNode.setParent(this);
+    newChildEvent.trigger(newChildNode);
+
+    newOffspringEvent.trigger(newChildNode);
+    for(Node n : newChildNode.getChildNodes(true /* recursive */)){
+      newOffspringEvent.trigger(n);
+    }
+
+    newOffspringEvent.forward(newChildNode.newOffspringEvent);
   }
 
   public void removeChild(Node n){
     childNodes.remove(n);
+    newOffspringEvent.stopForward(n.newOffspringEvent);
   }
 
   public void removeAllChildren(){
@@ -291,9 +319,39 @@ public class Node extends TouchReceiver {
     return null;
   }
 
+  public List<Node> getChildrenWithName(String name){
+	  return getChildrenWithName(name, -1);
+  }
+
+  public List<Node> getChildrenWithName(String name, int maxDepth){
+    List<Node> result = new ArrayList<>();
+
+    for(Node childNode : childNodes){
+      if(childNode.getName().equals(name))
+        result.add(childNode);
+
+      if(maxDepth != 0)
+        result.addAll(childNode.getChildrenWithName(name, maxDepth-1));
+    }
+
+    return result;
+  }
 
   public List<Node> getChildNodes(){
-    return childNodes;
+    return getChildNodes(false);
+  }
+
+  public List<Node> getChildNodes(boolean recursive){
+    if(!recursive)
+      return childNodes;
+
+    List<Node> result = new ArrayList<>();
+    for(Node n : childNodes){
+      result.add(n);
+      result.addAll(n.getChildNodes(true));
+    }
+
+    return result;
   }
 
   public boolean hasChild(Node child){
@@ -301,7 +359,7 @@ public class Node extends TouchReceiver {
   }
 
   /**
-   * \brief render will render this component and its subtree.
+   * Render will render this component and its subtree.
    * usually should be called on the root scene object,
    * but can be used also for offline rendering of any branch of the graph
    *
@@ -311,18 +369,35 @@ public class Node extends TouchReceiver {
    * 3. call draw from back to front
    */
   public void render(){ render(false /* forceAll */); }
+
+  /**
+   * Renders components and subtree, see render() for more info.
+   * @param forceAll Ignores nodes' visibility flags if true
+   */
   public void render(boolean forceAll){
     // Get order list of subtree nodes
     List<Node> nodes = getOrderedSubtreeList(!forceAll);
 
     // call draw on each node
     for(Node node : nodes){
+      Node clipNode = node.getClippingNode();
+      if(clipNode != null){
+        PVector scrPos = clipNode.getGlobalPosition();
+        PVector size = clipNode.getSize();
+        pg.clip(scrPos.x, scrPos.y, scrPos.x+size.x, scrPos.y+size.y);
+      }
+
       pg.pushMatrix();
       {
         pg.applyMatrix(node.getGlobalTransformMatrix());
         node.draw();
       }
       pg.popMatrix();
+
+      if(clipNode != null){
+        pg.noClip();
+        // pg.popMatrix();
+      }
     }
   }
 
@@ -422,5 +497,53 @@ public class Node extends TouchReceiver {
     if(change){
       newParentEvent.trigger(this);
     }
+  }
+
+  public void forAllChildren(Consumer<Node> func){
+    newChildEvent.addListener(func);
+
+    for(Node n : childNodes){
+      func.accept(n);
+    }
+  }
+
+  public void forAllOffspring(Consumer<Node> func){
+    forAllOffspring(func, null);
+  }
+
+  public void forAllOffspring(Consumer<Node> func, Object owner){
+    newOffspringEvent.addListener(func, owner);
+
+    List<Node> nodes = getChildNodes(true /* recursive */);
+    for(Node n : nodes){
+      func.accept(n);
+    }
+  }
+
+  public void setClipContent(boolean enable){
+    boolean enabled = (enable && !this.clipContent);
+    boolean disabled = (this.clipContent && !enable);
+    this.clipContent = enable;
+
+    if(enabled){
+      this.forAllOffspring((Node n) -> {
+        n.setClippingNode(this);
+      }, this);
+    }
+
+    if(disabled){
+      newOffspringEvent.removeListeners(this);
+      for(Node n : getChildNodes(true /* recursive */)){
+        n.setClippingNode(null);
+      }
+    }
+  }
+
+  public void setClippingNode(Node n){
+    clippingNode = n;
+  }
+
+  public Node getClippingNode(){
+    return clippingNode;
   }
 }
