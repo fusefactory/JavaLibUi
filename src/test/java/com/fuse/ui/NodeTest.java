@@ -232,4 +232,38 @@ public class NodeTest {
 
         assertEquals(strings.get(1), "New kid: c2");
     }
+
+    @Test public void forAllOffspring(){
+        Node parent = new Node();
+        Node c1 = new Node();
+        c1.setName("c1");
+        Node d1 = new Node();
+        d1.setName("d1");
+        c1.addChild(d1);
+        parent.addChild(c1);
+
+        List<String> strings = new ArrayList<>();
+        parent.forAllOffspring((Node n) -> { strings.add("New kid: "+n.getName()); });
+
+        assertEquals(strings.get(0), "New kid: c1");
+        assertEquals(strings.get(1), "New kid: d1");
+
+        Node c2 = new Node();
+        c2.setName("c2");
+        Node d2 = new Node();
+        d2.setName("d2");
+        c2.addChild(d2);
+        parent.addChild(c2);
+
+        assertEquals(strings.get(2), "New kid: c2");
+        assertEquals(strings.get(3), "New kid: d2");
+
+        parent.removeChild(c2);
+
+        Node e2 = new Node();
+        e2.setName("e2");
+        c2.addChild(e2);
+
+        assertEquals(strings.size(), 4);
+    }
 }

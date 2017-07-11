@@ -274,10 +274,18 @@ public class Node extends TouchReceiver {
     childNodes.add(newChildNode);
     newChildNode.setParent(this);
     newChildEvent.trigger(newChildNode);
+
+    newOffspringEvent.trigger(newChildNode);
+    for(Node n : newChildNode.getChildNodes(true /* recursive */)){
+      newOffspringEvent.trigger(n);
+    }
+
+    newOffspringEvent.forward(newChildNode.newOffspringEvent);
   }
 
   public void removeChild(Node n){
     childNodes.remove(n);
+    newOffspringEvent.stopForward(n.newOffspringEvent);
   }
 
   public void removeAllChildren(){
@@ -327,7 +335,20 @@ public class Node extends TouchReceiver {
   }
 
   public List<Node> getChildNodes(){
-    return childNodes;
+    return getChildNodes(false);
+  }
+
+  public List<Node> getChildNodes(boolean recursive){
+    if(!recursive)
+      return childNodes;
+
+    List<Node> result = new ArrayList<>();
+    for(Node n : childNodes){
+      result.add(n);
+      result.addAll(n.getChildNodes(true));
+    }
+
+    return result;
   }
 
   public boolean hasChild(Node child){
@@ -473,5 +494,10 @@ public class Node extends TouchReceiver {
 
   public void forAllOffspring(Consumer<Node> func){
     newOffspringEvent.addListener(func);
+
+    List<Node> nodes = getChildNodes(true /* recursive */);
+    for(Node n : nodes){
+      func.accept(n);
+    }
   }
 }
