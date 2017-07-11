@@ -48,6 +48,9 @@ public class Node extends TouchReceiver {
   private PVector rotation;
   /** 3D Matrix that matches with the position, size and rotation attributes */
   private PMatrix3D localTransformMatrix;
+  /** Makes sure all offspring Node render within this node's boundaries */
+  private boolean clipContent;
+  private Node clippingNode;
 
   /** Float-based z-level attribute used for re-ordering Nodes in the render-queue;
    * a higher plane value will put the Node later in the queue, which means
@@ -493,11 +496,42 @@ public class Node extends TouchReceiver {
   }
 
   public void forAllOffspring(Consumer<Node> func){
-    newOffspringEvent.addListener(func);
+    forAllOffspring(func, null);
+  }
+
+  public void forAllOffspring(Consumer<Node> func, Object owner){
+    newOffspringEvent.addListener(func, owner);
 
     List<Node> nodes = getChildNodes(true /* recursive */);
     for(Node n : nodes){
       func.accept(n);
     }
+  }
+
+  public void setClipContent(boolean enable){
+    boolean enabled = (enable && !this.clipContent);
+    boolean disabled = (this.clipContent && !enable);
+    this.clipContent = enable;
+
+    if(enabled){
+      this.forAllOffspring((Node n) -> {
+        n.setClippingNode(this);
+      }, this);
+    }
+
+    if(disabled){
+      newOffspringEvent.removeListeners(this);
+      for(Node n : getChildNodes(true /* recursive */)){
+        n.setClippingNode(null);
+      }
+    }
+  }
+
+  public void setClippingNode(Node n){
+    clippingNode = n;
+  }
+
+  public Node getClippingNode(){
+    return clippingNode;
   }
 }

@@ -266,4 +266,33 @@ public class NodeTest {
 
         assertEquals(strings.size(), 4);
     }
+
+    @Test public void setCLipContet(){
+        Node parent = new Node();
+
+        Node c1 = new Node();
+        parent.addChild(c1);
+        Node c1_1 = new Node();
+        c1.addChild(c1_1);
+
+        assertEquals(c1.getClippingNode(), null);
+        assertEquals(c1_1.getClippingNode(), null);
+        parent.setClipContent(true);
+        assertEquals(c1.getClippingNode(), parent);
+        assertEquals(c1_1.getClippingNode(), parent);
+
+        Node c2 = new Node();
+        assertEquals(c2.getClippingNode(), null);
+        parent.addChild(c2);
+        assertEquals(c2.getClippingNode(), parent);
+
+        parent.setClipContent(false);
+        assertEquals(c1.getClippingNode(), null);
+        assertEquals(c1_1.getClippingNode(), null);
+        assertEquals(c2.getClippingNode(), null);
+
+        Node c3 = new Node();
+        parent.addChild(c3);
+        assertEquals(c3.getClippingNode(), null);
+    }
 }
