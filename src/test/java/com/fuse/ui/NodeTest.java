@@ -214,4 +214,22 @@ public class NodeTest {
         parent.addChild(child);
         assertEquals(child.toLocal(new PVector(30.0f, 30.0f, 0.0f)), new PVector(10.0f, 10.0f, 0.0f));
     }
+
+    @Test public void forAllChildren(){
+        Node parent = new Node();
+        Node c1 = new Node();
+        c1.setName("c1");
+        parent.addChild(c1);
+
+        List<String> strings = new ArrayList<>();
+        parent.forAllChildren((Node n) -> strings.add("New kid: "+n.getName()));
+
+        assertEquals(strings.get(0), "New kid: c1");
+
+        Node c2 = new Node();
+        c2.setName("c2");
+        parent.addChild(c2);
+
+        assertEquals(strings.get(1), "New kid: c2");
+    }
 }

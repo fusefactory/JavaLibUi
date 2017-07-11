@@ -3,6 +3,7 @@ package com.fuse.ui;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.function.Consumer;
 import java.util.List;
 
 import com.fuse.utils.Event;
@@ -55,6 +56,10 @@ public class Node extends TouchReceiver {
   private float plane;
 
   public Event<Node> newParentEvent;
+  /** Triggered when a -direct- child is added to this node */
+  public Event<Node> newChildEvent;
+  /** Triggered when a child is added to this node, or any of its offspring */
+  public Event<Node> newOffspringEvent;
 
   /** Comparator for ordering a list of Nodes from lower plane to higher plane (used for rendering) */
   static public Comparator<Node> bottomPlaneFirst = (a,b) -> {
@@ -78,6 +83,8 @@ public class Node extends TouchReceiver {
     localTransformMatrix = new PMatrix3D();
     name = "";
     newParentEvent = new Event<>();
+    newChildEvent = new Event<>();
+    newOffspringEvent = new Event<>();
 
     touchDownEvent.addListener((TouchEvent e) -> {
       bTouched = true;
@@ -266,6 +273,7 @@ public class Node extends TouchReceiver {
   public void addChild(Node newChildNode){
     childNodes.add(newChildNode);
     newChildNode.setParent(this);
+    newChildEvent.trigger(newChildNode);
   }
 
   public void removeChild(Node n){
@@ -327,7 +335,7 @@ public class Node extends TouchReceiver {
   }
 
   /**
-   * \brief render will render this component and its subtree.
+   * Render will render this component and its subtree.
    * usually should be called on the root scene object,
    * but can be used also for offline rendering of any branch of the graph
    *
@@ -337,6 +345,11 @@ public class Node extends TouchReceiver {
    * 3. call draw from back to front
    */
   public void render(){ render(false /* forceAll */); }
+
+  /**
+   * Renders components and subtree, see render() for more info.
+   * @param forceAll Ignores nodes' visiblity flags if true
+   */
   public void render(boolean forceAll){
     // Get order list of subtree nodes
     List<Node> nodes = getOrderedSubtreeList(!forceAll);
@@ -448,5 +461,17 @@ public class Node extends TouchReceiver {
     if(change){
       newParentEvent.trigger(this);
     }
+  }
+
+  public void forAllChildren(Consumer<Node> func){
+    newChildEvent.addListener(func);
+
+    for(Node n : childNodes){
+      func.accept(n);
+    }
+  }
+
+  public void forAllOffspring(Consumer<Node> func){
+    newOffspringEvent.addListener(func);
   }
 }
