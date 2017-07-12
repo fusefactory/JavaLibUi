@@ -72,4 +72,12 @@ public class TouchReceiver {
   public void onTouchDown(TouchEvent event){}
   public void onTouchMove(TouchEvent event){}
   public void onTouchUp(TouchEvent event){}
+
+  /**
+   * Convenience method that wraps the given function in a lambda so the calle doesn't need to "know about" TouchEvent
+   * @param func The parameter-less function to invoke when this node is clicked
+   */
+  public void whenClicked(Runnable func){
+    touchClickEvent.addListener( (TouchEvent evt) -> func.run() );
+  }
 }

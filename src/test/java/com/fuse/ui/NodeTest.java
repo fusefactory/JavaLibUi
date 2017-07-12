@@ -25,7 +25,6 @@ public class NodeTest {
     }
 
     @Test public void setVisible(){
-
         Node node = new Node();
         assertEquals(node.isVisible(), true);
         node.setVisible(false);
@@ -35,7 +34,6 @@ public class NodeTest {
     }
 
     @Test public void loadSubtreeList(){
-
         Node node = new Node();
         node.setName("scene");
         Node c1 = new Node();
@@ -118,11 +116,9 @@ public class NodeTest {
         assertEquals(list.get(3).getName(), "c2");
         assertEquals(list.get(4).getName(), "c3");
         assertEquals(list.get(5).getName(), "c1_2");
-
     }
 
     @Test public void isInside(){
-
         Node node = new Node();
         node.setPosition(10f,10f);
         node.setSize(100f, 100f);
@@ -136,7 +132,6 @@ public class NodeTest {
     }
 
     @Test public void toLocal(){
-
         Node node = new Node();
         node.setPosition(100f,0f);
         node.setSize(100f, 50f);
@@ -316,4 +311,18 @@ public class NodeTest {
         c1.addChild(c2);
         assertEquals(c2.getGlobalPosition(), new PVector(35.0f, 20.0f, 0.0f));
     }
+
+    @Test public void whenClicked(){
+        Node n = new Node();
+        List<String> strings = new ArrayList<>();
+        n.whenClicked(() -> {
+            strings.add("clikked");
+        });
+
+        assertEquals(strings.size(), 0);
+        n.touchClickEvent.trigger(null);
+        assertEquals(strings.size(), 1);
+    }
+
+
 }
