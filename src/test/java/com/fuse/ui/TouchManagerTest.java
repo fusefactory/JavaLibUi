@@ -14,8 +14,7 @@ public class TouchManagerTest {
   private List<TouchEvent> touchEvents;
   private List<String> strings;
 
-  @Test
-  public void touchEvent()
+  @Test public void touchEvent()
   {
     touchEvents = new ArrayList<TouchEvent>();
     strings = new ArrayList<String>();
@@ -48,8 +47,7 @@ public class TouchManagerTest {
     assertEquals(touchEvents.get(2).position, new PVector(100,50,0));
   }
 
-  @Test
-  public void touchDownEvent()
+  @Test public void touchDownEvent()
   {
     touchEvents = new ArrayList<TouchEvent>();
     strings = new ArrayList<String>();
@@ -78,8 +76,7 @@ public class TouchManagerTest {
     assertEquals(touchEvents.get(0).position, new PVector(0,0,0));
   }
 
-  @Test
-  public void touchUpEvent()
+  @Test public void touchUpEvent()
   {
     touchEvents = new ArrayList<TouchEvent>();
     strings = new ArrayList<String>();
@@ -109,8 +106,7 @@ public class TouchManagerTest {
     assertEquals(touchEvents.get(0).position, new PVector(2,0,0));
   }
 
-  @Test
-  public void touchMoveEvent()
+  @Test public void touchMoveEvent()
   {
     touchEvents = new ArrayList<TouchEvent>();
     strings = new ArrayList<String>();
@@ -139,8 +135,7 @@ public class TouchManagerTest {
     assertEquals(touchEvents.get(0).position, new PVector(1,0,0));
   }
 
-  @Test
-  public void NodeTouchEvent()
+  @Test public void NodeTouchEvent()
   {
     touchEvents = new ArrayList<TouchEvent>();
     strings = new ArrayList<String>();
@@ -186,8 +181,7 @@ public class TouchManagerTest {
     assertEquals(touchEvents.get(2).node, sceneNode);
   }
 
-  @Test
-  public void dispatchOnUpdate()
+  @Test public void dispatchOnUpdate()
   {
     touchEvents = new ArrayList<TouchEvent>();
     strings = new ArrayList<String>();
@@ -221,8 +215,7 @@ public class TouchManagerTest {
     assertEquals(touchEvents.get(2).startPosition, new PVector(10, 10, 0));
   }
 
-  @Test
-  public void touchEnterExit()
+  @Test public void touchEnterExit()
   {
     touchEvents = new ArrayList<TouchEvent>();
     strings = new ArrayList<String>();
@@ -267,8 +260,7 @@ public class TouchManagerTest {
     assertEquals(strings.get(7), "c2: #0 UP on c2 at position: 50.0, 11.0");
   }
 
-  @Test
-  public void click()
+  @Test public void click()
   {
     touchEvents = new ArrayList<TouchEvent>();
     strings = new ArrayList<String>();
@@ -322,5 +314,40 @@ public class TouchManagerTest {
     man.touchUp(0, new PVector(14f, 10f, 0f));
     assertEquals(strings.size(), 1);
     assertEquals(strings.get(0), "#0 CLICK on <NO NODE> at position: 14.0, 10.0");
+  }
+
+  @Test public void not_interactive_node(){
+    strings = new ArrayList<>();
+
+    Node n1 = new Node();
+    n1.setPosition(10, 10);
+    n1.setSize(100, 100);
+    n1.whenClicked(() -> strings.add("n1 clicked"));
+
+    TouchManager man = new TouchManager();
+    man.setNode(n1);
+    assertEquals(strings.size(), 0);
+
+    // click
+    man.touchDown(0, new PVector(20,20));
+    man.touchUp(0, new PVector(20,20));
+    // verify
+    assertEquals(strings.size(), 1);
+    assertEquals(strings.get(0), "n1 clicked");
+
+    // click 2nd time
+    man.touchDown(0, new PVector(20,20));
+    man.touchUp(0, new PVector(20,20));
+    // verify
+    assertEquals(strings.size(), 2);
+    assertEquals(strings.get(1), "n1 clicked");
+
+    // disable
+    n1.setInteractive(false);
+    // click 3rd time
+    man.touchDown(0, new PVector(20,20));
+    man.touchUp(0, new PVector(20,20));
+    // verify ignored
+    assertEquals(strings.size(), 2);
   }
 }
