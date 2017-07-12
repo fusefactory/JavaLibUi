@@ -48,8 +48,7 @@ public class Node extends TouchReceiver {
   private PVector rotation;
   /** 3D Matrix that matches with the position, size and rotation attributes */
   private PMatrix3D localTransformMatrix;
-  /** Makes sure all offspring Node render within this node's boundaries */
-  private boolean clipContent;
+  /** Makes sure all offspring Nodes only render within this node's boundaries */
   private Node clippingNode;
 
   /** Float-based z-level attribute used for re-ordering Nodes in the render-queue;
@@ -520,22 +519,33 @@ public class Node extends TouchReceiver {
     }
   }
 
-  public void setClipContent(boolean enable){
-    boolean enabled = (enable && !this.clipContent);
-    boolean disabled = (this.clipContent && !enable);
-    this.clipContent = enable;
+  /** only to be used in the setClipContent method */
+  private Consumer<Node> __offspringClipper = (Node n) -> n.setClippingNode(this);
 
-    if(enabled){
-      this.forAllOffspring((Node n) -> {
-        n.setClippingNode(this);
-      }, this);
+  /**
+   * When enabled it will set itself as the clipping node (see setClippingNode method)
+   * on all its current and future offspring (subtree) nodes.
+   * @param enable Enables when true, disables when false
+   */
+  public void setClipContent(boolean enable){
+    if(enable){
+      // abort if already enabled
+      if(newOffspringEvent.hasListener(__offspringClipper))
+        return;
+
+      this.forAllOffspring(__offspringClipper);
+      return;
     }
 
-    if(disabled){
-      newOffspringEvent.removeListeners(this);
-      for(Node n : getChildNodes(true /* recursive */)){
-        n.setClippingNode(null);
-      }
+    // abort if wasn't enabled in the first place
+    if(!newOffspringEvent.hasListener(__offspringClipper))
+      return;
+
+    // disable
+    newOffspringEvent.removeListener(__offspringClipper);
+    // clear clipping node on all offspring
+    for(Node n : getChildNodes(true /* recursive */)){
+      n.setClippingNode(null);
     }
   }
 
