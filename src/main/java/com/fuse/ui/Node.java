@@ -379,7 +379,10 @@ public class Node extends TouchReceiver {
 
     // call draw on each node
     for(Node node : nodes){
+
       Node clipNode = node.getClippingNode();
+
+      // enable clipping if necessary
       if(clipNode != null){
         PVector scrPos = clipNode.getGlobalPosition();
         PVector size = clipNode.getSize();
@@ -393,9 +396,9 @@ public class Node extends TouchReceiver {
       }
       pg.popMatrix();
 
+      // disable clipping if necessary
       if(clipNode != null){
         pg.noClip();
-        // pg.popMatrix();
       }
     }
   }
@@ -491,11 +494,12 @@ public class Node extends TouchReceiver {
   }
 
   protected void setParent(Node newParent){
-    boolean change = (newParent != parentNode);
+    if(newParent == parentNode)
+      return;
+
     parentNode = newParent;
-    if(change){
-      newParentEvent.trigger(this);
-    }
+    updateClipping();
+    newParentEvent.trigger(this);
   }
 
   public void forAllChildren(Consumer<Node> func){
@@ -519,8 +523,7 @@ public class Node extends TouchReceiver {
     }
   }
 
-  /** only to be used in the setClipContent method */
-  private Consumer<Node> __offspringClipper = (Node n) -> n.setClippingNode(this);
+  private boolean bClipContent = false;
 
   /**
    * When enabled it will set itself as the clipping node (see setClippingNode method)
@@ -528,25 +531,15 @@ public class Node extends TouchReceiver {
    * @param enable Enables when true, disables when false
    */
   public void setClipContent(boolean enable){
-    if(enable){
-      // abort if already enabled
-      if(newOffspringEvent.hasListener(__offspringClipper))
-        return;
-
-      this.forAllOffspring(__offspringClipper);
-      return;
-    }
-
-    // abort if wasn't enabled in the first place
-    if(!newOffspringEvent.hasListener(__offspringClipper))
+    if(bClipContent == enable)
       return;
 
-    // disable
-    newOffspringEvent.removeListener(__offspringClipper);
-    // clear clipping node on all offspring
-    for(Node n : getChildNodes(true /* recursive */)){
-      n.setClippingNode(null);
-    }
+    bClipContent = enable;
+    updateClipping();
+  }
+
+  public boolean isClippingContent(){
+    return bClipContent;
   }
 
   public void setClippingNode(Node n){
@@ -555,5 +548,22 @@ public class Node extends TouchReceiver {
 
   public Node getClippingNode(){
     return clippingNode;
+  }
+
+  /** @return Node First parent iwth clipping content enabled */
+  public Node getFirstClippingParent(){
+    for(Node p = getParent(); p != null; p=p.getParent())
+      if(p.isClippingContent())
+        return p;
+
+    return null;
+  }
+
+  private void updateClipping(){
+    this.setClippingNode(this.getFirstClippingParent());
+
+    for(Node n : getChildNodes(true /* recursive */)){
+      n.setClippingNode(n.getFirstClippingParent());
+    }
   }
 }
