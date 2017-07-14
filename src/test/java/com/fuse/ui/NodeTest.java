@@ -371,4 +371,16 @@ public class NodeTest {
         n.touchClickEvent.trigger(null);
         assertEquals(strings.size(), 1);
     }
+
+    @Test public void getChildNodes(){
+        Node a = new Node();
+        a.addChild(new Node());
+        a.addChild(new Node());
+        a.addChild(new Node());
+        List<Node> cc = a.getChildNodes();
+        assertEquals(cc.size(), 3);
+        cc.remove(1);
+        assertEquals(cc.size(), 2);
+        assertEquals(a.getChildNodes().size(), 3);
+    }
 }

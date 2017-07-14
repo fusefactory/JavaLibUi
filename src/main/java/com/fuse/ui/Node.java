@@ -341,10 +341,13 @@ public class Node extends TouchReceiver {
   }
 
   public List<Node> getChildNodes(boolean recursive){
-    if(!recursive)
-      return childNodes;
-
     List<Node> result = new ArrayList<>();
+
+    if(!recursive){
+      result.addAll(childNodes);
+      return result;
+    }
+
     for(Node n : childNodes){
       result.add(n);
       result.addAll(n.getChildNodes(true));
