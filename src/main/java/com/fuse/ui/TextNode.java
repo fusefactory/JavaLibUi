@@ -12,7 +12,7 @@ public class TextNode extends Node {
   private PFont font;
   private int alignX, alignY;
 
-  private void _init(){
+  public TextNode(){
     text = "";
     pg.colorMode(pg.RGB, 255);
     textColor = pg.color(255);
@@ -22,35 +22,26 @@ public class TextNode extends Node {
     alignY = PApplet.BASELINE;
   }
 
-  public TextNode(){
-    _init();
-  }
+  public void setText(String txt){ text = txt == null ? "" : txt; }
+  public String getText(){ return text; }
 
-  public void setText(String txt){
-    text = txt;
-    if(text == null)
-      text = "";
-  }
+  public void setTextColor(int newColor){ this.textColor = newColor; }
+  public int getTextColor(){ return textColor; }
 
-  public void setTextColor(int newColor){
-    this.textColor = newColor;
-  }
+  public void setTextSize(float newSize){ textSize = newSize; }
+  public float getTextSize(){ return textSize; }
 
-  public int getTextColor(){
-    return textColor;
-  }
+  public void setFont(PFont newFont){ this.font = newFont; }
+  public PFont getFont(){ return this.font; }
 
-  public float getTextSize(){
-    return textSize;
-  }
+  public PVector getTextOffset(){ return textOffset.copy(); }
+  public void setTextOffset(PVector offset){ textOffset = offset.copy(); }
 
-  public void setFont(PFont newFont){
-    this.font = newFont;
-  }
+  public void setAlignX(int align){ alignX = align; }
+  public int getAlignX(int align){ return alignX; }
 
-  public PFont getFont(){
-    return this.font;
-  }
+  public void setAlignY(int align){ alignY = align; }
+  public int getAlignY(int align){ return alignY; }
 
   @Override
   public void draw(){

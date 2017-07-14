@@ -4,9 +4,9 @@ import processing.core.PVector;
 
 public class LineNode extends Node {
 
-  public PVector[] coordinates;
-  public int lineColor;
-  public float strokeWeight = 1;
+  private PVector[] coordinates;
+  private int lineColor;
+  private float strokeWeight = 1;
 
   /** Default constructor; intialized with default values: image=null and mode=NORMAL */
   public LineNode(){
