@@ -6,12 +6,12 @@ import java.util.Comparator;
 import java.util.function.Consumer;
 import java.util.List;
 
-import com.fuse.utils.Event;
-
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PVector;
 import processing.core.PMatrix3D;
+
+import com.fuse.utils.Event;
 
 /**
  * Base class for scenegraph UI functionality, heavily inspired by the ofxInterface
@@ -73,7 +73,8 @@ public class Node extends TouchReceiver {
     return Float.valueOf(b.getPlane()).compareTo(a.getPlane());
   };
 
-  public Node(){
+  /** The private _init method is only used in constructor (to keep them DRY) */
+  private void _init(){
     childNodes = new ArrayList<Node>();
     parentNode = null;
     bVisible = true;
@@ -103,6 +104,17 @@ public class Node extends TouchReceiver {
     touchExitEvent.addListener((TouchEvent e) -> {
         bTouched = false;
     }, this);
+  }
+
+  /** Default constructor; intializes default value (visible, interactive, empty name, position zero, size zero) */
+  public Node(){
+    _init();
+  }
+
+  /** Constructor which initializes default values but lets caller specify the node's name */
+  public Node(String nodeName){
+    _init();
+    setName(nodeName);
   }
 
   public void update(float dt){

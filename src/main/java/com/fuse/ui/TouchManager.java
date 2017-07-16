@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.logging.*;
 
-import com.fuse.utils.Event; // TODO: fix ugly dependcy on higher level class
+import com.fuse.utils.Event;
 
 import processing.core.PVector;
 
