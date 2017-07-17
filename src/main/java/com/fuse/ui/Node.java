@@ -6,12 +6,12 @@ import java.util.Comparator;
 import java.util.function.Consumer;
 import java.util.List;
 
-import com.fuse.utils.Event;
-
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PVector;
 import processing.core.PMatrix3D;
+
+import com.fuse.utils.Event;
 
 /**
  * Base class for scenegraph UI functionality, heavily inspired by the ofxInterface
@@ -48,8 +48,7 @@ public class Node extends TouchReceiver {
   private PVector rotation;
   /** 3D Matrix that matches with the position, size and rotation attributes */
   private PMatrix3D localTransformMatrix;
-  /** Makes sure all offspring Node render within this node's boundaries */
-  private boolean clipContent;
+  /** Makes sure all offspring Nodes only render within this node's boundaries */
   private Node clippingNode;
 
   /** Float-based z-level attribute used for re-ordering Nodes in the render-queue;
@@ -74,7 +73,8 @@ public class Node extends TouchReceiver {
     return Float.valueOf(b.getPlane()).compareTo(a.getPlane());
   };
 
-  public Node(){
+  /** The private _init method is only used in constructor (to keep them DRY) */
+  private void _init(){
     childNodes = new ArrayList<Node>();
     parentNode = null;
     bVisible = true;
@@ -104,6 +104,17 @@ public class Node extends TouchReceiver {
     touchExitEvent.addListener((TouchEvent e) -> {
         bTouched = false;
     }, this);
+  }
+
+  /** Default constructor; intializes default value (visible, interactive, empty name, position zero, size zero) */
+  public Node(){
+    _init();
+  }
+
+  /** Constructor which initializes default values but lets caller specify the node's name */
+  public Node(String nodeName){
+    _init();
+    setName(nodeName);
   }
 
   public void update(float dt){
@@ -163,6 +174,11 @@ public class Node extends TouchReceiver {
 
   public PVector getGlobalPosition(){
     return toGlobal(new PVector(0.0f, 0.0f, 0.0f));
+  }
+
+  /** @return A PVector which is a translation of the Node's size PVector from local space into screen-space */
+  public PVector getGlobalBottomRight(){
+    return toGlobal(size);
   }
 
   public void setX(float newX){
@@ -342,10 +358,13 @@ public class Node extends TouchReceiver {
   }
 
   public List<Node> getChildNodes(boolean recursive){
-    if(!recursive)
-      return childNodes;
-
     List<Node> result = new ArrayList<>();
+
+    if(!recursive){
+      result.addAll(childNodes);
+      return result;
+    }
+
     for(Node n : childNodes){
       result.add(n);
       result.addAll(n.getChildNodes(true));
@@ -380,10 +399,16 @@ public class Node extends TouchReceiver {
 
     // call draw on each node
     for(Node node : nodes){
+
       Node clipNode = node.getClippingNode();
+
+      // enable clipping if necessary
       if(clipNode != null){
         PVector scrPos = clipNode.getGlobalPosition();
-        PVector size = clipNode.getSize();
+        // TODO this size conversion from local to global space, only really works
+        // if the node is rotated to multiples of 90 degrees (or not rotated at all of course).
+        PVector size = clipNode.getGlobalBottomRight();
+        size.sub(scrPos);
         pg.clip(scrPos.x, scrPos.y, scrPos.x+size.x, scrPos.y+size.y);
       }
 
@@ -394,9 +419,9 @@ public class Node extends TouchReceiver {
       }
       pg.popMatrix();
 
+      // disable clipping if necessary
       if(clipNode != null){
         pg.noClip();
-        // pg.popMatrix();
       }
     }
   }
@@ -492,11 +517,12 @@ public class Node extends TouchReceiver {
   }
 
   protected void setParent(Node newParent){
-    boolean change = (newParent != parentNode);
+    if(newParent == parentNode)
+      return;
+
     parentNode = newParent;
-    if(change){
-      newParentEvent.trigger(this);
-    }
+    updateClipping();
+    newParentEvent.trigger(this);
   }
 
   public void forAllChildren(Consumer<Node> func){
@@ -520,23 +546,23 @@ public class Node extends TouchReceiver {
     }
   }
 
+  private boolean bClipContent = false;
+
+  /**
+   * When enabled it will set itself as the clipping node (see setClippingNode method)
+   * on all its current and future offspring (subtree) nodes.
+   * @param enable Enables when true, disables when false
+   */
   public void setClipContent(boolean enable){
-    boolean enabled = (enable && !this.clipContent);
-    boolean disabled = (this.clipContent && !enable);
-    this.clipContent = enable;
+    if(bClipContent == enable)
+      return;
 
-    if(enabled){
-      this.forAllOffspring((Node n) -> {
-        n.setClippingNode(this);
-      }, this);
-    }
+    bClipContent = enable;
+    updateClipping();
+  }
 
-    if(disabled){
-      newOffspringEvent.removeListeners(this);
-      for(Node n : getChildNodes(true /* recursive */)){
-        n.setClippingNode(null);
-      }
-    }
+  public boolean isClippingContent(){
+    return bClipContent;
   }
 
   public void setClippingNode(Node n){
@@ -545,5 +571,22 @@ public class Node extends TouchReceiver {
 
   public Node getClippingNode(){
     return clippingNode;
+  }
+
+  /** @return Node First parent iwth clipping content enabled */
+  public Node getFirstClippingParent(){
+    for(Node p = getParent(); p != null; p=p.getParent())
+      if(p.isClippingContent())
+        return p;
+
+    return null;
+  }
+
+  private void updateClipping(){
+    this.setClippingNode(this.getFirstClippingParent());
+
+    for(Node n : getChildNodes(true /* recursive */)){
+      n.setClippingNode(n.getFirstClippingParent());
+    }
   }
 }

@@ -25,7 +25,6 @@ public class NodeTest {
     }
 
     @Test public void setVisible(){
-
         Node node = new Node();
         assertEquals(node.isVisible(), true);
         node.setVisible(false);
@@ -35,7 +34,6 @@ public class NodeTest {
     }
 
     @Test public void loadSubtreeList(){
-
         Node node = new Node();
         node.setName("scene");
         Node c1 = new Node();
@@ -118,11 +116,9 @@ public class NodeTest {
         assertEquals(list.get(3).getName(), "c2");
         assertEquals(list.get(4).getName(), "c3");
         assertEquals(list.get(5).getName(), "c1_2");
-
     }
 
     @Test public void isInside(){
-
         Node node = new Node();
         node.setPosition(10f,10f);
         node.setSize(100f, 100f);
@@ -136,7 +132,6 @@ public class NodeTest {
     }
 
     @Test public void toLocal(){
-
         Node node = new Node();
         node.setPosition(100f,0f);
         node.setSize(100f, 50f);
@@ -166,6 +161,8 @@ public class NodeTest {
         c1.setPosition(100f, 30f);
         node.addChild(c1);
         assertEquals(c1.toGlobal(new PVector(10f, 10f, 0f)), new PVector(210f, 90f));
+        node.rotateZ(PGraphics.PI);
+        assertEquals(node.toGlobal(new PVector(10, 10, 0)), new PVector(90, 40, 0));
     }
 
     @Test public void getChildWithName(){
@@ -272,32 +269,80 @@ public class NodeTest {
     }
 
     @Test public void setClipContent(){
+        // create parent node with children and verify children don't have clipping nodes
         Node parent = new Node();
-
         Node c1 = new Node();
         parent.addChild(c1);
         Node c1_1 = new Node();
         c1.addChild(c1_1);
-
         assertEquals(c1.getClippingNode(), null);
         assertEquals(c1_1.getClippingNode(), null);
+
+        // enable clipping on parent
+        // verify all children got the parent as clipping node
         parent.setClipContent(true);
         assertEquals(c1.getClippingNode(), parent);
         assertEquals(c1_1.getClippingNode(), parent);
 
+        // add new child to parent
+        // verify this also get that parent as clipping node
         Node c2 = new Node();
         assertEquals(c2.getClippingNode(), null);
         parent.addChild(c2);
         assertEquals(c2.getClippingNode(), parent);
 
+        // disable clipping on parent and verify all child
+        // nodes have no clipping node anymore
         parent.setClipContent(false);
         assertEquals(c1.getClippingNode(), null);
         assertEquals(c1_1.getClippingNode(), null);
         assertEquals(c2.getClippingNode(), null);
 
+        // add new child to parent
+        // verify it gets no clipping node
         Node c3 = new Node();
         parent.addChild(c3);
         assertEquals(c3.getClippingNode(), null);
+    }
+
+    @Test public void setClipContent_nested(){
+        // create parent node with children and verify children don't have clipping nodes
+        Node parent = new Node();
+        Node c1 = new Node();
+        parent.addChild(c1);
+        Node c1_1 = new Node();
+        c1.addChild(c1_1);
+        assertEquals(c1.getClippingNode(), null);
+        assertEquals(c1_1.getClippingNode(), null);
+
+        // enable clipping on parent
+        // verify all children got the parent as clipping node
+        parent.setClipContent(true);
+        assertEquals(c1.getClippingNode(), parent);
+        assertEquals(c1_1.getClippingNode(), parent);
+
+        // enable clipping on c1
+        // veify c1_1 (child of c1) get c1 as clipping node but c1's clipping node stays parent
+        c1.setClipContent(true);
+        assertEquals(c1.getClippingNode(), parent);
+        assertEquals(c1_1.getClippingNode(), c1);
+
+        // add new child to parent
+        // verify this also get that parent as clipping node
+        Node c2 = new Node();
+        assertEquals(c2.getClippingNode(), null);
+        parent.addChild(c2);
+        assertEquals(c2.getClippingNode(), parent);
+        // now add c2 to c1 and verify c1 becomes clipping node
+        c1.addChild(c2);
+        assertEquals(c2.getClippingNode(), c1);
+
+        // disable clipping on c1
+        // verify all children now have parent as clippingNode again
+        c1.setClipContent(false);
+        assertEquals(c1.getClippingNode(), parent);
+        assertEquals(c1_1.getClippingNode(), parent);
+        assertEquals(c2.getClippingNode(), parent);
     }
 
     @Test public void getGlobalPosition(){
@@ -315,5 +360,37 @@ public class NodeTest {
         c2.setPosition(15.0f, 20.0f);
         c1.addChild(c2);
         assertEquals(c2.getGlobalPosition(), new PVector(35.0f, 20.0f, 0.0f));
+    }
+
+    @Test public void getGlobalBottomRight(){
+        Node n = new Node();
+        n.setSize(100, 50);
+        assertEquals(n.getGlobalBottomRight(), new PVector(100,50,0));
+        n.rotate(PGraphics.PI * 0.5f);
+        assertEquals(n.getGlobalBottomRight().dist(new PVector(-50,100,0)) < 0.00001f, true);
+    }
+
+    @Test public void whenClicked(){
+        Node n = new Node();
+        List<String> strings = new ArrayList<>();
+        n.whenClicked(() -> {
+            strings.add("clikked");
+        });
+
+        assertEquals(strings.size(), 0);
+        n.touchClickEvent.trigger(null);
+        assertEquals(strings.size(), 1);
+    }
+
+    @Test public void getChildNodes(){
+        Node a = new Node();
+        a.addChild(new Node());
+        a.addChild(new Node());
+        a.addChild(new Node());
+        List<Node> cc = a.getChildNodes();
+        assertEquals(cc.size(), 3);
+        cc.remove(1);
+        assertEquals(cc.size(), 2);
+        assertEquals(a.getChildNodes().size(), 3);
     }
 }
