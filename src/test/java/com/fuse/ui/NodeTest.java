@@ -161,6 +161,8 @@ public class NodeTest {
         c1.setPosition(100f, 30f);
         node.addChild(c1);
         assertEquals(c1.toGlobal(new PVector(10f, 10f, 0f)), new PVector(210f, 90f));
+        node.rotateZ(PGraphics.PI);
+        assertEquals(node.toGlobal(new PVector(10, 10, 0)), new PVector(90, 40, 0));
     }
 
     @Test public void getChildWithName(){
@@ -364,8 +366,8 @@ public class NodeTest {
         Node n = new Node();
         n.setSize(100, 50);
         assertEquals(n.getGlobalBottomRight(), new PVector(100,50,0));
-        n.rotate(90);
-        assertEquals(n.getGlobalSize(), new PVector(50,100,0));
+        n.rotate(PGraphics.PI * 0.5f);
+        assertEquals(n.getGlobalBottomRight().dist(new PVector(-50,100,0)) < 0.00001f, true);
     }
 
     @Test public void whenClicked(){
