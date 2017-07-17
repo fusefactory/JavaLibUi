@@ -4,11 +4,11 @@
 
     <groupId>com.github.fusefactory</groupId>
     <artifactId>ui</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <packaging>jar</packaging>
 
     <name>Fuse UI package</name>
-    <url>https://jitpack.io/#fusefactory/ui/1.0.1</url>
+    <url>https://jitpack.io/#fusefactory/ui/1.0.2</url>
 
     <dependencies>
         <!-- https://mvnrepository.com/artifact/junit/junit -->
