@@ -176,6 +176,11 @@ public class Node extends TouchReceiver {
     return toGlobal(new PVector(0.0f, 0.0f, 0.0f));
   }
 
+  /** @return A PVector which is a translation of the Node's size PVector from local space into screen-space */
+  public PVector getGlobalBottomRight(){
+    return toGlobal(size);
+  }
+
   public void setX(float newX){
     setPosition(newX, position.y, position.z);
   }

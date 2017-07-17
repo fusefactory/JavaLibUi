@@ -360,6 +360,14 @@ public class NodeTest {
         assertEquals(c2.getGlobalPosition(), new PVector(35.0f, 20.0f, 0.0f));
     }
 
+    @Test public void getGlobalBottomRight(){
+        Node n = new Node();
+        n.setSize(100, 50);
+        assertEquals(n.getGlobalBottomRight(), new PVector(100,50,0));
+        n.rotate(90);
+        assertEquals(n.getGlobalSize(), new PVector(50,100,0));
+    }
+
     @Test public void whenClicked(){
         Node n = new Node();
         List<String> strings = new ArrayList<>();
