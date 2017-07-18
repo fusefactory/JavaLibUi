@@ -13,10 +13,19 @@ public class ImageNode extends Node {
   private PImage image;
   private Mode mode;
 
-  /** Default constructor; intialized with default values: image=null and mode=NORMAL */
-  public ImageNode(){
+  private void _init(){
     image = null;
     mode = Mode.NORMAL;
+  }
+
+  /** Default constructor; intialized with default values: image=null and mode=NORMAL */
+  public ImageNode(){
+    _init();
+  }
+  
+  public ImageNode(String nodeName){
+    super(nodeName);
+    _init();
   }
 
   /** Draw this node's image at this Node's position */
