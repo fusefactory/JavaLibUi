@@ -19,6 +19,7 @@ public class LineNode extends Node {
   /** Draw this node's image at this Node's position */
   @Override public void draw(){
     pg.stroke(lineColor);
+    pg.strokeWeight(strokeWeight);
     pg.beginShape(pg.LINES);
 
     PVector from = coordinates[0];
