@@ -56,7 +56,7 @@ public class DraggableTest {
     // create touch manager that acts on this scene
     TouchManager tm = new TouchManager(scene);
     // enable draggable on node
-    Draggable.enableFor(n);
+    assertEquals(Draggable.enableFor(n).getClass(), Draggable.class);
 
     // try interaction, verify node moves
     tm.touchDown(0, new PVector(20,20,0));

@@ -35,11 +35,13 @@ public class Draggable extends ExtensionBase {
     node.touchUpEvent.removeListeners(this);
   }
 
-  public static void enableFor(Node n){
+  public static Draggable enableFor(Node n){
     for(ExtensionBase ext : n.getExtensions())
       if(Draggable.class.isInstance(ext))
-        return;
-    n.use(new Draggable());
+        return (Draggable)ext;
+    Draggable d = new Draggable();
+    n.use(d);
+    return d;
   }
 
   public static void disableFor(Node n){
