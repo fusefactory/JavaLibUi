@@ -41,26 +41,13 @@ public class Constrain extends ExtensionBase {
 
       node.setPosition(newPos);
 
-      if(axisMinValues[0] != null && axisMaxValues[0] != null){
-        if(axisMinValues[0].equals(axisMaxValues[0]))
-          xPercentageEvent.trigger(1.0f);
-        else
-          xPercentageEvent.trigger(PApplet.map(newPos.x, axisMinValues[0], axisMaxValues[0], 0.0f, 1.0f));
-      }
+      Float p = getPercentageX();
+      if(p != null) xPercentageEvent.trigger(p);
+      p = getPercentageY();
+      if(p != null) yPercentageEvent.trigger(p);
+      p = getPercentageZ();
+      if(p != null) zPercentageEvent.trigger(p);
 
-      if(axisMinValues[1] != null && axisMaxValues[1] != null){
-        if(axisMinValues[1].equals(axisMaxValues[1]))
-          yPercentageEvent.trigger(1.0f);
-        else
-          yPercentageEvent.trigger(PApplet.map(newPos.y, axisMinValues[1], axisMaxValues[1], 0.0f, 1.0f));
-      }
-
-      if(axisMinValues[2] != null && axisMaxValues[2] != null){
-        if(axisMinValues[2].equals(axisMaxValues[2]))
-          zPercentageEvent.trigger(1.0f);
-        else
-          zPercentageEvent.trigger(PApplet.map(newPos.z, axisMinValues[2], axisMaxValues[2], 0.0f, 1.0f));
-      }
     }, this);
   }
 
@@ -109,6 +96,36 @@ public class Constrain extends ExtensionBase {
   public void setMaxX(Float max){ axisMaxValues[0] = max; if(max != null && node.getPosition().x > max) node.setX(max); }
   public void setMaxY(Float max){ axisMaxValues[1] = max; if(max != null && node.getPosition().y > max) node.setY(max); }
   public void setMaxZ(Float max){ axisMaxValues[2] = max; if(max != null && node.getPosition().z > max) node.setZ(max); }
+
+  public Float getPercentageX(){
+    if(axisMinValues[0] == null || axisMaxValues[0] == null)
+      return null;
+
+    if(axisMinValues[0].equals(axisMaxValues[0]))
+      return 1.0f;
+
+    return PApplet.map(node.getPosition().x, axisMinValues[0], axisMaxValues[0], 0.0f, 1.0f);
+  }
+
+  public Float getPercentageY(){
+    if(axisMinValues[1] == null || axisMaxValues[1] == null)
+      return null;
+
+    if(axisMinValues[1].equals(axisMaxValues[1]))
+      return 1.0f;
+
+    return PApplet.map(node.getPosition().y, axisMinValues[1], axisMaxValues[1], 0.0f, 1.0f);
+  }
+
+  public Float getPercentageZ(){
+    if(axisMinValues[2] == null || axisMaxValues[2] == null)
+      return null;
+
+    if(axisMinValues[2].equals(axisMaxValues[2]))
+      return 1.0f;
+
+    return PApplet.map(node.getPosition().z, axisMinValues[2], axisMaxValues[2], 0.0f, 1.0f);
+  }
 
   public void setPercentageX(float percentage){
     if(axisMinValues[0] != null && axisMaxValues[0] != null)
