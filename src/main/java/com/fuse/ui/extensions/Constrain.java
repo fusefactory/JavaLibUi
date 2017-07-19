@@ -115,12 +115,12 @@ public class Constrain extends ExtensionBase {
   }
 
   public static Constrain enableFor(Node n, boolean onByDefault){
-    for(ExtensionBase ext : n.getExtensions())
-      if(Constrain.class.isInstance(ext))
-        return (Constrain)ext;
+    Constrain d = getFor(n);
 
-    Constrain d = new Constrain();
-    n.use(d);
+    if(d == null){
+      d = new Constrain();
+      n.use(d);
+    }
 
     if(onByDefault){
       d.setFixX(true);
@@ -129,6 +129,13 @@ public class Constrain extends ExtensionBase {
     }
 
     return d;
+  }
+
+  public static Constrain getFor(Node n){
+    for(ExtensionBase ext : n.getExtensions())
+      if(Constrain.class.isInstance(ext))
+        return (Constrain)ext;
+    return null;
   }
 
   public static void disableFor(Node n){
