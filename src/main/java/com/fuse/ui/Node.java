@@ -12,6 +12,7 @@ import processing.core.PVector;
 import processing.core.PMatrix3D;
 
 import com.fuse.utils.Event;
+import com.fuse.ui.extensions.ExtensionBase;
 
 /**
  * Base class for scenegraph UI functionality, heavily inspired by the ofxInterface
@@ -50,6 +51,7 @@ public class Node extends TouchReceiver {
   private PMatrix3D localTransformMatrix;
   /** Makes sure all offspring Nodes only render within this node's boundaries */
   private Node clippingNode;
+  private List<ExtensionBase> extensions;
 
   /** Float-based z-level attribute used for re-ordering Nodes in the render-queue;
    * a higher plane value will put the Node later in the queue, which means
@@ -169,7 +171,7 @@ public class Node extends TouchReceiver {
   }
 
   public PVector getPosition(){
-    return position;
+    return position.copy();
   }
 
   public PVector getGlobalPosition(){
@@ -207,7 +209,7 @@ public class Node extends TouchReceiver {
   }
 
   public PVector getSize(){
-    return size;
+    return size.copy();
   }
 
   public void setWidth(float newWidth){
@@ -588,5 +590,16 @@ public class Node extends TouchReceiver {
     for(Node n : getChildNodes(true /* recursive */)){
       n.setClippingNode(n.getFirstClippingParent());
     }
+  }
+
+  public void use(ExtensionBase newExtension){
+    // lazy create so extensions attribute doesn't use any memory
+    // unless this Node actually gets extensions
+    if(extensions == null){
+      extensions = new ArrayList<>();
+    }
+
+    newExtension.setNode(this);
+    extensions.add(newExtension);
   }
 }

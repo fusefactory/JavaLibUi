@@ -9,14 +9,7 @@ import java.util.List;
 import java.util.ArrayList;
 import processing.core.*;
 
-/**
-* Unit test for com.fuse.utils.Event.
-*/
 public class NodeTest {
-
-    private void _start(String name){
-        // System.out.println("TEST: "+name);
-    }
 
     @Test public void setSize(){
         Node node = new Node();
@@ -393,4 +386,28 @@ public class NodeTest {
         assertEquals(cc.size(), 2);
         assertEquals(a.getChildNodes().size(), 3);
     }
+
+    @Test public void getPosition_safety(){
+        Node n = new Node();
+        n.setPosition(10, 10);
+        assertEquals(n.getPosition(), new PVector(10,10,0));
+        n.getPosition().add(new PVector(10, 0, 0));
+        assertEquals(n.getPosition(), new PVector(10,10,0));
+    }
+
+    @Test public void getSize_safety(){
+        Node n = new Node();
+        n.setSize(10, 10);
+        assertEquals(n.getSize(), new PVector(10,10,0));
+        n.getSize().add(new PVector(10, 0, 0));
+        assertEquals(n.getSize(), new PVector(10,10,0));
+    }
+
+    // @Test public void getRotation_safety(){
+    //     Node n = new Node();
+    //     n.rotateZ(10);
+    //     assertEquals(n.getRotation(), new PVector(0,0,10));
+    //     n.getRotation().add(new PVector(10, 0, 0));
+    //     assertEquals(n.getRotation(), new PVector(0,0,10));
+    // }
 }
