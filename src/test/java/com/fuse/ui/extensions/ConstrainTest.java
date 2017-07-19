@@ -23,7 +23,7 @@ public class ConstrainTest {
     n.setPosition(20, 20);
     assertEquals(n.getPosition(), new PVector(20,20,0));
     // apply constrain (all axis by default) and verify it won't move anymore
-    Constrain c = Constrain.enableFor(n);
+    Constrain c = Constrain.enableFor(n, true);
     n.setPosition(30, 30);
     assertEquals(n.getPosition(), new PVector(20,20,0));
     // disable constrain and verify moving works again
@@ -42,7 +42,7 @@ public class ConstrainTest {
     n.setPosition(20, 20);
     assertEquals(n.getPosition(), new PVector(20,20,0));
     // apply constrain (no axis by default) and verify it won't move anymore
-    Constrain c = Constrain.enableFor(n, false);
+    Constrain c = Constrain.enableFor(n);
     n.setPosition(30, 30);
     assertEquals(n.getPosition(), new PVector(30,30,0));
 

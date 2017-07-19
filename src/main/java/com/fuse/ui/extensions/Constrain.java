@@ -8,7 +8,6 @@ import com.fuse.ui.Node;
 import com.fuse.ui.TouchEvent;
 
 public class Constrain extends ExtensionBase {
-  private boolean[] fixedAxis;
   private Float[] axisMinValues = {null, null, null};
   private Float[] axisMaxValues = {null, null, null};
   private PVector constrainPos;
@@ -16,12 +15,13 @@ public class Constrain extends ExtensionBase {
   public Event<Float> xPercentageEvent, yPercentageEvent, zPercentageEvent;
 
   public Constrain(){
-    fixedAxis = new boolean[3];
     setFixX(true);
     setFixY(true);
     setFixZ(true);
     constrainPos = new PVector();
     xPercentageEvent = new Event<>();
+    yPercentageEvent = new Event<>();
+    zPercentageEvent = new Event<>();
   }
 
   @Override public void enable(Node newNode){
@@ -30,9 +30,6 @@ public class Constrain extends ExtensionBase {
 
     node.positionChangeEvent.whenTriggered(() -> {
       PVector newPos = node.getPosition();
-      if(fixedAxis[0]) newPos.x = constrainPos.x;
-      if(fixedAxis[1]) newPos.y = constrainPos.y;
-      if(fixedAxis[2]) newPos.z = constrainPos.z;
 
       if(axisMinValues[0] != null && axisMinValues[0] > newPos.x) newPos.x = axisMinValues[0];
       if(axisMinValues[1] != null && axisMinValues[1] > newPos.y) newPos.y = axisMinValues[1];
@@ -44,14 +41,26 @@ public class Constrain extends ExtensionBase {
 
       node.setPosition(newPos);
 
-      if(axisMinValues[0] != null && axisMaxValues[0] != null)
-        xPercentageEvent.trigger(PApplet.map(newPos.x, axisMinValues[0], axisMaxValues[0], 0.0f, 1.0f));
+      if(axisMinValues[0] != null && axisMaxValues[0] != null){
+        if(axisMinValues[0].equals(axisMaxValues[0]))
+          xPercentageEvent.trigger(1.0f);
+        else
+          xPercentageEvent.trigger(PApplet.map(newPos.x, axisMinValues[0], axisMaxValues[0], 0.0f, 1.0f));
+      }
 
-      if(axisMinValues[1] != null && axisMaxValues[1] != null)
-        yPercentageEvent.trigger(PApplet.map(newPos.y, axisMinValues[1], axisMaxValues[1], 0.0f, 1.0f));
+      if(axisMinValues[1] != null && axisMaxValues[1] != null){
+        if(axisMinValues[1].equals(axisMaxValues[1]))
+          yPercentageEvent.trigger(1.0f);
+        else
+          yPercentageEvent.trigger(PApplet.map(newPos.y, axisMinValues[1], axisMaxValues[1], 0.0f, 1.0f));
+      }
 
-      if(axisMinValues[2] != null && axisMaxValues[2] != null)
-        zPercentageEvent.trigger(PApplet.map(newPos.z, axisMinValues[2], axisMaxValues[2], 0.0f, 1.0f));
+      if(axisMinValues[2] != null && axisMaxValues[2] != null){
+        if(axisMinValues[2].equals(axisMaxValues[2]))
+          zPercentageEvent.trigger(1.0f);
+        else
+          zPercentageEvent.trigger(PApplet.map(newPos.z, axisMinValues[2], axisMaxValues[2], 0.0f, 1.0f));
+      }
     }, this);
   }
 
@@ -62,25 +71,34 @@ public class Constrain extends ExtensionBase {
 
   public void setFixX(){ setFixX(true); }
   public void setFixX(boolean enable){
-    fixedAxis[0] = enable;
-    if(enable && constrainPos != null && node != null){
-      constrainPos.x = node.getPosition().x;
+    if(enable && node != null){
+      setMinX(node.getPosition().x);
+      setMaxX(node.getPosition().x);
+    }else{
+      setMinX(null);
+      setMaxX(null);
     }
   }
 
   public void setFixY(){ setFixY(true); }
   public void setFixY(boolean enable){
-    fixedAxis[1] = enable;
-    if(enable && constrainPos != null && node != null){
-      constrainPos.y = node.getPosition().y;
+    if(enable && node != null){
+      setMinY(node.getPosition().y);
+      setMaxY(node.getPosition().y);
+    } else {
+      setMinY(null);
+      setMaxY(null);
     }
   }
 
   public void setFixZ(){ setFixZ(true); }
   public void setFixZ(boolean enable){
-    fixedAxis[2] = enable;
-    if(enable && constrainPos != null && node != null){
-      constrainPos.z = node.getPosition().z;
+    if(enable && node != null){
+      setMinZ(node.getPosition().z);
+      setMaxZ(node.getPosition().z);
+    } else {
+      setMinZ(null);
+      setMaxZ(null);
     }
   }
 
@@ -93,7 +111,7 @@ public class Constrain extends ExtensionBase {
   public void setMaxZ(Float max){ axisMaxValues[2] = max; if(max != null && node.getPosition().z > max) node.setZ(max); }
 
   public static Constrain enableFor(Node n){
-    return enableFor(n, true);
+    return enableFor(n, false);
   }
 
   public static Constrain enableFor(Node n, boolean onByDefault){
@@ -102,12 +120,14 @@ public class Constrain extends ExtensionBase {
         return (Constrain)ext;
 
     Constrain d = new Constrain();
-    if(!onByDefault){
-      d.setFixX(false);
-      d.setFixY(false);
-      d.setFixZ(false);
-    }
     n.use(d);
+
+    if(onByDefault){
+      d.setFixX(true);
+      d.setFixY(true);
+      d.setFixZ(true);
+    }
+
     return d;
   }
 
