@@ -16,14 +16,13 @@ public class Draggable extends ExtensionBase {
     }, this);
 
     node.touchMoveEvent.addListener((TouchEvent event) -> {
-      if(originalNodePosition == null)
-        return; // sohuld not happen
-
+      if(originalNodePosition == null) return; // happens sometimes with race conditions
       // logger.warning("offset: "+event.offset().toString()+", orig pos: "+originalNodePosition.toString());
       getNode().setPosition(PVector.add(event.offset(), originalNodePosition));
     }, this);
 
     node.touchUpEvent.addListener((TouchEvent event) -> {
+      if(originalNodePosition == null) return; // happens sometimes with race conditions
       getNode().setPosition(PVector.add(event.offset(), originalNodePosition));
       originalNodePosition = null;
     }, this);
