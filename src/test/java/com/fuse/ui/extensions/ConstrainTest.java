@@ -5,6 +5,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import org.junit.Test;
 
+import java.util.List;
+import java.util.ArrayList;
+
 import processing.core.PVector;
 import com.fuse.ui.Node;
 import com.fuse.ui.TouchManager;
@@ -76,5 +79,26 @@ public class ConstrainTest {
     c.setMinX(null);
     n.setPosition(-1000f, -2000f);
     assertEquals(n.getPosition(), new PVector(-1000,-2000,0));
+  }
+
+  @Test public void xPercentageEvent(){
+    Node n = new Node();
+    Constrain c = Constrain.enableFor(n, false);
+    List<Float> floats = new ArrayList<>();
+    c.xPercentageEvent.addListener((Float xperc) -> floats.add(xperc));
+
+    n.setPosition(20, 0);
+    assertEquals(floats.size(), 0);
+    c.setMaxX(100f);
+    assertEquals(floats.size(), 0);
+    c.setMinX(50f); // now we have a min and a max on the X axi which means it will start triggering the xPercentageEvent
+    assertEquals(floats.size(), 1);
+    assertEquals((float)floats.get(0), 0.0f, 0.00001f);
+    n.setPosition(75, 20);
+    assertEquals(floats.size(), 2);
+    assertEquals((float)floats.get(1), 0.5f, 0.00001f); // 50%
+    n.setPosition(60, 20);
+    assertEquals(floats.size(), 3);
+    assertEquals((float)floats.get(2), 0.2f, 0.00001f); // 20%
   }
 }

@@ -1,7 +1,9 @@
 package com.fuse.ui.extensions;
 
+import processing.core.PApplet;
 import processing.core.PVector;
 
+import com.fuse.utils.Event;
 import com.fuse.ui.Node;
 import com.fuse.ui.TouchEvent;
 
@@ -11,12 +13,15 @@ public class Constrain extends ExtensionBase {
   private Float[] axisMaxValues = {null, null, null};
   private PVector constrainPos;
 
+  public Event<Float> xPercentageEvent, yPercentageEvent, zPercentageEvent;
+
   public Constrain(){
     fixedAxis = new boolean[3];
     setFixX(true);
     setFixY(true);
     setFixZ(true);
     constrainPos = new PVector();
+    xPercentageEvent = new Event<>();
   }
 
   @Override public void enable(Node newNode){
@@ -38,6 +43,15 @@ public class Constrain extends ExtensionBase {
       if(axisMaxValues[2] != null && axisMaxValues[2] < newPos.z) newPos.z = axisMaxValues[2];
 
       node.setPosition(newPos);
+
+      if(axisMinValues[0] != null && axisMaxValues[0] != null)
+        xPercentageEvent.trigger(PApplet.map(newPos.x, axisMinValues[0], axisMaxValues[0], 0.0f, 1.0f));
+
+      if(axisMinValues[1] != null && axisMaxValues[1] != null)
+        yPercentageEvent.trigger(PApplet.map(newPos.y, axisMinValues[1], axisMaxValues[1], 0.0f, 1.0f));
+
+      if(axisMinValues[2] != null && axisMaxValues[2] != null)
+        zPercentageEvent.trigger(PApplet.map(newPos.z, axisMinValues[2], axisMaxValues[2], 0.0f, 1.0f));
     }, this);
   }
 
