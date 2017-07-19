@@ -110,6 +110,21 @@ public class Constrain extends ExtensionBase {
   public void setMaxY(Float max){ axisMaxValues[1] = max; if(max != null && node.getPosition().y > max) node.setY(max); }
   public void setMaxZ(Float max){ axisMaxValues[2] = max; if(max != null && node.getPosition().z > max) node.setZ(max); }
 
+  public void setPercentageX(float percentage){
+    if(axisMinValues[0] != null && axisMaxValues[0] != null)
+      node.setX(PApplet.lerp(axisMinValues[0], axisMaxValues[0], percentage));
+  }
+
+  public void setPercentageY(float percentage){
+    if(axisMinValues[1] != null && axisMaxValues[1] != null)
+      node.setY(PApplet.lerp(axisMinValues[1], axisMaxValues[1], percentage));
+  }
+
+  public void setPercentageZ(float percentage){
+    if(axisMinValues[2] != null && axisMaxValues[2] != null)
+      node.setZ(PApplet.lerp(axisMinValues[2], axisMaxValues[2], percentage));
+  }
+
   public static Constrain enableFor(Node n){
     return enableFor(n, false);
   }

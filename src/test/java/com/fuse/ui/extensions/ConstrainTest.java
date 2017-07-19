@@ -101,4 +101,15 @@ public class ConstrainTest {
     assertEquals(floats.size(), 3);
     assertEquals((float)floats.get(2), 0.2f, 0.00001f); // 20%
   }
+
+  @Test public void setPercentageX(){
+    Node n = new Node();
+    Constrain c = Constrain.enableFor(n, false);
+    c.setMinX(20f);
+    c.setMaxX(400f);
+    c.setPercentageX(0.0f);
+    assertEquals(n.getPosition(), new PVector(20,0,0));
+    c.setPercentageX(0.9f); // 90%
+    assertEquals(n.getPosition(), new PVector(362,0,0));
+  }
 }
