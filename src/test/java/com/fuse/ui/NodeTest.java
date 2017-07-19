@@ -410,4 +410,17 @@ public class NodeTest {
     //     n.getRotation().add(new PVector(10, 0, 0));
     //     assertEquals(n.getRotation(), new PVector(0,0,10));
     // }
+
+    @Test public void positionChangeEvent(){
+        Node n = new Node();
+        n.setPosition(10, 20);
+
+        List<String> strs = new ArrayList<>();
+        n.positionChangeEvent.whenTriggered(() -> strs.add("change"));
+        assertEquals(strs.size(), 0);
+        n.setPosition(20, 20);
+        assertEquals(strs.size(), 1);
+        n.setPosition(20, 20); // no change
+        assertEquals(strs.size(), 1);
+    }
 }
