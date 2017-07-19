@@ -11,8 +11,12 @@ public class ExtensionBase {
     logger = Logger.getLogger(ExtensionBase.class.getName());
   }
 
-  public void setNode(Node newNode){
+  public void enable(Node newNode){
     this.node = newNode;
+  }
+
+  // virtual
+  public void disable(){
   }
 
   public Node getNode(){

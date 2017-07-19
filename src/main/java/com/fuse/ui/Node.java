@@ -599,7 +599,21 @@ public class Node extends TouchReceiver {
       extensions = new ArrayList<>();
     }
 
-    newExtension.setNode(this);
+    newExtension.enable(this);
     extensions.add(newExtension);
+  }
+
+  public void stopUsing(ExtensionBase ext){
+    if(extensions == null)
+      return;
+
+    if(extensions.remove(ext))
+      ext.disable();
+  }
+
+  public List<ExtensionBase> getExtensions(){
+    if(extensions == null)
+      return new ArrayList<>();
+    return extensions;
   }
 }
