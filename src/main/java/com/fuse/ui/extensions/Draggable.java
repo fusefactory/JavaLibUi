@@ -8,6 +8,7 @@ import com.fuse.ui.TouchEvent;
 
 public class Draggable extends ExtensionBase {
   private PVector originalNodePosition = null;
+  private boolean bDragging = false;
 
   public Event<Draggable> startEvent;
   public Event<Draggable> endEvent;
@@ -21,8 +22,9 @@ public class Draggable extends ExtensionBase {
     super.enable(newNode);
 
     node.touchMoveEvent.addListener((TouchEvent event) -> {
-      if(originalNodePosition == null){
+      if(originalNodePosition == null || !bDragging){
         originalNodePosition = getNode().getPosition();
+        bDragging = true;
         // TODO; min offset before officialy start dragging?
         startEvent.trigger(this);
       }
@@ -32,10 +34,15 @@ public class Draggable extends ExtensionBase {
     }, this);
 
     node.touchUpEvent.addListener((TouchEvent event) -> {
-      if(originalNodePosition == null) return; // happens sometimes with race conditions
-      getNode().setPosition(PVector.add(event.offset(), originalNodePosition));
-      originalNodePosition = null;
+      if(!bDragging)
+        return;
+
+      if(originalNodePosition != null)
+        getNode().setPosition(PVector.add(event.offset(), originalNodePosition));
+
+      bDragging = false;
       endEvent.trigger(this);
+      // originalNodePosition = null;
     }, this);
   }
 
@@ -66,5 +73,13 @@ public class Draggable extends ExtensionBase {
       return new PVector(0.0f,0.0f,0.0f);
 
     return node.getPosition().sub(originalNodePosition);
+  }
+
+  public PVector getOriginalPosition(){
+    return originalNodePosition == null ? null : originalNodePosition.copy();
+  }
+
+  public boolean isDragging(){
+    return bDragging;
   }
 }
