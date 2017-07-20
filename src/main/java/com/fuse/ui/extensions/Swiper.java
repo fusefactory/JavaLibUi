@@ -98,6 +98,11 @@ public class Swiper extends ExtensionBase {
     minOffsetRight = min;
   }
 
+  public void setMinOffset(float offset){
+    setMinOffsetRight(offset);
+    setMaxOffsetLeft(-offset);
+  }
+
   public boolean isSnapBackEnabled(){
     return bSnapBackEnabled;
   }
