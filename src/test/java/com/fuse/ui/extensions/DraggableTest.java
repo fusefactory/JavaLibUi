@@ -82,4 +82,59 @@ public class DraggableTest {
     tm.touchUp(0, new PVector(55,55,0));
     assertEquals(n.getPosition(), new PVector(10,10,0));
   }
+
+  @Test public void getOffset(){
+    // create scene
+    Node scene = new Node();
+    Node n = new Node();
+    n.setPosition(10, 10);
+    n.setSize(100, 100);
+    scene.addChild(n);
+
+    // create touch manager that acts on this scene
+    TouchManager tm = new TouchManager(scene);
+    // enable draggable on node
+    Draggable d = Draggable.enableFor(n);
+
+    assertEquals(d.getOffset(), new PVector(0.0f, 0.0f, 0.0f));
+    tm.touchDown(0, new PVector(20,20,0));
+    assertEquals(d.getOffset(), new PVector(0.0f, 0.0f, 0.0f));
+    tm.touchMove(0, new PVector(30,30,0));
+    assertEquals(d.getOffset(), new PVector(10.0f, 10.0f, 0.0f));
+    tm.touchMove(0, new PVector(15,25,0));
+    assertEquals(d.getOffset(), new PVector(-5.0f, 5.0f, 0.0f));
+  }
+
+  @Test public void events(){
+    // create scene
+    Node scene = new Node();
+    Node n = new Node();
+    n.setPosition(10, 10);
+    n.setSize(100, 100);
+    scene.addChild(n);
+
+    // create touch manager that acts on this scene
+    TouchManager tm = new TouchManager(scene);
+    // enable draggable on node
+    Draggable d = Draggable.enableFor(n);
+
+    d.startEvent.enableHistory();
+    d.endEvent.enableHistory();
+
+    assertEquals(d.startEvent.getHistory().size(), 0);
+    assertEquals(d.endEvent.getHistory().size(), 0);
+
+    tm.touchDown(0, new PVector(20,20,0));
+    assertEquals(d.startEvent.getHistory().size(), 0);
+    assertEquals(d.endEvent.getHistory().size(), 0);
+    tm.touchMove(0, new PVector(30,30,0));
+    assertEquals(d.startEvent.getHistory().size(), 1);
+    assertEquals(d.endEvent.getHistory().size(), 0);
+    tm.touchMove(0, new PVector(50,30,0));
+    assertEquals(d.startEvent.getHistory().size(), 1);
+    assertEquals(d.endEvent.getHistory().size(), 0);
+    tm.touchUp(0, new PVector(15,25,0));
+    assertEquals(d.startEvent.getHistory().size(), 1);
+    assertEquals(d.endEvent.getHistory().size(), 1);
+  }
 }
