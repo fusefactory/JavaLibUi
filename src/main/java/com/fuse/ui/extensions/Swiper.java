@@ -82,22 +82,6 @@ public class Swiper extends ExtensionBase {
     return draggable != null && draggable.getOffset().x >= getMinOffsetRight();
   }
 
-  public static Swiper enableFor(Node n){
-    for(ExtensionBase ext : n.getExtensions())
-      if(Swiper.class.isInstance(ext))
-        return (Swiper)ext;
-    Swiper d = new Swiper();
-    n.use(d);
-    return d;
-  }
-
-  public static void disableFor(Node n){
-    for(int i=n.getExtensions().size()-1; i>=0; i--)
-      if(Swiper.class.isInstance(n.getExtensions().get(i))){
-        n.stopUsing(n.getExtensions().get(i));
-      }
-  }
-
   public float getMaxOffsetLeft(){
     return maxOffsetLeft;
   }
@@ -129,4 +113,30 @@ public class Swiper extends ExtensionBase {
   public void setInstantSwipeEnabled(boolean enable){
     bInstantSwipe = enable;
   }
+
+  public static Swiper enableFor(Node n){
+    Swiper d = getFor(n);
+
+    if(d == null){
+      d = new Swiper();
+      n.use(d);
+    }
+
+    return d;
+  }
+
+  public static void disableFor(Node n){
+    for(int i=n.getExtensions().size()-1; i>=0; i--)
+      if(Swiper.class.isInstance(n.getExtensions().get(i))){
+        n.stopUsing(n.getExtensions().get(i));
+      }
+  }
+
+  public static Swiper getFor(Node n){
+    for(ExtensionBase ext : n.getExtensions())
+      if(Swiper.class.isInstance(ext))
+        return (Swiper)ext;
+    return null;
+  }
+
 }
