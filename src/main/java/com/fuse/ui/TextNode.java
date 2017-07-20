@@ -14,18 +14,20 @@ public class TextNode extends Node {
 
   private void _init(){
     text = "";
-    pg.colorMode(pg.RGB, 255);
-    textColor = pg.color(255);
+    if(pg != null){
+      pg.colorMode(pg.RGB, 255);
+      textColor = pg.color(255);
+    }
     textSize = 20f;
     textOffset = new PVector(0.0f, 0.0f, 0.0f);
     alignX = PApplet.LEFT;
-    alignY = PApplet.BASELINE;    
+    alignY = PApplet.BASELINE;
   }
 
   public TextNode(){
     _init();
   }
-  
+
   public TextNode(String nodeName){
     super(nodeName);
     _init();
