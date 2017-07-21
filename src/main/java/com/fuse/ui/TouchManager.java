@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.logging.*;
+import java.util.function.Consumer;
 
 import com.fuse.utils.Event;
 
@@ -16,6 +17,48 @@ import processing.core.PVector;
 class TouchLog {
   public TouchEvent touchEvent;
   public float time;
+}
+
+class TouchMirror {
+  private TouchReceiver receiver;
+  private List<TouchEvent> currentMirrorEvents;
+  private PVector mirrorOffset;
+
+  public TouchMirror(TouchReceiver receiver){
+    this.receiver = receiver;
+    currentMirrorEvents = new ArrayList<>();
+    mirrorOffset = new PVector(10,10,0);
+    enable();
+  }
+
+  public void enable(){
+    Consumer<TouchEvent> func = (TouchEvent event) -> {
+      for(TouchEvent activeEvent : this.currentMirrorEvents)
+        if(activeEvent.touchId == event.touchId)
+          return;
+
+      TouchEvent mirror = event.copy();
+      mirror.touchId = event.touchId + 1;
+
+      PVector offset = event.offset();
+      offset.mult(-1.0f);
+      mirror.position = offset.add(event.startPosition).add(mirrorOffset);
+
+      this.currentMirrorEvents.add(mirror);
+      receiver.submitTouchEvent(mirror);
+      this.currentMirrorEvents.remove(mirror);
+    };
+
+    receiver.touchDownEvent.addListener(func, this);
+    receiver.touchMoveEvent.addListener(func, this);
+    receiver.touchUpEvent.addListener(func, this);
+  }
+
+  public void disable(){
+    receiver.touchDownEvent.removeListeners(this);
+    receiver.touchUpEvent.removeListeners(this);
+    receiver.touchMoveEvent.removeListeners(this);
+  }
 }
 
 public class TouchManager extends TouchReceiver {
@@ -32,9 +75,6 @@ public class TouchManager extends TouchReceiver {
   private List<TouchEvent> touchEventQueue;
   private Map<Integer, TouchEvent> activeTouchEvents;
   private Map<Integer, TouchLog> activeTouchLogs;
-
-  /** For debugging! (TODO: remove?) */
-  private boolean bMirror = false;
 
   private void _init(){
     logger = Logger.getLogger(TouchManager.class.getName());
@@ -94,7 +134,7 @@ public class TouchManager extends TouchReceiver {
   /**
    * takes a touch event and, depending on the dispatchOnUpdate setting, will immediately process or queue for processing during the next call to update()
    */
-  public void submitTouchEvent(TouchEvent event){
+  @Override public void submitTouchEvent(TouchEvent event){
     if(dispatchOnUpdate){
       touchEventQueue.add(event);
       return;
@@ -224,25 +264,17 @@ public class TouchManager extends TouchReceiver {
         break;
     }
 
-    // trigger appropriate events on this
-    this.receiveTouchEvent(event);
-
     // trigger appropriate events on event's original node
     if(event.node != null){
       event.node.receiveTouchEvent(event);
-      if(bMirror){
-        TouchEvent e2 = event.copy();
-        e2.touchId = event.touchId + 1;
-        PVector offset = event.offset();
-        offset.mult(-1.0f);
-        e2.position = offset.add(e2.startPosition).add(new PVector(10, 10, 0));
-        event.node.receiveTouchEvent(e2);
-      }
     }
 
     // trigger appropriate events on event's most recent node
     if(event.mostRecentNode != null && event.mostRecentNode != event.node)
       event.mostRecentNode.receiveTouchEvent(event);
+
+    // trigger appropriate events on this
+    this.receiveTouchEvent(event);
   }
 
   public void setNode(Node newNode){
@@ -327,12 +359,26 @@ public class TouchManager extends TouchReceiver {
     return e;
   }
 
+
+  /** For debugging! (TODO: remove?) */
+  private TouchMirror touchMirror = null;
+
   /** DEBUG FEATURE for pinch-zoom without touchscreen! (TODO: remove?) */
   public void setMirrorNodeEventsEnabled(boolean enable){
-    bMirror = enable;
+    if(enable){
+      if(touchMirror != null)
+        return;
+      touchMirror = new TouchMirror(this);
+      return;
+    }
+
+    if(touchMirror != null){
+      touchMirror.disable();
+      touchMirror = null;
+    }
   }
 
-  public boolean getMirrorNodeEventsEnabled(){ return bMirror; }
+  public boolean getMirrorNodeEventsEnabled(){ return touchMirror != null; }
 
   public void drawActiveTouches(){
     PGraphics pg = Node.getPGraphics();
