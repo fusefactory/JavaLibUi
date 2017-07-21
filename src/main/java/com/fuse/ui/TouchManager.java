@@ -68,11 +68,7 @@ public class TouchManager extends TouchReceiver {
    */
   public void touchDown(int id, PVector p){
     logger.finer("touchDown (" + Integer.toString(id) + "): "+Float.toString(p.x)+", "+Float.toString(p.y));
-    TouchEvent e = new TouchEvent();
-    e.touchId = id;
-    e.eventType = TouchEvent.EventType.TOUCH_DOWN;
-    e.position = p;
-    submitTouchEvent(e);
+    submitTouchEvent(createTouchDownEvent(id, p));
   };
 
   /**
@@ -80,11 +76,7 @@ public class TouchManager extends TouchReceiver {
    */
   public void touchUp(int id, PVector p){
     logger.finer("touchUp (" + Integer.toString(id) + "): "+Float.toString(p.x)+", "+Float.toString(p.y));
-    TouchEvent e = new TouchEvent();
-    e.touchId = id;
-    e.eventType = TouchEvent.EventType.TOUCH_UP;
-    e.position = p;
-    submitTouchEvent(e);
+    submitTouchEvent(createTouchUpEvent(id,p));
   };
 
   /**
@@ -92,17 +84,13 @@ public class TouchManager extends TouchReceiver {
    */
   public void touchMove(int id, PVector p){
     logger.finer("touchMove (" + Integer.toString(id) + "): "+Float.toString(p.x)+", "+Float.toString(p.y));
-    TouchEvent e = new TouchEvent();
-    e.touchId = id;
-    e.eventType = TouchEvent.EventType.TOUCH_MOVE;
-    e.position = p;
-    submitTouchEvent(e);
+    submitTouchEvent(createTouchMoveEvent(id, p));
   };
 
   /**
    * takes a touch event and, depending on the dispatchOnUpdate setting, will immediately process or queue for processing during the next call to update()
    */
-  private void submitTouchEvent(TouchEvent event){
+  public void submitTouchEvent(TouchEvent event){
     if(dispatchOnUpdate){
       touchEventQueue.add(event);
       return;
@@ -226,7 +214,6 @@ public class TouchManager extends TouchReceiver {
           }
         }
 
-
         // this is the end of this touch
         activeTouchEvents.remove(event.touchId);
         activeTouchLogs.remove(event.touchId);
@@ -284,7 +271,7 @@ public class TouchManager extends TouchReceiver {
 
     if(root.isInteractive() && rootContains) {
       // if this node has a clipping node then the touch
-      // only applies to this node if it's within the clipping area 
+      // only applies to this node if it's within the clipping area
       Node clipNode = root.getClippingNode();
       if(clipNode == null || clipNode.isInside(pos))
         targetList.add(root);
@@ -301,5 +288,29 @@ public class TouchManager extends TouchReceiver {
 
   public void setClickMaxDistance(float distance){
     clickMaxDistance = distance;
+  }
+
+  public static TouchEvent createTouchDownEvent(int id, PVector p){
+    TouchEvent e = new TouchEvent();
+    e.touchId = id;
+    e.eventType = TouchEvent.EventType.TOUCH_DOWN;
+    e.position = p;
+    return e;
+  }
+
+  public static TouchEvent createTouchMoveEvent(int id, PVector p){
+    TouchEvent e = new TouchEvent();
+    e.touchId = id;
+    e.eventType = TouchEvent.EventType.TOUCH_MOVE;
+    e.position = p;
+    return e;
+  }
+
+  public static TouchEvent createTouchUpEvent(int id, PVector p){
+    TouchEvent e = new TouchEvent();
+    e.touchId = id;
+    e.eventType = TouchEvent.EventType.TOUCH_UP;
+    e.position = p;
+    return e;
   }
 }

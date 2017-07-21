@@ -59,11 +59,26 @@ public class Draggable extends ExtensionBase {
     node.touchUpEvent.removeListeners(this);
   }
 
-  private void apply(PVector dragOffset){
-    if(originalNodePositionGlobal == null)
-      return;
+  public void apply(PVector dragOffset){
+    if(originalNodePositionGlobal == null) // should already be set at first processed touchMoveEvent, but just to be sure
+      originalNodePositionGlobal = this.getNode().getGlobalPosition();
 
     this.getNode().setGlobalPosition(dragOffset.add(originalNodePositionGlobal));
+  }
+
+  public PVector getOffset(){
+    if(originalNodePosition == null || node == null)
+      return new PVector(0.0f,0.0f,0.0f);
+
+    return node.getPosition().sub(originalNodePosition);
+  }
+
+  public PVector getOriginalPosition(){
+    return originalNodePosition == null ? null : originalNodePosition.copy();
+  }
+
+  public boolean isDragging(){
+    return bDragging;
   }
 
   public static Draggable enableFor(Node n){
@@ -82,18 +97,5 @@ public class Draggable extends ExtensionBase {
       }
   }
 
-  public PVector getOffset(){
-    if(originalNodePosition == null || node == null)
-      return new PVector(0.0f,0.0f,0.0f);
 
-    return node.getPosition().sub(originalNodePosition);
-  }
-
-  public PVector getOriginalPosition(){
-    return originalNodePosition == null ? null : originalNodePosition.copy();
-  }
-
-  public boolean isDragging(){
-    return bDragging;
-  }
 }
