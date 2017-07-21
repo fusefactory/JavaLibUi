@@ -11,6 +11,7 @@ import com.fuse.ui.RectNode;
 import com.fuse.ui.TextNode;
 import com.fuse.ui.extensions.Draggable;
 import com.fuse.ui.extensions.Swiper;
+import com.fuse.ui.extensions.PinchZoom;
 
 public class App extends PApplet {
   Logger logger;
@@ -78,6 +79,25 @@ public class App extends PApplet {
 
       TextNode tx = new TextNode();
       tx.setText("Draggable");
+      tx.setSize(100,100);
+      tx.setTextSize(14);
+      tx.setTextColor(pg.color(0,0,0));
+      n.addChild(tx);
+      // disable textnode, otherwise it will take all touchevents,
+      // because it covers its entire parent node
+      tx.setInteractive(false);
+    }
+
+    {
+      RectNode n = new RectNode();
+      n.setPosition(400, 100);
+      n.setSize(100,100);
+      sceneNode.addChild(n);
+      // add draggable extension
+      PinchZoom.enableFor(n);
+
+      TextNode tx = new TextNode();
+      tx.setText("PinchZoom");
       tx.setSize(100,100);
       tx.setTextSize(14);
       tx.setTextColor(pg.color(0,0,0));
