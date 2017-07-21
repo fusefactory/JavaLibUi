@@ -5,13 +5,16 @@ import processing.core.PImage;
 import processing.core.PVector;
 
 public class ImageNode extends Node {
+
   public enum Mode {
     NORMAL, // image rendered at original size at Node's origin (0,0) position
     CENTER, // image rendered at original size centered inside the node
     FIT
   }
+
   private PImage image;
   private Mode mode;
+  private boolean autoResizeToImage = false;
 
   private void _init(){
     image = null;
@@ -22,7 +25,7 @@ public class ImageNode extends Node {
   public ImageNode(){
     _init();
   }
-  
+
   public ImageNode(String nodeName){
     super(nodeName);
     _init();
@@ -50,8 +53,6 @@ public class ImageNode extends Node {
       pg.imageMode(PApplet.CORNERS);
       pg.image(image, 0.0f, 0.0f, getSize().x, getSize().y);
     }
-
-    //TODO; implement options like tiling, fitting, stretching, etc.
   }
 
   /**
@@ -60,18 +61,22 @@ public class ImageNode extends Node {
    */
   public void setImage(PImage newImage){
     image = newImage;
+
+    if(autoResizeToImage && image != null)
+      setSize(image.pixelWidth, image.pixelHeight);
   }
 
   /** @return PImage The image that this node is rendering */
-  public PImage getImage(){
-    return image;
-  }
+  public PImage getImage(){ return image; }
 
-  public Mode getMode(){
-    return mode;
-  }
+  public Mode getMode(){ return mode; }
+  public void setMode(Mode newMode){ mode = newMode; }
 
-  public void setMode(Mode newMode){
-    mode = newMode;
+  public boolean getAutoResizeToImage(){ return autoResizeToImage; }
+  public void setAutoResizeToImage(boolean enable){
+    autoResizeToImage = enable;
+    if(autoResizeToImage && image != null){
+      setSize(image.pixelWidth, image.pixelHeight);
+    }
   }
 }
