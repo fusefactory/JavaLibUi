@@ -283,7 +283,11 @@ public class TouchManager extends TouchReceiver {
     }
 
     if(root.isInteractive() && rootContains) {
-      targetList.add(root);
+      // if this node has a clipping node then the touch
+      // only applies to this node if it's within the clipping area 
+      Node clipNode = root.getClippingNode();
+      if(clipNode == null || clipNode.isInside(pos))
+        targetList.add(root);
     }
   }
 
