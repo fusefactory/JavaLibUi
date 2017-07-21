@@ -9,14 +9,7 @@ import java.util.List;
 import java.util.ArrayList;
 import processing.core.*;
 
-/**
-* Unit test for com.fuse.utils.Event.
-*/
 public class NodeTest {
-
-    private void _start(String name){
-        // System.out.println("TEST: "+name);
-    }
 
     @Test public void setSize(){
         Node node = new Node();
@@ -392,5 +385,42 @@ public class NodeTest {
         cc.remove(1);
         assertEquals(cc.size(), 2);
         assertEquals(a.getChildNodes().size(), 3);
+    }
+
+    @Test public void getPosition_safety(){
+        Node n = new Node();
+        n.setPosition(10, 10);
+        assertEquals(n.getPosition(), new PVector(10,10,0));
+        n.getPosition().add(new PVector(10, 0, 0));
+        assertEquals(n.getPosition(), new PVector(10,10,0));
+    }
+
+    @Test public void getSize_safety(){
+        Node n = new Node();
+        n.setSize(10, 10);
+        assertEquals(n.getSize(), new PVector(10,10,0));
+        n.getSize().add(new PVector(10, 0, 0));
+        assertEquals(n.getSize(), new PVector(10,10,0));
+    }
+
+    // @Test public void getRotation_safety(){
+    //     Node n = new Node();
+    //     n.rotateZ(10);
+    //     assertEquals(n.getRotation(), new PVector(0,0,10));
+    //     n.getRotation().add(new PVector(10, 0, 0));
+    //     assertEquals(n.getRotation(), new PVector(0,0,10));
+    // }
+
+    @Test public void positionChangeEvent(){
+        Node n = new Node();
+        n.setPosition(10, 20);
+
+        List<String> strs = new ArrayList<>();
+        n.positionChangeEvent.whenTriggered(() -> strs.add("change"));
+        assertEquals(strs.size(), 0);
+        n.setPosition(20, 20);
+        assertEquals(strs.size(), 1);
+        n.setPosition(20, 20); // no change
+        assertEquals(strs.size(), 1);
     }
 }

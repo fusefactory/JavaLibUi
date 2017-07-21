@@ -32,8 +32,7 @@ public class TouchManager extends TouchReceiver {
   private Map<Integer, TouchEvent> activeTouchEvents;
   private Map<Integer, TouchLog> activeTouchLogs;
 
-
-  public TouchManager(){
+  private void _init(){
     logger = Logger.getLogger(TouchManager.class.getName());
     dispatchOnUpdate = false;
     controlledTime = false;
@@ -42,6 +41,14 @@ public class TouchManager extends TouchReceiver {
     touchEventQueue = new ArrayList<TouchEvent>();
     activeTouchEvents = new HashMap<Integer, TouchEvent>();
     activeTouchLogs = new HashMap<Integer, TouchLog>();
+  }
+  public TouchManager(){
+    _init();
+  }
+
+  public TouchManager(Node sceneNode){
+    _init();
+    setNode(sceneNode);
   }
 
   public void update(){

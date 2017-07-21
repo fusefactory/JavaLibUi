@@ -8,14 +8,24 @@ public class ImageNode extends Node {
   public enum Mode {
     NORMAL, // image rendered at original size at Node's origin (0,0) position
     CENTER, // image rendered at original size centered inside the node
+    FIT
   }
   private PImage image;
   private Mode mode;
 
-  /** Default constructor; intialized with default values: image=null and mode=NORMAL */
-  public ImageNode(){
+  private void _init(){
     image = null;
     mode = Mode.NORMAL;
+  }
+
+  /** Default constructor; intialized with default values: image=null and mode=NORMAL */
+  public ImageNode(){
+    _init();
+  }
+  
+  public ImageNode(String nodeName){
+    super(nodeName);
+    _init();
   }
 
   /** Draw this node's image at this Node's position */
@@ -34,6 +44,11 @@ public class ImageNode extends Node {
       pg.image(image, pos.x, pos.y);
       pg.imageMode(PApplet.CORNERS); // restore default
       return;
+    }
+
+    if(mode == Mode.FIT){
+      pg.imageMode(PApplet.CORNERS);
+      pg.image(image, 0.0f, 0.0f, getSize().x, getSize().y);
     }
 
     //TODO; implement options like tiling, fitting, stretching, etc.
