@@ -439,6 +439,7 @@ public class NodeTest {
         Node n = new Node();
         n.setScale(new PVector(0.5f, 2.0f, 1.0f));
         assertEquals(n.toLocal(new PVector(1.0f, 1.0f, 0.0f)), new PVector(2.0f, 0.5f, 0.0f));
+        assertEquals(n.toGlobal(new PVector(10,10,0)), new PVector(5, 20, 0));
 
         Node child = new Node();
         child.setPosition(10, 10);
@@ -446,9 +447,11 @@ public class NodeTest {
         child.setParent(n);
         assertEquals(child.getGlobalPosition(), new PVector(5.0f, 20.0f, 0.0f));
 
+        // scaling back to 1.0, though child has 10.0,10.0 position offset
         child.setScale(new PVector(2.0f, 0.5f, 1.0f));
-        assertEquals(child.toLocal(new PVector(100.0f, 100.0f, 0.0f)), new PVector(90.0f, 90.0f, 0.0f)); // scaling back to 1.0, though child has 10.0,10.0 position offset
+        assertEquals(child.toLocal(new PVector(100.0f, 100.0f, 0.0f)), new PVector(95.0f, 80.0f, 0.0f));
+
+        n.setPosition(10, 10);
+        assertEquals(n.toGlobal(new PVector(0f, 0f, 0f)), new PVector(5,20,0));
     }
-
-
 }

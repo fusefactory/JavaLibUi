@@ -241,13 +241,12 @@ public class Node extends TouchReceiver {
   }
 
   private void updateLocalTransformMatrix(){
-    // PMatrix3D
     localTransformMatrix.reset();
-    localTransformMatrix.scale(scale.x, scale.y, scale.z);
+    localTransformMatrix.translate(position.x, position.y, position.z);
     localTransformMatrix.rotateX(rotation.x);
     localTransformMatrix.rotateY(rotation.y);
     localTransformMatrix.rotateZ(rotation.z);
-    localTransformMatrix.translate(position.x, position.y, position.z);
+    localTransformMatrix.scale(scale.x, scale.y, scale.z);
   }
 
   public void rotate(float amount){
