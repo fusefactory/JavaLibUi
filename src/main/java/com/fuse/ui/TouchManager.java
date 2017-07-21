@@ -10,6 +10,7 @@ import java.util.logging.*;
 
 import com.fuse.utils.Event;
 
+import processing.core.PGraphics;
 import processing.core.PVector;
 
 class TouchLog {
@@ -332,4 +333,16 @@ public class TouchManager extends TouchReceiver {
   }
 
   public boolean getMirrorNodeEventsEnabled(){ return bMirror; }
+
+  public void drawActiveTouches(){
+    PGraphics pg = Node.getPGraphics();
+
+    pg.colorMode(pg.RGB, 255);
+    pg.fill(pg.color(255,100,100,150));
+    pg.noStroke();
+    pg.ellipseMode(pg.CENTER);
+
+    for(TouchEvent event : activeTouchEvents.values())
+      pg.ellipse(event.position.x, event.position.y, 25, 25);
+  }
 }

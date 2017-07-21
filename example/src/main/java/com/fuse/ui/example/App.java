@@ -7,6 +7,10 @@ import processing.core.PVector;
 
 import com.fuse.ui.TouchManager;
 import com.fuse.ui.Node;
+import com.fuse.ui.RectNode;
+import com.fuse.ui.TextNode;
+import com.fuse.ui.extensions.Draggable;
+import com.fuse.ui.extensions.Swiper;
 
 public class App extends PApplet {
   Logger logger;
@@ -49,10 +53,39 @@ public class App extends PApplet {
     touchManager.setNode(sceneNode);
 
     // create scene content
-    Node n = new Node();
-    n.setPosition(10, 10);
-    n.setSize(100,100);
-    sceneNode.addChild(n);
+
+    {
+      RectNode n = new RectNode();
+      n.setPosition(100, 100);
+      n.setSize(100,100);
+      sceneNode.addChild(n);
+
+      TextNode tx = new TextNode();
+      tx.setText("RectNode");
+      tx.setSize(100,100);
+      tx.setTextSize(14);
+      tx.setTextColor(pg.color(0,0,0));
+      n.addChild(tx);
+    }
+
+    {
+      RectNode n = new RectNode();
+      n.setPosition(250, 100);
+      n.setSize(100,100);
+      sceneNode.addChild(n);
+      // add draggable extension
+      Draggable.enableFor(n);
+
+      TextNode tx = new TextNode();
+      tx.setText("Draggable");
+      tx.setSize(100,100);
+      tx.setTextSize(14);
+      tx.setTextColor(pg.color(0,0,0));
+      n.addChild(tx);
+      // disable textnode, otherwise it will take all touchevents,
+      // because it covers its entire parent node
+      tx.setInteractive(false);
+    }
   }
 
   private void update(float dt){
@@ -75,6 +108,7 @@ public class App extends PApplet {
 
       if(bDrawDebug){
         sceneNode.renderDebug();
+        touchManager.drawActiveTouches();
       }
     }
     pg.endDraw();
