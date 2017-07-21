@@ -251,6 +251,17 @@ public class Node extends TouchReceiver {
     return position.y + size.y;
   }
 
+  public void setGlobalPosition(PVector globalPos){
+    Node parentNode = getParent();
+
+    if(parentNode == null){
+      setPosition(globalPos);
+      return;
+    }
+
+    setPosition(parentNode.toLocal(globalPos));
+  }
+
   public boolean isInside(PVector pos){
     PVector localPos = toLocal(pos);
     // return pos.x >= position.x && pos.y >= position.y && pos.x < getRight() && pos.y < getBottom();
