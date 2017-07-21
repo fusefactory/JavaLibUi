@@ -162,7 +162,7 @@ public class DraggableTest {
     assertEquals(n.getPosition(), originalPosition);
   }
 
-  @Ignore @Test public void rotatedParent(){
+  @Test public void rotatedParent(){
     Node scene = new Node();
     Node rotator = new Node();
     rotator.rotate((float)Math.PI * 0.5f); // turned 90 degrees; our so when we move our subject node sideway, globally it's moving vertically
@@ -178,6 +178,6 @@ public class DraggableTest {
     TouchGenerator.on(scene).from(-5, 5).move(0, 200).moves(5).go();
 
     // in local coordinates the node got dragged 200 pixel RIGHT
-    assertEquals(subject.getPosition(), new PVector(200, 0, 0));
+    assertEquals(subject.getPosition().dist(new PVector(200, 0, 0)), 0.0000000001f, 0.00001f);
   }
 }

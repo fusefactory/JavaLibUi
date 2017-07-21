@@ -63,7 +63,7 @@ public class Draggable extends ExtensionBase {
     if(originalNodePositionGlobal == null)
       return;
 
-    this.getNode().setPosition(dragOffset.add(originalNodePositionGlobal.copy()));
+    this.getNode().setGlobalPosition(dragOffset.add(originalNodePositionGlobal));
   }
 
   public static Draggable enableFor(Node n){
