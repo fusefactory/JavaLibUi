@@ -8,6 +8,7 @@ import org.junit.Test;
 import processing.core.PVector;
 import com.fuse.ui.Node;
 import com.fuse.ui.TouchManager;
+import com.fuse.ui.TouchGenerator;
 
 public class DraggableTest {
   @Test public void use(){
@@ -136,5 +137,27 @@ public class DraggableTest {
     tm.touchUp(0, new PVector(15,25,0));
     assertEquals(d.startEvent.getHistory().size(), 1);
     assertEquals(d.endEvent.getHistory().size(), 1);
+  }
+
+  @Test public void only_when_touch_starts_on_node(){
+    // create scene
+    Node scene = new Node();
+    Node n = new Node();
+    n.setPosition(10, 10);
+    n.setSize(100, 100);
+    scene.addChild(n);
+
+    // redundant copy for clarity
+    PVector originalPosition = n.getPosition().copy();
+    Draggable.enableFor(n);
+
+    // drag horizontally (mostly) to the right
+    // starting left (outside) from n
+    // dragging OVER n
+    // using 5 intermediate "move" events, between the down and the up events
+    TouchGenerator.on(scene).from(5, 5).move(200, 10).moves(5).go();
+
+    // didn't move
+    assertEquals(n.getPosition(), originalPosition);
   }
 }

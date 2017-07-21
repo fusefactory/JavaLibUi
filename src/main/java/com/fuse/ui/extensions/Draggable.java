@@ -23,6 +23,9 @@ public class Draggable extends ExtensionBase {
 
     node.touchMoveEvent.addListener((TouchEvent event) -> {
       if(originalNodePosition == null || !bDragging){
+        if(event.node != this.getNode())
+          return; // touch didn't start on our node
+
         originalNodePosition = getNode().getPosition();
         bDragging = true;
         // TODO; min offset before officialy start dragging?
