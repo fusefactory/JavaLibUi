@@ -350,4 +350,44 @@ public class TouchManagerTest {
     // verify ignored
     assertEquals(strings.size(), 2);
   }
+
+  @Test public void click_on_clipped_node(){
+    // setup scene
+    Node scene = new Node();
+    Node clipper = new Node();
+    clipper.setPosition(100, 100); // global position: 100, 100
+    clipper.setSize(200, 100);  // global bottom right: 300, 200
+    scene.addChild(clipper);
+    Node subject = new Node();
+    subject.setPosition(10, 10); // global position: 110,110
+    subject.setSize(300,50);   // global bottom right:  410, 160
+    clipper.addChild(subject);
+
+    // init TouchManager
+    TouchManager man = new TouchManager();
+    man.setNode(scene);
+
+    // enable history on subject's touchDownEvent for easy assertions
+    subject.touchDownEvent.enableHistory();
+    assertEquals(subject.touchDownEvent.getHistory().size(), 0);
+
+    // clipper not yet clipping; click outside clipper but on subject position
+    man.touchDown(0, new PVector(350, 150));
+    assertEquals(subject.touchDownEvent.getHistory().size(), 1); // touch event triggered
+
+    // enable clipping and try again
+    clipper.setClipContent(true);
+    man.touchDown(0, new PVector(350, 150));
+    assertEquals(subject.touchDownEvent.getHistory().size(), 1); // touch event NOT triggered
+
+    // with clipping enabled try INSIDE clipper
+    man.touchDown(0, new PVector(150, 150));
+    assertEquals(subject.touchDownEvent.getHistory().size(), 2); // touch event triggered
+
+    // disable clipping and try outside clipper again
+    clipper.setClipContent(false);
+    man.touchDown(0, new PVector(350, 150));
+    assertEquals(subject.touchDownEvent.getHistory().size(), 3); // touch event triggered
+
+  }
 }

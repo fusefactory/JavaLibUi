@@ -363,6 +363,17 @@ public class NodeTest {
         assertEquals(n.getGlobalBottomRight().dist(new PVector(-50,100,0)) < 0.00001f, true);
     }
 
+    @Test public void setGlobalPosition(){
+        Node scene = new Node();
+        scene.setPosition(100, 0);
+        scene.rotate((float)Math.PI * 0.5f); // 90 degrees clockwise
+        Node subject = new Node();
+        scene.addChild(subject);
+        subject.setGlobalPosition(new PVector(20, 0, 0));
+        assertEquals(subject.getGlobalPosition().dist(new PVector(20, 0, 0)) < 0.00001f, true);
+        assertEquals(subject.getPosition().dist(new PVector(0, 80, 0)), 0.0000001f, 0.0001f);
+    }
+
     @Test public void whenClicked(){
         Node n = new Node();
         List<String> strings = new ArrayList<>();
