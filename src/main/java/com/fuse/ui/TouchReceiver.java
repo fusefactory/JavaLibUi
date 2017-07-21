@@ -44,6 +44,9 @@ public class TouchReceiver {
     eventMap.put(TouchEvent.EventType.TOUCH_DOUBLECLICK, touchDoubleClickEvent);
   }
 
+  // virtual
+  public void submitTouchEvent(TouchEvent event){}
+
   public void receiveTouchEvent(TouchEvent event){
     // general touchEvent
     touchEvent.trigger(event);
