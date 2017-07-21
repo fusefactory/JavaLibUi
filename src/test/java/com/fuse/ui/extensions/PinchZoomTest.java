@@ -16,8 +16,7 @@ public class PinchZoomTest {
         Node scene = new Node();
         Node n = new Node();
         n.setSize(100, 100);
-        n.setPosition(0,0);
-        n.setPlane(2.0f);
+        n.setPosition(10, 0);
         scene.addChild(n);
 
         PinchZoom pz = PinchZoom.enableFor(n);
@@ -35,8 +34,12 @@ public class PinchZoomTest {
 
         assertEquals(pz.getGlobalStartDelta(), new PVector(10,10,0));
         assertEquals(pz.getGlobalCurrentDelta(), new PVector(30,30,0));
-        // assertEquals(pz.getGlobalStartDelta(), new PVector(10,10,0));
         assertEquals(pz.getGlobalPinchScale(), new PVector(3.0f, 3.0f, 1.0f));
+
+        assertEquals(pz.getGlobalStartCenter(), new PVector(50,50,0));
+        assertEquals(pz.getGlobalCurrentCenter(), new PVector(50,50,0));
+
+        assertEquals(pz.getGlobalPinchTranslate(), new PVector(-10.0f*3.0f,-10.0f*3.0f,0));
 
         // assertEquals(n.getPosition(), new PVector(-10, -10, 0));
     }

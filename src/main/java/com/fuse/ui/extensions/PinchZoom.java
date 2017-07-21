@@ -8,8 +8,10 @@ import com.fuse.ui.TouchEvent;
 
 public class PinchZoom extends ExtensionBase {
 
-  TouchEvent touchEvent1 = null;
-  TouchEvent touchEvent2 = null;
+  private TouchEvent touchEvent1 = null;
+  private TouchEvent touchEvent2 = null;
+  /** This will hold the center of the _start_ of the two touches in global coordinate space */
+  private PVector originalNodePositionGlobal = null;
 
   public PinchZoom(){
   }
@@ -34,6 +36,7 @@ public class PinchZoom extends ExtensionBase {
 
       if(touchEvent2 == null){
         touchEvent2 = event;
+        originalNodePositionGlobal = node.getGlobalPosition();
       }
 
       // already two touches; ignore any other touches
@@ -52,8 +55,14 @@ public class PinchZoom extends ExtensionBase {
     }, this);
 
     getNode().touchMoveEvent.addListener((TouchEvent event) -> {
-      Node n = getNode();
-      //n.setPosition() getPositionDelta();
+      if(!isActive()) return;
+
+      PVector scaler = getGlobalPinchScale();
+      PVector translater = getGlobalPinchTranslate();
+      // System.out.println("PinchZoom scale: "+scaler.toString());
+      getNode().setScale(scaler);
+      getNode().setGlobalPosition(translater.add(originalNodePositionGlobal));
+
     }, this);
   }
 
@@ -66,14 +75,14 @@ public class PinchZoom extends ExtensionBase {
     return touchEvent1 != null && touchEvent2 != null;
   }
 
-  private PVector getGlobalStartCenter(){
+  public PVector getGlobalStartCenter(){
     if(!isActive()) return null;
 
     PVector delta = touchEvent2.startPosition.copy().sub(touchEvent1.startPosition);
     return PVector.add(delta.mult(0.5f), touchEvent1.startPosition);
   }
 
-  private PVector getGlobalCurrentCenter(){
+  public PVector getGlobalCurrentCenter(){
     if(!isActive()) return null;
 
     PVector delta = touchEvent2.position.copy().sub(touchEvent1.position);
@@ -93,13 +102,25 @@ public class PinchZoom extends ExtensionBase {
   }
 
   public PVector getGlobalPinchScale(){
-    if(!isActive()) return null;
+    if(!isActive()) return new PVector();
     PVector start = getGlobalStartDelta();
     PVector current = getGlobalCurrentDelta();
     return new PVector(
       start.x == 0.0f ? 1.0f : current.x / start.x,
       start.y == 0.0f ? 1.0f : current.y / start.y,
       start.z == 0.0f ? 1.0f : current.z / start.z);
+  }
+
+  public PVector getGlobalPinchTranslate(){
+    if(!isActive()) return new PVector();
+
+    PVector scale = getGlobalPinchScale();
+    PVector touchOffset = touchEvent1.offset().copy();
+
+    return new PVector(
+      scale.x*touchOffset.x,
+      scale.y*touchOffset.y,
+      scale.z*touchOffset.z);
   }
 
   public static PinchZoom enableFor(Node n){
