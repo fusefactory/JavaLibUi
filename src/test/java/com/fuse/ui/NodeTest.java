@@ -434,4 +434,21 @@ public class NodeTest {
         n.setPosition(20, 20); // no change
         assertEquals(strs.size(), 1);
     }
+
+    @Test public void scale(){
+        Node n = new Node();
+        n.setScale(new PVector(0.5f, 2.0f, 1.0f));
+        assertEquals(n.toLocal(new PVector(1.0f, 1.0f, 0.0f)), new PVector(2.0f, 0.5f, 0.0f));
+
+        Node child = new Node();
+        child.setPosition(10, 10);
+        assertEquals(child.getGlobalPosition(), new PVector(10.0f, 10.0f, 0.0f));
+        child.setParent(n);
+        assertEquals(child.getGlobalPosition(), new PVector(5.0f, 20.0f, 0.0f));
+
+        child.setScale(new PVector(2.0f, 0.5f, 1.0f));
+        assertEquals(child.toLocal(new PVector(100.0f, 100.0f, 0.0f)), new PVector(90.0f, 90.0f, 0.0f)); // scaling back to 1.0, though child has 10.0,10.0 position offset
+    }
+
+
 }
