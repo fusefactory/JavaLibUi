@@ -32,6 +32,9 @@ public class TouchManager extends TouchReceiver {
   private Map<Integer, TouchEvent> activeTouchEvents;
   private Map<Integer, TouchLog> activeTouchLogs;
 
+  /** For debugging! (TODO: remove?) */
+  private boolean bMirror = false;
+
   private void _init(){
     logger = Logger.getLogger(TouchManager.class.getName());
     dispatchOnUpdate = false;
@@ -224,8 +227,17 @@ public class TouchManager extends TouchReceiver {
     this.receiveTouchEvent(event);
 
     // trigger appropriate events on event's original node
-    if(event.node != null)
+    if(event.node != null){
       event.node.receiveTouchEvent(event);
+      if(bMirror){
+        TouchEvent e2 = event.copy();
+        e2.touchId = event.touchId + 1;
+        PVector offset = event.offset();
+        offset.mult(-1.0f);
+        e2.position = offset.add(e2.startPosition).add(new PVector(10, 10, 0));
+        event.node.receiveTouchEvent(e2);
+      }
+    }
 
     // trigger appropriate events on event's most recent node
     if(event.mostRecentNode != null && event.mostRecentNode != event.node)
@@ -313,4 +325,11 @@ public class TouchManager extends TouchReceiver {
     e.position = p;
     return e;
   }
+
+  /** DEBUG FEATURE for pinch-zoom without touchscreen! (TODO: remove?) */
+  public void setMirrorNodeEventsEnabled(boolean enable){
+    bMirror = enable;
+  }
+
+  public boolean getMirrorNodeEventsEnabled(){ return bMirror; }
 }
