@@ -8,6 +8,7 @@ import com.fuse.ui.TouchEvent;
 
 public class Draggable extends ExtensionBase {
   private PVector originalNodePosition = null;
+  private PVector originalNodePositionGlobal = null;
   private boolean bDragging = false;
 
   public Event<Draggable> startEvent;
@@ -23,25 +24,28 @@ public class Draggable extends ExtensionBase {
 
     node.touchMoveEvent.addListener((TouchEvent event) -> {
       if(originalNodePosition == null || !bDragging){
-        if(event.node != this.getNode())
+        Node ourNode = this.getNode();
+
+        if(event.node != ourNode)
           return; // touch didn't start on our node
 
-        originalNodePosition = getNode().getPosition();
+        originalNodePosition = ourNode.getPosition();
+        originalNodePositionGlobal = ourNode.getGlobalPosition();
+
         bDragging = true;
+
         // TODO; min offset before officialy start dragging?
         startEvent.trigger(this);
       }
 
-      // logger.warning("offset: "+event.offset().toString()+", orig pos: "+originalNodePosition.toString());
-      getNode().setPosition(PVector.add(event.offset(), originalNodePosition));
+      apply(event.offset());
     }, this);
 
     node.touchUpEvent.addListener((TouchEvent event) -> {
       if(!bDragging)
         return;
 
-      if(originalNodePosition != null)
-        getNode().setPosition(PVector.add(event.offset(), originalNodePosition));
+      apply(event.offset());
 
       bDragging = false;
       endEvent.trigger(this);
@@ -53,6 +57,13 @@ public class Draggable extends ExtensionBase {
     super.disable();
     node.touchMoveEvent.removeListeners(this);
     node.touchUpEvent.removeListeners(this);
+  }
+
+  private void apply(PVector dragOffset){
+    if(originalNodePositionGlobal == null)
+      return;
+
+    this.getNode().setPosition(dragOffset.add(originalNodePositionGlobal.copy()));
   }
 
   public static Draggable enableFor(Node n){

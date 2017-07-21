@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import org.junit.Test;
+import org.junit.Ignore;
 
 import processing.core.PVector;
 import com.fuse.ui.Node;
@@ -159,5 +160,24 @@ public class DraggableTest {
 
     // didn't move
     assertEquals(n.getPosition(), originalPosition);
+  }
+
+  @Ignore @Test public void rotatedParent(){
+    Node scene = new Node();
+    Node rotator = new Node();
+    rotator.rotate((float)Math.PI * 0.5f); // turned 90 degrees; our so when we move our subject node sideway, globally it's moving vertically
+    //rotator.setPosition(100, 0);
+    scene.addChild(rotator);
+    Node subject = new Node();
+    subject.setSize(100, 100); // default position: 0,0
+    rotator.addChild(subject);
+
+    Draggable.enableFor(subject);
+    // drag from global position -5,5  200 pixels DOWN (start at -5 because the rotator rotated around 0,0, putting it outside the scree :/)
+    // with 5 -eqaully spaced- touchMove events in between touchDown and touchUp
+    TouchGenerator.on(scene).from(-5, 5).move(0, 200).moves(5).go();
+
+    // in local coordinates the node got dragged 200 pixel RIGHT
+    assertEquals(subject.getPosition(), new PVector(200, 0, 0));
   }
 }
