@@ -41,6 +41,8 @@ public class Node extends TouchReceiver {
   private PVector size;
   /** Rotation of this node along the three axis */
   private PVector rotation;
+  /** Scaling of this node, along the three axis */
+  private PVector scale;
   /** 3D Matrix that matches with the position, size and rotation attributes */
   private PMatrix3D localTransformMatrix;
   /** Makes sure all offspring Nodes only render within this node's boundaries */
@@ -80,6 +82,7 @@ public class Node extends TouchReceiver {
     position = new PVector();
     size = new PVector();
     rotation = new PVector();
+    scale = new PVector();
     localTransformMatrix = new PMatrix3D();
     name = "";
     newParentEvent = new Event<>();
@@ -226,6 +229,24 @@ public class Node extends TouchReceiver {
 
   public void setSize(float newWidth, float newHeight){
     size.set(newWidth, newHeight, 0.0f);
+  }
+
+  public PVector getScale(){
+    return scale;
+  }
+
+  public void setScale(PVector newScale){
+    scale = newScale;
+    updateLocalTransformMatrix();
+  }
+
+  private void updateLocalTransformMatrix(){
+    localTransformMatrix.reset();
+    localTransformMatrix.translate(position.x, position.y, position.z);
+    localTransformMatrix.rotateX(rotation.x);
+    localTransformMatrix.rotateY(rotation.y);
+    localTransformMatrix.rotateZ(rotation.z);
+    localTransformMatrix.scale(scale.x, scale.y, scale.z);
   }
 
   public void rotate(float amount){

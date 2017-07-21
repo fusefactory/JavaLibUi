@@ -32,6 +32,9 @@ public class TouchManager extends TouchReceiver {
   private Map<Integer, TouchEvent> activeTouchEvents;
   private Map<Integer, TouchLog> activeTouchLogs;
 
+  /** For debugging! (TODO: remove?) */
+  private boolean bMirror = false;
+
   private void _init(){
     logger = Logger.getLogger(TouchManager.class.getName());
     dispatchOnUpdate = false;
@@ -68,11 +71,7 @@ public class TouchManager extends TouchReceiver {
    */
   public void touchDown(int id, PVector p){
     logger.finer("touchDown (" + Integer.toString(id) + "): "+Float.toString(p.x)+", "+Float.toString(p.y));
-    TouchEvent e = new TouchEvent();
-    e.touchId = id;
-    e.eventType = TouchEvent.EventType.TOUCH_DOWN;
-    e.position = p;
-    submitTouchEvent(e);
+    submitTouchEvent(createTouchDownEvent(id, p));
   };
 
   /**
@@ -80,11 +79,7 @@ public class TouchManager extends TouchReceiver {
    */
   public void touchUp(int id, PVector p){
     logger.finer("touchUp (" + Integer.toString(id) + "): "+Float.toString(p.x)+", "+Float.toString(p.y));
-    TouchEvent e = new TouchEvent();
-    e.touchId = id;
-    e.eventType = TouchEvent.EventType.TOUCH_UP;
-    e.position = p;
-    submitTouchEvent(e);
+    submitTouchEvent(createTouchUpEvent(id,p));
   };
 
   /**
@@ -92,17 +87,13 @@ public class TouchManager extends TouchReceiver {
    */
   public void touchMove(int id, PVector p){
     logger.finer("touchMove (" + Integer.toString(id) + "): "+Float.toString(p.x)+", "+Float.toString(p.y));
-    TouchEvent e = new TouchEvent();
-    e.touchId = id;
-    e.eventType = TouchEvent.EventType.TOUCH_MOVE;
-    e.position = p;
-    submitTouchEvent(e);
+    submitTouchEvent(createTouchMoveEvent(id, p));
   };
 
   /**
    * takes a touch event and, depending on the dispatchOnUpdate setting, will immediately process or queue for processing during the next call to update()
    */
-  private void submitTouchEvent(TouchEvent event){
+  public void submitTouchEvent(TouchEvent event){
     if(dispatchOnUpdate){
       touchEventQueue.add(event);
       return;
@@ -226,7 +217,6 @@ public class TouchManager extends TouchReceiver {
           }
         }
 
-
         // this is the end of this touch
         activeTouchEvents.remove(event.touchId);
         activeTouchLogs.remove(event.touchId);
@@ -237,8 +227,17 @@ public class TouchManager extends TouchReceiver {
     this.receiveTouchEvent(event);
 
     // trigger appropriate events on event's original node
-    if(event.node != null)
+    if(event.node != null){
       event.node.receiveTouchEvent(event);
+      if(bMirror){
+        TouchEvent e2 = event.copy();
+        e2.touchId = event.touchId + 1;
+        PVector offset = event.offset();
+        offset.mult(-1.0f);
+        e2.position = offset.add(e2.startPosition).add(new PVector(10, 10, 0));
+        event.node.receiveTouchEvent(e2);
+      }
+    }
 
     // trigger appropriate events on event's most recent node
     if(event.mostRecentNode != null && event.mostRecentNode != event.node)
@@ -284,7 +283,7 @@ public class TouchManager extends TouchReceiver {
 
     if(root.isInteractive() && rootContains) {
       // if this node has a clipping node then the touch
-      // only applies to this node if it's within the clipping area 
+      // only applies to this node if it's within the clipping area
       Node clipNode = root.getClippingNode();
       if(clipNode == null || clipNode.isInside(pos))
         targetList.add(root);
@@ -302,4 +301,35 @@ public class TouchManager extends TouchReceiver {
   public void setClickMaxDistance(float distance){
     clickMaxDistance = distance;
   }
+
+  public static TouchEvent createTouchDownEvent(int id, PVector p){
+    TouchEvent e = new TouchEvent();
+    e.touchId = id;
+    e.eventType = TouchEvent.EventType.TOUCH_DOWN;
+    e.position = p;
+    return e;
+  }
+
+  public static TouchEvent createTouchMoveEvent(int id, PVector p){
+    TouchEvent e = new TouchEvent();
+    e.touchId = id;
+    e.eventType = TouchEvent.EventType.TOUCH_MOVE;
+    e.position = p;
+    return e;
+  }
+
+  public static TouchEvent createTouchUpEvent(int id, PVector p){
+    TouchEvent e = new TouchEvent();
+    e.touchId = id;
+    e.eventType = TouchEvent.EventType.TOUCH_UP;
+    e.position = p;
+    return e;
+  }
+
+  /** DEBUG FEATURE for pinch-zoom without touchscreen! (TODO: remove?) */
+  public void setMirrorNodeEventsEnabled(boolean enable){
+    bMirror = enable;
+  }
+
+  public boolean getMirrorNodeEventsEnabled(){ return bMirror; }
 }
