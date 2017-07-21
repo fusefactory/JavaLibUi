@@ -6,7 +6,6 @@ import java.util.Comparator;
 import java.util.function.Consumer;
 import java.util.List;
 
-import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PVector;
 import processing.core.PMatrix3D;
@@ -20,16 +19,11 @@ import com.fuse.ui.extensions.ExtensionBase;
  */
 public class Node extends TouchReceiver {
 
-  /** PApplet instance, accessible to all Node instances (and instances of its inheriting classes) */
-  public static PApplet papplet;
   /** PGraphics instance, accessible to all Node instances (and instances of its inheriting classes) */
   protected static PGraphics pg;
 
-  public static void setPApplet(PApplet newPapplet){ papplet = newPapplet; }
-  public static PApplet getPApplet(){ return papplet; }
   public static void setPGraphics(PGraphics newPg){ pg = newPg; }
   public static PGraphics getPGraphics(){ return pg; }
-
 
   private List<Node> childNodes;
   private Node parentNode;
