@@ -9,6 +9,7 @@ import com.fuse.utils.Event;
  * Using Events in the update and draw loops could strongly affect
  * performance, therefore this class is primarily menat for development
  * and prototyping purposes.
+ * For slightly better performance, consider using the LambdaNode.
  */
 public class EventNode extends Node {
 
