@@ -76,7 +76,7 @@ public class ImageNode extends Node {
   public void setAutoResizeToImage(boolean enable){
     autoResizeToImage = enable;
     if(autoResizeToImage && image != null){
-      setSize(image.pixelWidth, image.pixelHeight);
+      setSize(image.width, image.height);
     }
   }
 }
