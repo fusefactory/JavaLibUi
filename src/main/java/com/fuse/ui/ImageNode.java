@@ -15,6 +15,7 @@ public class ImageNode extends Node {
   private PImage image;
   private Mode mode;
   private boolean autoResizeToImage = false;
+  private Integer tintColor = null;
 
   private void _init(){
     image = null;
@@ -36,23 +37,23 @@ public class ImageNode extends Node {
     if(image == null)
       return;
 
+    if(tintColor != null)
+      pg.tint(tintColor);
+
     if(mode == Mode.NORMAL){
       pg.image(image, 0.0f, 0.0f);
-      return;
-    }
-
-    if(mode == Mode.CENTER){
+    } else if(mode == Mode.CENTER){
       PVector pos = PVector.mult(getSize(), 0.5f);
       pg.imageMode(PApplet.CENTER);
       pg.image(image, pos.x, pos.y);
       pg.imageMode(PApplet.CORNERS); // restore default
-      return;
-    }
-
-    if(mode == Mode.FIT){
+    } else if(mode == Mode.FIT){
       pg.imageMode(PApplet.CORNERS);
       pg.image(image, 0.0f, 0.0f, getSize().x, getSize().y);
     }
+
+    if(tintColor != null)
+      pg.noTint();
   }
 
   /**
@@ -79,4 +80,7 @@ public class ImageNode extends Node {
       setSize(image.width, image.height);
     }
   }
+
+  public void setTint(Integer clr){ tintColor = clr; }
+  public Integer getTint(){ return tintColor; }
 }
