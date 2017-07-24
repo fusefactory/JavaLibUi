@@ -648,4 +648,12 @@ public class Node extends TouchReceiver {
       return new ArrayList<>();
     return extensions;
   }
+
+  public void enable(boolean _enable){
+    this.setVisible(_enable);
+    this.setInteractive(_enable);
+  }
+
+  public void enable(){ this.enable(true); }
+  public void disable(){ this.enable(false); }
 }

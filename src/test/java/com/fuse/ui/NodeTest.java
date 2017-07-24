@@ -454,4 +454,22 @@ public class NodeTest {
         n.setPosition(10, 10);
         assertEquals(n.toGlobal(new PVector(0f, 0f, 0f)), new PVector(5,20,0));
     }
+
+    @Test public void enable(){
+        Node n = new Node();
+        assertTrue(n.isVisible());
+        assertTrue(n.isInteractive());
+        n.disable();
+        assertFalse(n.isVisible());
+        assertFalse(n.isInteractive());
+        n.enable();
+        assertTrue(n.isVisible());
+        assertTrue(n.isInteractive());
+        n.enable(false);
+        assertFalse(n.isVisible());
+        assertFalse(n.isInteractive());
+        n.enable(true);
+        assertTrue(n.isVisible());
+        assertTrue(n.isInteractive());
+    }
 }
