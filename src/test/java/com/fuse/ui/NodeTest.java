@@ -398,6 +398,76 @@ public class NodeTest {
         assertEquals(a.getChildNodes().size(), 3);
     }
 
+
+    @Test public void withChild(){
+        Node n = new Node();
+
+        List<String> strings = new ArrayList<>();
+
+        n.withChildren("bambino", (Node bambinoNode) -> {
+            strings.add("1: "+bambinoNode.getName());
+        });
+
+        assertEquals(strings.size(), 0);
+        n.addChild(new Node("bambino"));
+
+        n.withChild("bambino", (Node bambinoNode) -> {
+            strings.add("2: "+bambinoNode.getName());
+        });
+
+        assertEquals(strings.get(0), "2: bambino");
+        assertEquals(strings.size(), 1);
+
+        n.addChild(new Node("bambino"));
+
+        n.withChild("bambino", (Node bambinoNode) -> {
+            strings.add("3: "+bambinoNode.getName());
+        });
+
+        assertEquals(strings.get(1), "3: bambino");
+        assertEquals(strings.size(), 2);
+    }
+
+    @Test public void withChildren(){
+        Node n = new Node();
+
+        List<String> strings = new ArrayList<>();
+
+        n.withChildren("bambino", (Node bambinoNode) -> {
+            strings.add("1: "+bambinoNode.getName());
+        });
+
+        assertEquals(strings.size(), 0);
+        n.addChild(new Node("bambino"));
+        assertEquals(strings.size(), 0);
+
+        n.withChildren("bambino", (Node bambinoNode) -> {
+            strings.add("2: "+bambinoNode.getName());
+        });
+
+        assertEquals(strings.get(0), "2: bambino");
+        assertEquals(strings.size(), 1);
+
+        // and bambino grandchild
+        n.getChildNodes().get(0).addChild(new Node("bambino"));
+
+        n.withChildren("bambino", (Node bambinoNode) -> {
+            strings.add("3: "+bambinoNode.getName());
+        });
+
+        assertEquals(strings.get(1), "3: bambino");
+        assertEquals(strings.get(2), "3: bambino");
+        assertEquals(strings.size(), 3);
+
+        // only direct children (0 levels-deep)
+        n.withChildren("bambino", 0, (Node bambinoNode) -> {
+            strings.add("4: "+bambinoNode.getName());
+        });
+
+        assertEquals(strings.get(3), "4: bambino");
+        assertEquals(strings.size(), 4);
+    }
+
     @Test public void getPosition_safety(){
         Node n = new Node();
         n.setPosition(10, 10);

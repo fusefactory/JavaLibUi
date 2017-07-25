@@ -656,4 +656,24 @@ public class Node extends TouchReceiver {
 
   public void enable(){ this.enable(true); }
   public void disable(){ this.enable(false); }
+
+  public void withChild(String name, Consumer<Node> func){
+    withChild(name, -1, func);
+  }
+
+  public void withChild(String name, int maxLevel, Consumer<Node> func){
+    Node n = getChildWithName(name, maxLevel);
+    if(n != null)
+      func.accept(n);
+  }
+
+  public void withChildren(String name, Consumer<Node> func){
+    withChildren(name, -1, func);
+  }
+
+  public void withChildren(String name, int maxLevel, Consumer<Node> func){
+    List<Node> nodes = getChildrenWithName(name, maxLevel);
+    for(Node n : nodes)
+      func.accept(n);
+  }
 }
