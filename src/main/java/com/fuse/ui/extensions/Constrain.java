@@ -29,9 +29,8 @@ public class Constrain extends ExtensionBase {
     super.enable(newNode);
     constrainPos = node.getPosition();
 
-    node.positionChangeEvent.whenTriggered(() -> {
-      this.update();
-    }, this);
+    node.positionChangeEvent.whenTriggered(() -> { this.update(); }, this);
+    node.sizeChangeEvent.whenTriggered(() -> { this.update(); }, this);
   }
 
   void update(){
@@ -50,11 +49,18 @@ public class Constrain extends ExtensionBase {
       if(parent != null){
         // TODO; consider node's scaling property?
 
-        if(newPos.x > 0.0f) newPos.x = 0.0f;
-        else if(node.getRight() < parent.getSize().x) newPos.x = parent.getSize().x - node.getSize().x;
+        PVector nodeSize = node.getSize();
+        PVector parentSize = parent.getSize();
 
-        if(newPos.y > 0.0f) newPos.y = 0.0f;
-        else if(node.getBottom() < parent.getSize().y) newPos.y = parent.getSize().y - node.getSize().y;
+        if(nodeSize.x > parentSize.x){
+          if(newPos.x > 0.0f) newPos.x = 0.0f;
+          else if(node.getRight() < parent.getSize().x) newPos.x = parent.getSize().x - node.getSize().x;
+        }
+
+        if(nodeSize.y > parentSize.y){
+          if(newPos.y > 0.0f) newPos.y = 0.0f;
+          else if(node.getBottom() < parent.getSize().y) newPos.y = parent.getSize().y - node.getSize().y;
+        }
       }
     }
 
@@ -71,6 +77,7 @@ public class Constrain extends ExtensionBase {
   @Override public void disable(){
     super.disable();
     node.positionChangeEvent.stopWhenTriggeredCallbacks(this);
+    node.sizeChangeEvent.stopWhenTriggeredCallbacks(this);
   }
 
   public void setFixX(){ setFixX(true); }

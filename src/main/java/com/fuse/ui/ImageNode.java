@@ -1,6 +1,7 @@
 package com.fuse.ui;
 
 import processing.core.PApplet;
+import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.core.PVector;
 

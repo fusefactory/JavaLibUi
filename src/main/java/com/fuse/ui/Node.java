@@ -60,7 +60,7 @@ public class Node extends TouchReceiver {
   public Event<Node> newChildEvent;
   /** Triggered when a child is added to this node, or any of its offspring */
   public Event<Node> newOffspringEvent;
-  public Event<Node> positionChangeEvent;
+  public Event<Node> positionChangeEvent, sizeChangeEvent;
 
   /** Comparator for ordering a list of Nodes from lower plane to higher plane (used for rendering) */
   static public Comparator<Node> bottomPlaneFirst = (a,b) -> {
@@ -89,6 +89,7 @@ public class Node extends TouchReceiver {
     newChildEvent = new Event<>();
     newOffspringEvent = new Event<>();
     positionChangeEvent = new Event<>();
+    sizeChangeEvent = new Event<>();
 
     touchDownEvent.addListener((TouchEvent e) -> {
       bTouched = true;
@@ -225,10 +226,11 @@ public class Node extends TouchReceiver {
 
   public void setSize(PVector newSize){
     size = newSize.copy();
+    sizeChangeEvent.trigger(this);
   }
 
   public void setSize(float newWidth, float newHeight){
-    size.set(newWidth, newHeight, 0.0f);
+    setSize(new PVector(newWidth, newHeight, 0.0f));
   }
 
   public PVector getScale(){
