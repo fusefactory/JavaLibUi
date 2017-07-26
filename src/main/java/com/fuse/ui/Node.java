@@ -165,7 +165,7 @@ public class Node extends TouchReceiver {
     plane = newPlane;
   }
 
-  public String getName(){ return name; }
+  public String getName(){ return new String(name); }
   public void setName(String newName){
     name = newName;
   }
@@ -677,5 +677,9 @@ public class Node extends TouchReceiver {
     List<Node> nodes = getChildrenWithName(name, maxLevel);
     for(Node n : nodes)
       func.accept(n);
+  }
+
+  public boolean isTouched(){
+    return bTouched;
   }
 }
