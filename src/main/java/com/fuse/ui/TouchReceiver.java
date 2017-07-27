@@ -61,14 +61,16 @@ public class TouchReceiver {
 
     logger.warning("could not find touch-type specific event to trigger for touch event: " + event.toString());
 
-    switch(event.eventType){
-      case TOUCH_DOWN: this.onTouchDown(event); break;
-      case TOUCH_MOVE: this.onTouchMove(event); break;
-      case TOUCH_UP: this.onTouchUp(event); break;
-      // case TOUCH_ENTER: this.onTouchDown(event); break;
-      // case TOUCH_EXIT: this.onTouchDown(event); break;
-      // case TOUCH_CLICK: this.onTouchDown(event); break;
-      // case TOUCH_DOUBLECLICK: this.onTouchDown(event); break;
+    if(event.eventType != null){
+      switch(event.eventType){
+        case TOUCH_DOWN: this.onTouchDown(event); break;
+        case TOUCH_MOVE: this.onTouchMove(event); break;
+        case TOUCH_UP: this.onTouchUp(event); break;
+        // case TOUCH_ENTER: this.onTouchDown(event); break;
+        // case TOUCH_EXIT: this.onTouchDown(event); break;
+        // case TOUCH_CLICK: this.onTouchDown(event); break;
+        // case TOUCH_DOUBLECLICK: this.onTouchDown(event); break;
+      }
     }
   }
 

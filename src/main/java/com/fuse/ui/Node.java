@@ -12,6 +12,7 @@ import processing.core.PMatrix3D;
 
 import com.fuse.utils.Event;
 import com.fuse.ui.extensions.ExtensionBase;
+import com.fuse.ui.extensions.TouchEventForwarder;
 
 /**
  * Base class for scenegraph UI functionality, heavily inspired by the ofxInterface
@@ -681,5 +682,19 @@ public class Node extends TouchReceiver {
 
   public boolean isTouched(){
     return bTouched;
+  }
+
+  /**
+   * Creates an extension that monitors the source for touch events and passed them on to this node
+   * These two methods create a circul dependency between Node and TouchEventForwarder, however they
+   * merely exist for providing a predictable API
+   *
+   */
+  public ExtensionBase copyAllTouchEventsFrom(TouchReceiver source){
+    return TouchEventForwarder.enableFromTo(source, this);
+  }
+
+  public ExtensionBase stopCopyingAllTouchEventsFrom(TouchReceiver source){
+    return TouchEventForwarder.disableFromTo(source, this);
   }
 }

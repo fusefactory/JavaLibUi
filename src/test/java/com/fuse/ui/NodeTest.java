@@ -542,4 +542,27 @@ public class NodeTest {
         assertTrue(n.isVisible());
         assertTrue(n.isInteractive());
     }
+
+    @Test public void copyAllTouchEventsFrom(){
+        Node a = new Node();
+        Node b = new Node();
+
+        b.touchEvent.enableHistory();
+        assertEquals(b.touchEvent.getHistory().size(), 0);
+
+        a.receiveTouchEvent(new TouchEvent());
+        assertEquals(b.touchEvent.getHistory().size(), 0);
+
+        b.copyAllTouchEventsFrom(a);
+
+        a.receiveTouchEvent(new TouchEvent());
+        assertEquals(b.touchEvent.getHistory().size(), 1);
+        a.receiveTouchEvent(new TouchEvent());
+        assertEquals(b.touchEvent.getHistory().size(), 2);
+
+        b.stopCopyingAllTouchEventsFrom(a);
+
+        a.receiveTouchEvent(new TouchEvent());
+        assertEquals(b.touchEvent.getHistory().size(), 2);
+    }
 }
