@@ -323,6 +323,10 @@ public class TouchManager extends TouchReceiver {
     }
   }
 
+  public boolean getDispatchOnUpdate(){
+    return dispatchOnUpdate;
+  }
+
   public void setDispatchOnUpdate(boolean newVal){
     dispatchOnUpdate = newVal;
   }
