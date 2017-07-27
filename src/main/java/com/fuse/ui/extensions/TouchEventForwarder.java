@@ -24,7 +24,12 @@ public class TouchEventForwarder extends ExtensionBase {
     }
 
     source.touchEvent.addListener((TouchEvent evt) -> {
-      node.receiveTouchEvent(evt);
+      TouchEvent newEvent = evt.copy();
+      if(evt.node == source)
+        newEvent.node = this.node;
+      if(evt.mostRecentNode == source)
+        newEvent.mostRecentNode = this.node;
+      node.receiveTouchEvent(newEvent);
     }, this);
   }
 

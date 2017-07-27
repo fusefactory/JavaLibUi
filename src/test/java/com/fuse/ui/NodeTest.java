@@ -547,7 +547,9 @@ public class NodeTest {
         Node a = new Node();
         Node b = new Node();
 
+        a.touchEvent.enableHistory();
         b.touchEvent.enableHistory();
+
         assertEquals(b.touchEvent.getHistory().size(), 0);
 
         a.receiveTouchEvent(new TouchEvent());
@@ -559,10 +561,20 @@ public class NodeTest {
         assertEquals(b.touchEvent.getHistory().size(), 1);
         a.receiveTouchEvent(new TouchEvent());
         assertEquals(b.touchEvent.getHistory().size(), 2);
+        assertEquals(b.touchEvent.getHistory().get(1).node, null);
+
+        TouchEvent evt = new TouchEvent();
+        evt.node = a;
+        a.receiveTouchEvent(evt);
+        assertEquals(b.touchEvent.getHistory().size(), 3);
+        assertEquals(b.touchEvent.getHistory().get(2).node, b); // node attribute was transformed to b
 
         b.stopCopyingAllTouchEventsFrom(a);
 
         a.receiveTouchEvent(new TouchEvent());
-        assertEquals(b.touchEvent.getHistory().size(), 2);
+        assertEquals(b.touchEvent.getHistory().size(), 3);
+
+
+
     }
 }
