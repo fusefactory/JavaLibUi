@@ -27,18 +27,20 @@ public class RectNode extends Node {
 
   /** Draw this node's image at this Node's position */
   @Override public void draw(){
-    if(rectStrokeColor == null)
-      pg.noStroke();
-    else
-      pg.stroke(rectStrokeColor);
-
     if(rectFillColor == null)
       pg.noFill();
     else
       pg.fill(rectFillColor);
 
-    if(rectStrokeWeight != null)
+    if(rectStrokeWeight == null)
+      pg.noStroke();
+    else
       pg.strokeWeight(rectStrokeWeight);
+
+    if(rectStrokeColor == null)
+      pg.noStroke();
+    else
+      pg.stroke(rectStrokeColor);
 
     pg.rect(0,0,getSize().x,getSize().y);
   }
