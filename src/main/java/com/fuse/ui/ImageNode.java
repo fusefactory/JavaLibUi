@@ -83,7 +83,7 @@ public class ImageNode extends Node {
     image = newImage;
 
     if(autoResizeToImage && image != null)
-      setSize(image.pixelWidth, image.pixelHeight);
+      setSize(image.width, image.height);
   }
 
   /** @return PImage The image that this node is rendering */
