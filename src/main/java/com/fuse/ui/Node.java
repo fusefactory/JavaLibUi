@@ -634,7 +634,9 @@ public class Node extends TouchReceiver {
       extensions = new ArrayList<>();
     }
 
-    newExtension.enable(this);
+    newExtension.setNode(this);
+    newExtension.enable();
+
     extensions.add(newExtension);
   }
 

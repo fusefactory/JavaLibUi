@@ -160,4 +160,16 @@ public class ConstrainTest {
     child.setSize(150, 150);
     assertEquals(child.getPosition(), new PVector(-50,-50,0));
   }
+
+  @Test public void isEnabled(){
+    Constrain c = new Constrain();
+    assertFalse(c.isEnabled());
+    Node n = new Node();
+    c.enable(n);
+    assertTrue(c.isEnabled());
+    c.disable();
+    assertFalse(c.isEnabled());
+    c.enable();
+    assertTrue(c.isEnabled());
+  }
 }

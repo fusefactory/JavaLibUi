@@ -15,8 +15,8 @@ public class TouchEventForwarder extends ExtensionBase {
     this.source = source;
   }
 
-  @Override public void enable(Node newNode){
-    super.enable(newNode);
+  @Override public void enable(){
+    super.enable();
 
     if(this.source == null){
       logger.warning("no source");

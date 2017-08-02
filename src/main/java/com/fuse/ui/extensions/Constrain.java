@@ -25,8 +25,8 @@ public class Constrain extends ExtensionBase {
     zPercentageEvent = new Event<>();
   }
 
-  @Override public void enable(Node newNode){
-    super.enable(newNode);
+  @Override public void enable(){
+    super.enable();
     constrainPos = node.getPosition();
 
     node.positionChangeEvent.whenTriggered(() -> { this.update(); }, this);

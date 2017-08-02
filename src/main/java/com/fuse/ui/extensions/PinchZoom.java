@@ -23,10 +23,10 @@ public class PinchZoom extends ExtensionBase {
   public PinchZoom(){
   }
 
-  @Override public void enable(Node newNode){
-    super.enable(newNode);
+  @Override public void enable(){
+    super.enable();
 
-    newNode.touchDownEvent.addListener((TouchEvent event) -> {
+    node.touchDownEvent.addListener((TouchEvent event) -> {
 
       if(touchEvent1 == event)
         return; // already known
