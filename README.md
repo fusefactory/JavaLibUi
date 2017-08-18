@@ -34,8 +34,77 @@ Runtime Dependencies are:
 * [Processing](https://processing.org/) core [(mvn)](https://mvnrepository.com/artifact/org.processing/core)
 * [fusefactory](http://fuseinteractive.it/)'s [JavaLibEvent package](https://github.com/fusefactory/JavaLibEvent) [(jitpack)](https://jitpack.io/#fusefactory/event/1.0)
 
-### Usage - SceneGraph
-_TODO_ (see NodeTest unit tests for now)
+### Creating and rendering a simple scene
+_see also the example application in the example/ folder_
+```Java
+import processing.core.*;
+import com.fuse.ui.*;
+
+PGraphics pg;
+Node sceneNode;
+
+void setup(){
+    // ...
+    papplet.frameRate(30.0f);
+
+    // currently, Node requires a PGraphics instance for all rendering...
+    pg = papplet.createGraphics(papplet.width, papplet.height, P3D);
+    Node.setPGraphics(pg);
+
+    // create our scene's root node
+    sceneNode = new Node();
+    sceneNode.setSize(papplet.width, papplet.height);
+
+    // create a button
+    RectNode buttonNode = new RectNode();
+    buttonNode.setPosition(100, 100);
+    buttonNode.setSize(200,100);
+    sceneNode.addChild(buttonNode);
+
+    // add a text-label to the button
+    TextNode textNode = new TextNode();
+    textNode.setText("RectNode");
+    textNode.setSize(100,100);
+    textNode.setTextSize(14);
+    textNode.setTextColor(pg.color(0,0,0));
+    buttonNode.addChild(textNode);
+}
+
+void update(float dt){
+    // this performs a full recursive UI update by executing the update
+    // method of all Nodes that are part of the sceneNode's subtree
+    sceneNode.updateSubtree(dt);
+}
+
+void draw(){
+    // perform updates before rendering
+    this.update(1.0f / papplet.frameRate);
+
+    // draw UI to framebuffer
+    pg.beginDraw();
+    {
+        // clear framebuffer
+        pg.clear();
+
+        // render scene; this takes al Nodes in the sceneNode's subtree,
+        // re-orders them according to the plane ('z-level') attribute
+        // and executes their draw methods after applying their global transform matrix
+        sceneNode.render();
+
+        // renderDebug does the same render, but instead of the draw method, it invokes
+        // every Node's drawDebug method. For debug/development purposes only.
+        if(bDrawDebug)
+            sceneNode.renderDebug();
+    }
+    pg.endDraw();
+
+    // clear screen
+    papplet.background(0);
+    // draw framebuffer to screen
+    papplet.image(pg, 0f, 0f);
+}
+```
+
 
 ### Usage - TouchManager
 _TODO_ (see TouchManagerTest unit tests for now)
