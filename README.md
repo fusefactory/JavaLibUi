@@ -1,5 +1,5 @@
 # JavaLibUi
-_Java package that provides classes for building interactive User Interfaces_
+_Java package that provides a framework, on top of processing, for building (touch-screen) user interfaces._
 
 The code in this package is heavily inspired by the [ofxInterface OpenFrameworks addon](https://github.com/galsasson/ofxInterface) and the [poScene cinder block](https://github.com/Potion/Cinder-poScene).
 
@@ -34,7 +34,7 @@ Runtime Dependencies are:
 * [Processing](https://processing.org/) core [(mvn)](https://mvnrepository.com/artifact/org.processing/core)
 * [fusefactory](http://fuseinteractive.it/)'s [JavaLibEvent package](https://github.com/fusefactory/JavaLibEvent) [(jitpack)](https://jitpack.io/#fusefactory/event/1.0)
 
-### Creating and rendering a simple scene
+### USAGE: Creating and rendering a simple scene
 _see also the example application in the example/ folder_
 ```Java
 import processing.core.*;
@@ -106,5 +106,52 @@ void draw(){
 ```
 
 
-### Usage - TouchManager
-_TODO_ (see TouchManagerTest unit tests for now)
+### USAGE: Interactivity using the TouchManager
+_see also the example application in the example/ folder_
+
+```Java
+
+import processing.core.*;
+import com.fuse.ui.*;
+
+Node sceneNode;
+TouchManager touchManager;
+
+public void setup(){
+    // ...
+
+    // create our scene's root node
+    sceneNode = new Node();
+    sceneNode.setSize(papplet.width, papplet.height);
+
+    // initialize our touch manager
+    touchManager = new TouchManager();
+    touchManager.setNode(sceneNode);
+
+    // create a button node
+    Node exitButtonNode = new Node();
+    exitButtonNode.setName("exit");
+    exitButtonNode.setPosition(10, 50);
+    exitButtonNode.setSize(300, 200);
+    sceneNode.addChild(exitButtonNode);
+
+    // create a touch-click handler for the exit button
+    exitButtonNode.touchClickEvent.addListener((TouchEvent event) -> {
+        System.out.println("Exit clicked, shutting down!");
+        exit();
+    }, this);
+}
+
+// simulate touch events using the mouse
+public void mousePressed(){
+    touchManager.touchDown(0, new PVector(mouseX, mouseY, 0f));
+}
+
+public void mouseDragged(){
+    touchManager.touchMove(0, new PVector(mouseX, mouseY, 0f));
+}
+
+public void mouseReleased(){
+    touchManager.touchUp(0, new PVector(mouseX, mouseY, 0f));
+}
+```
