@@ -7,14 +7,58 @@ import java.util.HashMap;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.logging.*;
+import java.util.function.Consumer;
 
 import com.fuse.utils.Event;
 
+import processing.core.PGraphics;
 import processing.core.PVector;
 
 class TouchLog {
   public TouchEvent touchEvent;
   public float time;
+}
+
+class TouchMirror {
+  private TouchReceiver receiver;
+  private List<TouchEvent> currentMirrorEvents;
+  private PVector mirrorOffset;
+
+  public TouchMirror(TouchReceiver receiver){
+    this.receiver = receiver;
+    currentMirrorEvents = new ArrayList<>();
+    mirrorOffset = new PVector(10,10,0);
+    enable();
+  }
+
+  public void enable(){
+    Consumer<TouchEvent> func = (TouchEvent event) -> {
+      for(TouchEvent activeEvent : this.currentMirrorEvents)
+        if(activeEvent.touchId == event.touchId)
+          return;
+
+      TouchEvent mirror = event.copy();
+      mirror.touchId = event.touchId + 1;
+
+      PVector offset = event.offset();
+      offset.mult(-1.0f);
+      mirror.position = offset.add(event.startPosition).add(mirrorOffset);
+
+      this.currentMirrorEvents.add(mirror);
+      receiver.submitTouchEvent(mirror);
+      this.currentMirrorEvents.remove(mirror);
+    };
+
+    receiver.touchDownEvent.addListener(func, this);
+    receiver.touchMoveEvent.addListener(func, this);
+    receiver.touchUpEvent.addListener(func, this);
+  }
+
+  public void disable(){
+    receiver.touchDownEvent.removeListeners(this);
+    receiver.touchUpEvent.removeListeners(this);
+    receiver.touchMoveEvent.removeListeners(this);
+  }
 }
 
 public class TouchManager extends TouchReceiver {
@@ -32,8 +76,7 @@ public class TouchManager extends TouchReceiver {
   private Map<Integer, TouchEvent> activeTouchEvents;
   private Map<Integer, TouchLog> activeTouchLogs;
 
-
-  public TouchManager(){
+  private void _init(){
     logger = Logger.getLogger(TouchManager.class.getName());
     dispatchOnUpdate = false;
     controlledTime = false;
@@ -43,10 +86,24 @@ public class TouchManager extends TouchReceiver {
     activeTouchEvents = new HashMap<Integer, TouchEvent>();
     activeTouchLogs = new HashMap<Integer, TouchLog>();
   }
+  public TouchManager(){
+    _init();
+  }
+
+  public TouchManager(Node sceneNode){
+    _init();
+    setNode(sceneNode);
+  }
 
   public void update(){
-    for(TouchEvent e : touchEventQueue){
-      processTouchEvent(e);
+    if(dispatchOnUpdate){
+      List<TouchEvent> queueCopy = new ArrayList<>();
+      queueCopy.addAll(touchEventQueue);
+
+      for(TouchEvent e : queueCopy){
+        processTouchEvent(e);
+        touchEventQueue.remove(e);
+      }
     }
   }
 
@@ -61,11 +118,7 @@ public class TouchManager extends TouchReceiver {
    */
   public void touchDown(int id, PVector p){
     logger.finer("touchDown (" + Integer.toString(id) + "): "+Float.toString(p.x)+", "+Float.toString(p.y));
-    TouchEvent e = new TouchEvent();
-    e.touchId = id;
-    e.eventType = TouchEvent.EventType.TOUCH_DOWN;
-    e.position = p;
-    submitTouchEvent(e);
+    submitTouchEvent(createTouchDownEvent(id, p));
   };
 
   /**
@@ -73,11 +126,7 @@ public class TouchManager extends TouchReceiver {
    */
   public void touchUp(int id, PVector p){
     logger.finer("touchUp (" + Integer.toString(id) + "): "+Float.toString(p.x)+", "+Float.toString(p.y));
-    TouchEvent e = new TouchEvent();
-    e.touchId = id;
-    e.eventType = TouchEvent.EventType.TOUCH_UP;
-    e.position = p;
-    submitTouchEvent(e);
+    submitTouchEvent(createTouchUpEvent(id,p));
   };
 
   /**
@@ -85,17 +134,13 @@ public class TouchManager extends TouchReceiver {
    */
   public void touchMove(int id, PVector p){
     logger.finer("touchMove (" + Integer.toString(id) + "): "+Float.toString(p.x)+", "+Float.toString(p.y));
-    TouchEvent e = new TouchEvent();
-    e.touchId = id;
-    e.eventType = TouchEvent.EventType.TOUCH_MOVE;
-    e.position = p;
-    submitTouchEvent(e);
+    submitTouchEvent(createTouchMoveEvent(id, p));
   };
 
   /**
    * takes a touch event and, depending on the dispatchOnUpdate setting, will immediately process or queue for processing during the next call to update()
    */
-  private void submitTouchEvent(TouchEvent event){
+  @Override public void submitTouchEvent(TouchEvent event){
     if(dispatchOnUpdate){
       touchEventQueue.add(event);
       return;
@@ -219,23 +264,23 @@ public class TouchManager extends TouchReceiver {
           }
         }
 
-
         // this is the end of this touch
         activeTouchEvents.remove(event.touchId);
         activeTouchLogs.remove(event.touchId);
         break;
     }
 
-    // trigger appropriate events on this
-    this.receiveTouchEvent(event);
-
     // trigger appropriate events on event's original node
-    if(event.node != null)
+    if(event.node != null){
       event.node.receiveTouchEvent(event);
+    }
 
     // trigger appropriate events on event's most recent node
     if(event.mostRecentNode != null && event.mostRecentNode != event.node)
       event.mostRecentNode.receiveTouchEvent(event);
+
+    // trigger appropriate events on this
+    this.receiveTouchEvent(event);
   }
 
   public void setNode(Node newNode){
@@ -276,8 +321,16 @@ public class TouchManager extends TouchReceiver {
     }
 
     if(root.isInteractive() && rootContains) {
-      targetList.add(root);
+      // if this node has a clipping node then the touch
+      // only applies to this node if it's within the clipping area
+      Node clipNode = root.getClippingNode();
+      if(clipNode == null || clipNode.isInside(pos))
+        targetList.add(root);
     }
+  }
+
+  public boolean getDispatchOnUpdate(){
+    return dispatchOnUpdate;
   }
 
   public void setDispatchOnUpdate(boolean newVal){
@@ -290,5 +343,62 @@ public class TouchManager extends TouchReceiver {
 
   public void setClickMaxDistance(float distance){
     clickMaxDistance = distance;
+  }
+
+  public static TouchEvent createTouchDownEvent(int id, PVector p){
+    TouchEvent e = new TouchEvent();
+    e.touchId = id;
+    e.eventType = TouchEvent.EventType.TOUCH_DOWN;
+    e.position = p;
+    return e;
+  }
+
+  public static TouchEvent createTouchMoveEvent(int id, PVector p){
+    TouchEvent e = new TouchEvent();
+    e.touchId = id;
+    e.eventType = TouchEvent.EventType.TOUCH_MOVE;
+    e.position = p;
+    return e;
+  }
+
+  public static TouchEvent createTouchUpEvent(int id, PVector p){
+    TouchEvent e = new TouchEvent();
+    e.touchId = id;
+    e.eventType = TouchEvent.EventType.TOUCH_UP;
+    e.position = p;
+    return e;
+  }
+
+
+  /** For debugging! (TODO: remove?) */
+  private TouchMirror touchMirror = null;
+
+  /** DEBUG FEATURE for pinch-zoom without touchscreen! (TODO: remove?) */
+  public void setMirrorNodeEventsEnabled(boolean enable){
+    if(enable){
+      if(touchMirror != null)
+        return;
+      touchMirror = new TouchMirror(this);
+      return;
+    }
+
+    if(touchMirror != null){
+      touchMirror.disable();
+      touchMirror = null;
+    }
+  }
+
+  public boolean getMirrorNodeEventsEnabled(){ return touchMirror != null; }
+
+  public void drawActiveTouches(){
+    PGraphics pg = Node.getPGraphics();
+
+    pg.colorMode(pg.RGB, 255);
+    pg.fill(pg.color(255,100,100,150));
+    pg.noStroke();
+    pg.ellipseMode(pg.CENTER);
+
+    for(TouchEvent event : activeTouchEvents.values())
+      pg.ellipse(event.position.x, event.position.y, 25, 25);
   }
 }

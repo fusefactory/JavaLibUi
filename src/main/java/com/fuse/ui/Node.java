@@ -6,12 +6,13 @@ import java.util.Comparator;
 import java.util.function.Consumer;
 import java.util.List;
 
-import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PVector;
 import processing.core.PMatrix3D;
 
 import com.fuse.utils.Event;
+import com.fuse.ui.extensions.ExtensionBase;
+import com.fuse.ui.extensions.TouchEventForwarder;
 
 /**
  * Base class for scenegraph UI functionality, heavily inspired by the ofxInterface
@@ -19,16 +20,11 @@ import com.fuse.utils.Event;
  */
 public class Node extends TouchReceiver {
 
-  /** PApplet instance, accessible to all Node instances (and instances of its inheriting classes) */
-  public static PApplet papplet;
   /** PGraphics instance, accessible to all Node instances (and instances of its inheriting classes) */
   protected static PGraphics pg;
 
-  public static void setPApplet(PApplet newPapplet){ papplet = newPapplet; }
-  public static PApplet getPApplet(){ return papplet; }
   public static void setPGraphics(PGraphics newPg){ pg = newPg; }
   public static PGraphics getPGraphics(){ return pg; }
-
 
   private List<Node> childNodes;
   private Node parentNode;
@@ -46,10 +42,13 @@ public class Node extends TouchReceiver {
   private PVector size;
   /** Rotation of this node along the three axis */
   private PVector rotation;
+  /** Scaling of this node, along the three axis */
+  private PVector scale;
   /** 3D Matrix that matches with the position, size and rotation attributes */
   private PMatrix3D localTransformMatrix;
   /** Makes sure all offspring Nodes only render within this node's boundaries */
   private Node clippingNode;
+  private List<ExtensionBase> extensions;
 
   /** Float-based z-level attribute used for re-ordering Nodes in the render-queue;
    * a higher plane value will put the Node later in the queue, which means
@@ -62,6 +61,7 @@ public class Node extends TouchReceiver {
   public Event<Node> newChildEvent;
   /** Triggered when a child is added to this node, or any of its offspring */
   public Event<Node> newOffspringEvent;
+  public Event<Node> positionChangeEvent, sizeChangeEvent;
 
   /** Comparator for ordering a list of Nodes from lower plane to higher plane (used for rendering) */
   static public Comparator<Node> bottomPlaneFirst = (a,b) -> {
@@ -83,11 +83,14 @@ public class Node extends TouchReceiver {
     position = new PVector();
     size = new PVector();
     rotation = new PVector();
+    scale = new PVector();
     localTransformMatrix = new PMatrix3D();
     name = "";
     newParentEvent = new Event<>();
     newChildEvent = new Event<>();
     newOffspringEvent = new Event<>();
+    positionChangeEvent = new Event<>();
+    sizeChangeEvent = new Event<>();
 
     touchDownEvent.addListener((TouchEvent e) -> {
       bTouched = true;
@@ -163,13 +166,13 @@ public class Node extends TouchReceiver {
     plane = newPlane;
   }
 
-  public String getName(){ return name; }
+  public String getName(){ return new String(name); }
   public void setName(String newName){
     name = newName;
   }
 
   public PVector getPosition(){
-    return position;
+    return position.copy();
   }
 
   public PVector getGlobalPosition(){
@@ -202,12 +205,16 @@ public class Node extends TouchReceiver {
   }
 
   public void setPosition(float x, float y, float z){
-    localTransformMatrix.translate(x - position.x, y - position.y, z - position.z);
-    position.set(x,y,z);
+    boolean change = position.x != x || position.y != y || position.z != z;
+    if(change){
+      localTransformMatrix.translate(x - position.x, y - position.y, z - position.z);
+      position.set(x,y,z);
+      positionChangeEvent.trigger(this);
+    }
   }
 
   public PVector getSize(){
-    return size;
+    return size.copy();
   }
 
   public void setWidth(float newWidth){
@@ -220,10 +227,29 @@ public class Node extends TouchReceiver {
 
   public void setSize(PVector newSize){
     size = newSize.copy();
+    sizeChangeEvent.trigger(this);
   }
 
   public void setSize(float newWidth, float newHeight){
-    size.set(newWidth, newHeight, 0.0f);
+    setSize(new PVector(newWidth, newHeight, 0.0f));
+  }
+
+  public PVector getScale(){
+    return scale;
+  }
+
+  public void setScale(PVector newScale){
+    scale = newScale;
+    updateLocalTransformMatrix();
+  }
+
+  private void updateLocalTransformMatrix(){
+    localTransformMatrix.reset();
+    localTransformMatrix.translate(position.x, position.y, position.z);
+    localTransformMatrix.rotateX(rotation.x);
+    localTransformMatrix.rotateY(rotation.y);
+    localTransformMatrix.rotateZ(rotation.z);
+    localTransformMatrix.scale(scale.x, scale.y, scale.z);
   }
 
   public void rotate(float amount){
@@ -241,6 +267,17 @@ public class Node extends TouchReceiver {
 
   public float getBottom(){
     return position.y + size.y;
+  }
+
+  public void setGlobalPosition(PVector globalPos){
+    Node parentNode = getParent();
+
+    if(parentNode == null){
+      setPosition(globalPos);
+      return;
+    }
+
+    setPosition(parentNode.toLocal(globalPos));
   }
 
   public boolean isInside(PVector pos){
@@ -588,5 +625,78 @@ public class Node extends TouchReceiver {
     for(Node n : getChildNodes(true /* recursive */)){
       n.setClippingNode(n.getFirstClippingParent());
     }
+  }
+
+  public void use(ExtensionBase newExtension){
+    // lazy create so extensions attribute doesn't use any memory
+    // unless this Node actually gets extensions
+    if(extensions == null){
+      extensions = new ArrayList<>();
+    }
+
+    newExtension.setNode(this);
+    newExtension.enable();
+
+    extensions.add(newExtension);
+  }
+
+  public void stopUsing(ExtensionBase ext){
+    if(extensions == null)
+      return;
+
+    if(extensions.remove(ext))
+      ext.disable();
+  }
+
+  public List<ExtensionBase> getExtensions(){
+    if(extensions == null)
+      return new ArrayList<>();
+    return extensions;
+  }
+
+  public void enable(boolean _enable){
+    this.setVisible(_enable);
+    this.setInteractive(_enable);
+  }
+
+  public void enable(){ this.enable(true); }
+  public void disable(){ this.enable(false); }
+
+  public void withChild(String name, Consumer<Node> func){
+    withChild(name, -1, func);
+  }
+
+  public void withChild(String name, int maxLevel, Consumer<Node> func){
+    Node n = getChildWithName(name, maxLevel);
+    if(n != null)
+      func.accept(n);
+  }
+
+  public void withChildren(String name, Consumer<Node> func){
+    withChildren(name, -1, func);
+  }
+
+  public void withChildren(String name, int maxLevel, Consumer<Node> func){
+    List<Node> nodes = getChildrenWithName(name, maxLevel);
+    for(Node n : nodes)
+      func.accept(n);
+  }
+
+  public boolean isTouched(){
+    return bTouched;
+  }
+
+  /**
+   * Creates an extension that monitors the source for touch events and passed them on to this node
+   * These two methods create a circul dependency between Node and TouchEventForwarder, however they
+   * merely exist for providing a predictable API
+   *
+   */
+  public ExtensionBase copyAllTouchEventsFrom(TouchReceiver source){
+    return TouchEventForwarder.enableFromTo(source, this);
+  }
+
+  public ExtensionBase stopCopyingAllTouchEventsFrom(TouchReceiver source){
+    return TouchEventForwarder.disableFromTo(source, this);
   }
 }

@@ -9,14 +9,7 @@ import java.util.List;
 import java.util.ArrayList;
 import processing.core.*;
 
-/**
-* Unit test for com.fuse.utils.Event.
-*/
 public class NodeTest {
-
-    private void _start(String name){
-        // System.out.println("TEST: "+name);
-    }
 
     @Test public void setSize(){
         Node node = new Node();
@@ -370,6 +363,17 @@ public class NodeTest {
         assertEquals(n.getGlobalBottomRight().dist(new PVector(-50,100,0)) < 0.00001f, true);
     }
 
+    @Test public void setGlobalPosition(){
+        Node scene = new Node();
+        scene.setPosition(100, 0);
+        scene.rotate((float)Math.PI * 0.5f); // 90 degrees clockwise
+        Node subject = new Node();
+        scene.addChild(subject);
+        subject.setGlobalPosition(new PVector(20, 0, 0));
+        assertEquals(subject.getGlobalPosition().dist(new PVector(20, 0, 0)) < 0.00001f, true);
+        assertEquals(subject.getPosition().dist(new PVector(0, 80, 0)), 0.0000001f, 0.0001f);
+    }
+
     @Test public void whenClicked(){
         Node n = new Node();
         List<String> strings = new ArrayList<>();
@@ -392,5 +396,185 @@ public class NodeTest {
         cc.remove(1);
         assertEquals(cc.size(), 2);
         assertEquals(a.getChildNodes().size(), 3);
+    }
+
+
+    @Test public void withChild(){
+        Node n = new Node();
+
+        List<String> strings = new ArrayList<>();
+
+        n.withChildren("bambino", (Node bambinoNode) -> {
+            strings.add("1: "+bambinoNode.getName());
+        });
+
+        assertEquals(strings.size(), 0);
+        n.addChild(new Node("bambino"));
+
+        n.withChild("bambino", (Node bambinoNode) -> {
+            strings.add("2: "+bambinoNode.getName());
+        });
+
+        assertEquals(strings.get(0), "2: bambino");
+        assertEquals(strings.size(), 1);
+
+        n.addChild(new Node("bambino"));
+
+        n.withChild("bambino", (Node bambinoNode) -> {
+            strings.add("3: "+bambinoNode.getName());
+        });
+
+        assertEquals(strings.get(1), "3: bambino");
+        assertEquals(strings.size(), 2);
+    }
+
+    @Test public void withChildren(){
+        Node n = new Node();
+
+        List<String> strings = new ArrayList<>();
+
+        n.withChildren("bambino", (Node bambinoNode) -> {
+            strings.add("1: "+bambinoNode.getName());
+        });
+
+        assertEquals(strings.size(), 0);
+        n.addChild(new Node("bambino"));
+        assertEquals(strings.size(), 0);
+
+        n.withChildren("bambino", (Node bambinoNode) -> {
+            strings.add("2: "+bambinoNode.getName());
+        });
+
+        assertEquals(strings.get(0), "2: bambino");
+        assertEquals(strings.size(), 1);
+
+        // and bambino grandchild
+        n.getChildNodes().get(0).addChild(new Node("bambino"));
+
+        n.withChildren("bambino", (Node bambinoNode) -> {
+            strings.add("3: "+bambinoNode.getName());
+        });
+
+        assertEquals(strings.get(1), "3: bambino");
+        assertEquals(strings.get(2), "3: bambino");
+        assertEquals(strings.size(), 3);
+
+        // only direct children (0 levels-deep)
+        n.withChildren("bambino", 0, (Node bambinoNode) -> {
+            strings.add("4: "+bambinoNode.getName());
+        });
+
+        assertEquals(strings.get(3), "4: bambino");
+        assertEquals(strings.size(), 4);
+    }
+
+    @Test public void getPosition_safety(){
+        Node n = new Node();
+        n.setPosition(10, 10);
+        assertEquals(n.getPosition(), new PVector(10,10,0));
+        n.getPosition().add(new PVector(10, 0, 0));
+        assertEquals(n.getPosition(), new PVector(10,10,0));
+    }
+
+    @Test public void getSize_safety(){
+        Node n = new Node();
+        n.setSize(10, 10);
+        assertEquals(n.getSize(), new PVector(10,10,0));
+        n.getSize().add(new PVector(10, 0, 0));
+        assertEquals(n.getSize(), new PVector(10,10,0));
+    }
+
+    // @Test public void getRotation_safety(){
+    //     Node n = new Node();
+    //     n.rotateZ(10);
+    //     assertEquals(n.getRotation(), new PVector(0,0,10));
+    //     n.getRotation().add(new PVector(10, 0, 0));
+    //     assertEquals(n.getRotation(), new PVector(0,0,10));
+    // }
+
+    @Test public void positionChangeEvent(){
+        Node n = new Node();
+        n.setPosition(10, 20);
+
+        List<String> strs = new ArrayList<>();
+        n.positionChangeEvent.whenTriggered(() -> strs.add("change"));
+        assertEquals(strs.size(), 0);
+        n.setPosition(20, 20);
+        assertEquals(strs.size(), 1);
+        n.setPosition(20, 20); // no change
+        assertEquals(strs.size(), 1);
+    }
+
+    @Test public void scale(){
+        Node n = new Node();
+        n.setScale(new PVector(0.5f, 2.0f, 1.0f));
+        assertEquals(n.toLocal(new PVector(1.0f, 1.0f, 0.0f)), new PVector(2.0f, 0.5f, 0.0f));
+        assertEquals(n.toGlobal(new PVector(10,10,0)), new PVector(5, 20, 0));
+
+        Node child = new Node();
+        child.setPosition(10, 10);
+        assertEquals(child.getGlobalPosition(), new PVector(10.0f, 10.0f, 0.0f));
+        child.setParent(n);
+        assertEquals(child.getGlobalPosition(), new PVector(5.0f, 20.0f, 0.0f));
+
+        // scaling back to 1.0, though child has 10.0,10.0 position offset
+        child.setScale(new PVector(2.0f, 0.5f, 1.0f));
+        assertEquals(child.toLocal(new PVector(100.0f, 100.0f, 0.0f)), new PVector(95.0f, 80.0f, 0.0f));
+
+        n.setPosition(10, 10);
+        assertEquals(n.toGlobal(new PVector(0f, 0f, 0f)), new PVector(5,20,0));
+    }
+
+    @Test public void enable(){
+        Node n = new Node();
+        assertTrue(n.isVisible());
+        assertTrue(n.isInteractive());
+        n.disable();
+        assertFalse(n.isVisible());
+        assertFalse(n.isInteractive());
+        n.enable();
+        assertTrue(n.isVisible());
+        assertTrue(n.isInteractive());
+        n.enable(false);
+        assertFalse(n.isVisible());
+        assertFalse(n.isInteractive());
+        n.enable(true);
+        assertTrue(n.isVisible());
+        assertTrue(n.isInteractive());
+    }
+
+    @Test public void copyAllTouchEventsFrom(){
+        Node a = new Node();
+        Node b = new Node();
+
+        a.touchEvent.enableHistory();
+        b.touchEvent.enableHistory();
+
+        assertEquals(b.touchEvent.getHistory().size(), 0);
+
+        a.receiveTouchEvent(new TouchEvent());
+        assertEquals(b.touchEvent.getHistory().size(), 0);
+
+        b.copyAllTouchEventsFrom(a);
+
+        a.receiveTouchEvent(new TouchEvent());
+        assertEquals(b.touchEvent.getHistory().size(), 1);
+        a.receiveTouchEvent(new TouchEvent());
+        assertEquals(b.touchEvent.getHistory().size(), 2);
+        assertEquals(b.touchEvent.getHistory().get(1).node, null);
+
+        TouchEvent evt = new TouchEvent();
+        evt.node = a;
+        a.receiveTouchEvent(evt);
+        assertEquals(b.touchEvent.getHistory().size(), 3);
+        assertEquals(b.touchEvent.getHistory().get(2).node, b); // node attribute was transformed to b
+
+        b.stopCopyingAllTouchEventsFrom(a);
+
+        a.receiveTouchEvent(new TouchEvent());
+        assertEquals(b.touchEvent.getHistory().size(), 3);
+
+
+
     }
 }

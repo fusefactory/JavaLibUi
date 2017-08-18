@@ -8,17 +8,27 @@ public class LineNode extends Node {
   private int lineColor;
   private float strokeWeight = 1;
 
-  /** Default constructor; intialized with default values: image=null and mode=NORMAL */
-  public LineNode(){
+  private void _init(){
     coordinates = new PVector[2];
     coordinates[0] = new PVector(0.0f, 0.0f, 0.0f);
     coordinates[1] = new PVector(1.0f, 1.0f, 0.0f);
     lineColor = pg.color(255);
   }
 
+  /** Default constructor; intialized with default values: image=null and mode=NORMAL */
+  public LineNode(){
+    _init();
+  }
+  
+  public LineNode(String nodeName){
+    super(nodeName);
+    _init();
+  }
+
   /** Draw this node's image at this Node's position */
   @Override public void draw(){
     pg.stroke(lineColor);
+    pg.strokeWeight(strokeWeight);
     pg.beginShape(pg.LINES);
 
     PVector from = coordinates[0];
