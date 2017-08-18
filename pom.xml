@@ -3,12 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.fusefactory</groupId>
-    <artifactId>ui</artifactId>
-    <version>1.0.2</version>
+    <artifactId>JavaLibUi</artifactId>
+    <version>1.0.3</version>
     <packaging>jar</packaging>
 
     <name>Fuse UI package</name>
-    <url>https://jitpack.io/#fusefactory/ui/1.0.2</url>
+    <url>https://jitpack.io/#fusefactory/ui/1.0.3</url>
 
     <dependencies>
         <!-- https://mvnrepository.com/artifact/junit/junit -->
