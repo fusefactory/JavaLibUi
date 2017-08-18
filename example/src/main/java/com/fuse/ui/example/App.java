@@ -97,7 +97,7 @@ public class App extends PApplet {
       PinchZoom.enableFor(n);
 
       TextNode tx = new TextNode();
-      tx.setText("PinchZoom");
+      tx.setText("PinchZoom (WIP)");
       tx.setSize(100,100);
       tx.setTextSize(14);
       tx.setTextColor(pg.color(0,0,0));
