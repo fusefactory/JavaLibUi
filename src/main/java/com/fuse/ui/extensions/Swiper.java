@@ -23,12 +23,12 @@ public class Swiper extends ExtensionBase {
     swipeRightEvent = new Event<>();
   }
 
-  @Override public void enable(Node newNode){
-    super.enable(newNode);
+  @Override public void enable(){
+    super.enable();
 
     // constrain vertical movement
-    Constrain.enableFor(newNode).setFixY();
-    draggable = Draggable.enableFor(newNode);
+    Constrain.enableFor(node).setFixY();
+    draggable = Draggable.enableFor(node);
 
     draggable.endEvent.addListener((Draggable endedDraggable) -> {
 

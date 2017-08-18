@@ -31,32 +31,39 @@ public class TouchEvent {
   /** @return String A string-based representation of this TouchEvent instance (mainly for debugging) */
   public String toString(){
     String result = "#"+Integer.toString(touchId)+" ";
-    switch(eventType){
-      case TOUCH_DOWN:
-        result += "DOWN";
-        break;
-      case TOUCH_MOVE:
-        result += "MOVE";
-        break;
-      case TOUCH_UP:
-        result += "UP";
-        break;
-      case TOUCH_EXIT:
-        result += "EXIT";
-        break;
-      case TOUCH_ENTER:
-        result += "ENTER";
-        break;
-      case TOUCH_CLICK:
-        result += "CLICK";
-        break;
-      case TOUCH_DOUBLECLICK:
-        result += "DOUBLECLICK";
-        break;
-    }
+
+    if(eventType == null)
+      result += "????";
+    else
+      switch(eventType){
+        case TOUCH_DOWN:
+          result += "DOWN";
+          break;
+        case TOUCH_MOVE:
+          result += "MOVE";
+          break;
+        case TOUCH_UP:
+          result += "UP";
+          break;
+        case TOUCH_EXIT:
+          result += "EXIT";
+          break;
+        case TOUCH_ENTER:
+          result += "ENTER";
+          break;
+        case TOUCH_CLICK:
+          result += "CLICK";
+          break;
+        case TOUCH_DOUBLECLICK:
+          result += "DOUBLECLICK";
+          break;
+      }
 
     Node n = mostRecentNode == null ? node : mostRecentNode;
-    result += " on "+(n == null ? "<NO NODE>" : n.getName()) + " at position: " + Float.toString(position.x)+", "+Float.toString(position.y);
+    result += " on "+(n == null ? "<NO NODE>" : n.getName());
+    result += " at position: ";
+    result += (position == null ? "???" : (Float.toString(position.x)+", "+Float.toString(position.y)));
+
     return result;
   }
 

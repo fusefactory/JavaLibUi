@@ -112,4 +112,64 @@ public class ConstrainTest {
     c.setPercentageX(0.9f); // 90%
     assertEquals(n.getPosition(), new PVector(362,0,0));
   }
+
+  @Test public void setFillParent(){
+    Node parent = new Node();
+    parent.setSize(100, 100);
+
+    Node child = new Node();
+    child.setSize(200, 200);
+    parent.addChild(child);
+
+    Constrain c = Constrain.enableFor(child);
+    c.setFillParent(true);
+
+    // test horizontal restriction
+    child.setX(10);
+    assertEquals(child.getPosition(), new PVector(0,0,0));
+    child.setX(-10);
+    assertEquals(child.getPosition(), new PVector(-10,0,0));
+    child.setX(-100);
+    assertEquals(child.getPosition(), new PVector(-100,0,0));
+    child.setX(-110);
+    assertEquals(child.getPosition(), new PVector(-100,0,0));
+
+    // test vertical restriction
+    child.setY(10);
+    assertEquals(child.getPosition(), new PVector(-100,0,0));
+    child.setY(-10);
+    assertEquals(child.getPosition(), new PVector(-100,-10,0));
+    child.setY(-100);
+    assertEquals(child.getPosition(), new PVector(-100,-100,0));
+    child.setY(-110);
+    assertEquals(child.getPosition(), new PVector(-100,-100,0));
+
+    // if child is smaller than parent it can't fill the parent;
+    // constrain won't work on axis where the child is smaller
+
+    // make child's height smaller than parent height; no y-axis constrain
+    child.setSize(150, 50);
+    child.setPosition(300, 300);
+    assertEquals(child.getPosition(), new PVector(0,300,0));
+    // also make width smaller; no x-axis constrain
+    child.setSize(50, 50);
+    child.setPosition(-500, -500);
+    assertEquals(child.getPosition(), new PVector(-500,-500,0));
+
+    // make child big than parent again; constrain becomes active again
+    child.setSize(150, 150);
+    assertEquals(child.getPosition(), new PVector(-50,-50,0));
+  }
+
+  @Test public void isEnabled(){
+    Constrain c = new Constrain();
+    assertFalse(c.isEnabled());
+    Node n = new Node();
+    c.enable(n);
+    assertTrue(c.isEnabled());
+    c.disable();
+    assertFalse(c.isEnabled());
+    c.enable();
+    assertTrue(c.isEnabled());
+  }
 }

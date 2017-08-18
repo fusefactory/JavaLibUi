@@ -19,8 +19,8 @@ public class Draggable extends ExtensionBase {
     endEvent = new Event<>();
   }
 
-  @Override public void enable(Node newNode){
-    super.enable(newNode);
+  @Override public void enable(){
+    super.enable();
 
     node.touchMoveEvent.addListener((TouchEvent event) -> {
       if(originalNodePosition == null || !bDragging){

@@ -398,6 +398,76 @@ public class NodeTest {
         assertEquals(a.getChildNodes().size(), 3);
     }
 
+
+    @Test public void withChild(){
+        Node n = new Node();
+
+        List<String> strings = new ArrayList<>();
+
+        n.withChildren("bambino", (Node bambinoNode) -> {
+            strings.add("1: "+bambinoNode.getName());
+        });
+
+        assertEquals(strings.size(), 0);
+        n.addChild(new Node("bambino"));
+
+        n.withChild("bambino", (Node bambinoNode) -> {
+            strings.add("2: "+bambinoNode.getName());
+        });
+
+        assertEquals(strings.get(0), "2: bambino");
+        assertEquals(strings.size(), 1);
+
+        n.addChild(new Node("bambino"));
+
+        n.withChild("bambino", (Node bambinoNode) -> {
+            strings.add("3: "+bambinoNode.getName());
+        });
+
+        assertEquals(strings.get(1), "3: bambino");
+        assertEquals(strings.size(), 2);
+    }
+
+    @Test public void withChildren(){
+        Node n = new Node();
+
+        List<String> strings = new ArrayList<>();
+
+        n.withChildren("bambino", (Node bambinoNode) -> {
+            strings.add("1: "+bambinoNode.getName());
+        });
+
+        assertEquals(strings.size(), 0);
+        n.addChild(new Node("bambino"));
+        assertEquals(strings.size(), 0);
+
+        n.withChildren("bambino", (Node bambinoNode) -> {
+            strings.add("2: "+bambinoNode.getName());
+        });
+
+        assertEquals(strings.get(0), "2: bambino");
+        assertEquals(strings.size(), 1);
+
+        // and bambino grandchild
+        n.getChildNodes().get(0).addChild(new Node("bambino"));
+
+        n.withChildren("bambino", (Node bambinoNode) -> {
+            strings.add("3: "+bambinoNode.getName());
+        });
+
+        assertEquals(strings.get(1), "3: bambino");
+        assertEquals(strings.get(2), "3: bambino");
+        assertEquals(strings.size(), 3);
+
+        // only direct children (0 levels-deep)
+        n.withChildren("bambino", 0, (Node bambinoNode) -> {
+            strings.add("4: "+bambinoNode.getName());
+        });
+
+        assertEquals(strings.get(3), "4: bambino");
+        assertEquals(strings.size(), 4);
+    }
+
     @Test public void getPosition_safety(){
         Node n = new Node();
         n.setPosition(10, 10);
@@ -453,5 +523,58 @@ public class NodeTest {
 
         n.setPosition(10, 10);
         assertEquals(n.toGlobal(new PVector(0f, 0f, 0f)), new PVector(5,20,0));
+    }
+
+    @Test public void enable(){
+        Node n = new Node();
+        assertTrue(n.isVisible());
+        assertTrue(n.isInteractive());
+        n.disable();
+        assertFalse(n.isVisible());
+        assertFalse(n.isInteractive());
+        n.enable();
+        assertTrue(n.isVisible());
+        assertTrue(n.isInteractive());
+        n.enable(false);
+        assertFalse(n.isVisible());
+        assertFalse(n.isInteractive());
+        n.enable(true);
+        assertTrue(n.isVisible());
+        assertTrue(n.isInteractive());
+    }
+
+    @Test public void copyAllTouchEventsFrom(){
+        Node a = new Node();
+        Node b = new Node();
+
+        a.touchEvent.enableHistory();
+        b.touchEvent.enableHistory();
+
+        assertEquals(b.touchEvent.getHistory().size(), 0);
+
+        a.receiveTouchEvent(new TouchEvent());
+        assertEquals(b.touchEvent.getHistory().size(), 0);
+
+        b.copyAllTouchEventsFrom(a);
+
+        a.receiveTouchEvent(new TouchEvent());
+        assertEquals(b.touchEvent.getHistory().size(), 1);
+        a.receiveTouchEvent(new TouchEvent());
+        assertEquals(b.touchEvent.getHistory().size(), 2);
+        assertEquals(b.touchEvent.getHistory().get(1).node, null);
+
+        TouchEvent evt = new TouchEvent();
+        evt.node = a;
+        a.receiveTouchEvent(evt);
+        assertEquals(b.touchEvent.getHistory().size(), 3);
+        assertEquals(b.touchEvent.getHistory().get(2).node, b); // node attribute was transformed to b
+
+        b.stopCopyingAllTouchEventsFrom(a);
+
+        a.receiveTouchEvent(new TouchEvent());
+        assertEquals(b.touchEvent.getHistory().size(), 3);
+
+
+
     }
 }

@@ -96,8 +96,14 @@ public class TouchManager extends TouchReceiver {
   }
 
   public void update(){
-    for(TouchEvent e : touchEventQueue){
-      processTouchEvent(e);
+    if(dispatchOnUpdate){
+      List<TouchEvent> queueCopy = new ArrayList<>();
+      queueCopy.addAll(touchEventQueue);
+
+      for(TouchEvent e : queueCopy){
+        processTouchEvent(e);
+        touchEventQueue.remove(e);
+      }
     }
   }
 
@@ -321,6 +327,10 @@ public class TouchManager extends TouchReceiver {
       if(clipNode == null || clipNode.isInside(pos))
         targetList.add(root);
     }
+  }
+
+  public boolean getDispatchOnUpdate(){
+    return dispatchOnUpdate;
   }
 
   public void setDispatchOnUpdate(boolean newVal){

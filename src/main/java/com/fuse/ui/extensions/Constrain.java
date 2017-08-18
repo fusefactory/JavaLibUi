@@ -11,6 +11,7 @@ public class Constrain extends ExtensionBase {
   private Float[] axisMinValues = {null, null, null};
   private Float[] axisMaxValues = {null, null, null};
   private PVector constrainPos;
+  private boolean bFillParent = false;
 
   public Event<Float> xPercentageEvent, yPercentageEvent, zPercentageEvent;
 
@@ -24,36 +25,59 @@ public class Constrain extends ExtensionBase {
     zPercentageEvent = new Event<>();
   }
 
-  @Override public void enable(Node newNode){
-    super.enable(newNode);
+  @Override public void enable(){
+    super.enable();
     constrainPos = node.getPosition();
 
-    node.positionChangeEvent.whenTriggered(() -> {
-      PVector newPos = node.getPosition();
+    node.positionChangeEvent.whenTriggered(() -> { this.update(); }, this);
+    node.sizeChangeEvent.whenTriggered(() -> { this.update(); }, this);
+  }
 
-      if(axisMinValues[0] != null && axisMinValues[0] > newPos.x) newPos.x = axisMinValues[0];
-      if(axisMinValues[1] != null && axisMinValues[1] > newPos.y) newPos.y = axisMinValues[1];
-      if(axisMinValues[2] != null && axisMinValues[2] > newPos.z) newPos.z = axisMinValues[2];
+  void update(){
+    PVector newPos = node.getPosition();
 
-      if(axisMaxValues[0] != null && axisMaxValues[0] < newPos.x) newPos.x = axisMaxValues[0];
-      if(axisMaxValues[1] != null && axisMaxValues[1] < newPos.y) newPos.y = axisMaxValues[1];
-      if(axisMaxValues[2] != null && axisMaxValues[2] < newPos.z) newPos.z = axisMaxValues[2];
+    if(axisMinValues[0] != null && axisMinValues[0] > newPos.x) newPos.x = axisMinValues[0];
+    if(axisMinValues[1] != null && axisMinValues[1] > newPos.y) newPos.y = axisMinValues[1];
+    if(axisMinValues[2] != null && axisMinValues[2] > newPos.z) newPos.z = axisMinValues[2];
 
-      node.setPosition(newPos);
+    if(axisMaxValues[0] != null && axisMaxValues[0] < newPos.x) newPos.x = axisMaxValues[0];
+    if(axisMaxValues[1] != null && axisMaxValues[1] < newPos.y) newPos.y = axisMaxValues[1];
+    if(axisMaxValues[2] != null && axisMaxValues[2] < newPos.z) newPos.z = axisMaxValues[2];
 
-      Float p = getPercentageX();
-      if(p != null) xPercentageEvent.trigger(p);
-      p = getPercentageY();
-      if(p != null) yPercentageEvent.trigger(p);
-      p = getPercentageZ();
-      if(p != null) zPercentageEvent.trigger(p);
+    if(bFillParent){
+      Node parent = node.getParent();
+      if(parent != null){
+        // TODO; consider node's scaling property?
 
-    }, this);
+        PVector nodeSize = node.getSize();
+        PVector parentSize = parent.getSize();
+
+        if(nodeSize.x > parentSize.x){
+          if(newPos.x > 0.0f) newPos.x = 0.0f;
+          else if(node.getRight() < parent.getSize().x) newPos.x = parent.getSize().x - node.getSize().x;
+        }
+
+        if(nodeSize.y > parentSize.y){
+          if(newPos.y > 0.0f) newPos.y = 0.0f;
+          else if(node.getBottom() < parent.getSize().y) newPos.y = parent.getSize().y - node.getSize().y;
+        }
+      }
+    }
+
+    node.setPosition(newPos);
+
+    Float p = getPercentageX();
+    if(p != null) xPercentageEvent.trigger(p);
+    p = getPercentageY();
+    if(p != null) yPercentageEvent.trigger(p);
+    p = getPercentageZ();
+    if(p != null) zPercentageEvent.trigger(p);
   }
 
   @Override public void disable(){
     super.disable();
     node.positionChangeEvent.stopWhenTriggeredCallbacks(this);
+    node.sizeChangeEvent.stopWhenTriggeredCallbacks(this);
   }
 
   public void setFixX(){ setFixX(true); }
@@ -140,6 +164,10 @@ public class Constrain extends ExtensionBase {
   public void setPercentageZ(float percentage){
     if(axisMinValues[2] != null && axisMaxValues[2] != null)
       node.setZ(PApplet.lerp(axisMinValues[2], axisMaxValues[2], percentage));
+  }
+
+  public void setFillParent(boolean enable){
+    bFillParent = true;
   }
 
   public static Constrain enableFor(Node n){

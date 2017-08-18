@@ -12,6 +12,7 @@ import processing.core.PMatrix3D;
 
 import com.fuse.utils.Event;
 import com.fuse.ui.extensions.ExtensionBase;
+import com.fuse.ui.extensions.TouchEventForwarder;
 
 /**
  * Base class for scenegraph UI functionality, heavily inspired by the ofxInterface
@@ -60,7 +61,7 @@ public class Node extends TouchReceiver {
   public Event<Node> newChildEvent;
   /** Triggered when a child is added to this node, or any of its offspring */
   public Event<Node> newOffspringEvent;
-  public Event<Node> positionChangeEvent;
+  public Event<Node> positionChangeEvent, sizeChangeEvent;
 
   /** Comparator for ordering a list of Nodes from lower plane to higher plane (used for rendering) */
   static public Comparator<Node> bottomPlaneFirst = (a,b) -> {
@@ -89,6 +90,7 @@ public class Node extends TouchReceiver {
     newChildEvent = new Event<>();
     newOffspringEvent = new Event<>();
     positionChangeEvent = new Event<>();
+    sizeChangeEvent = new Event<>();
 
     touchDownEvent.addListener((TouchEvent e) -> {
       bTouched = true;
@@ -164,7 +166,7 @@ public class Node extends TouchReceiver {
     plane = newPlane;
   }
 
-  public String getName(){ return name; }
+  public String getName(){ return new String(name); }
   public void setName(String newName){
     name = newName;
   }
@@ -225,10 +227,11 @@ public class Node extends TouchReceiver {
 
   public void setSize(PVector newSize){
     size = newSize.copy();
+    sizeChangeEvent.trigger(this);
   }
 
   public void setSize(float newWidth, float newHeight){
-    size.set(newWidth, newHeight, 0.0f);
+    setSize(new PVector(newWidth, newHeight, 0.0f));
   }
 
   public PVector getScale(){
@@ -631,7 +634,9 @@ public class Node extends TouchReceiver {
       extensions = new ArrayList<>();
     }
 
-    newExtension.enable(this);
+    newExtension.setNode(this);
+    newExtension.enable();
+
     extensions.add(newExtension);
   }
 
@@ -647,5 +652,51 @@ public class Node extends TouchReceiver {
     if(extensions == null)
       return new ArrayList<>();
     return extensions;
+  }
+
+  public void enable(boolean _enable){
+    this.setVisible(_enable);
+    this.setInteractive(_enable);
+  }
+
+  public void enable(){ this.enable(true); }
+  public void disable(){ this.enable(false); }
+
+  public void withChild(String name, Consumer<Node> func){
+    withChild(name, -1, func);
+  }
+
+  public void withChild(String name, int maxLevel, Consumer<Node> func){
+    Node n = getChildWithName(name, maxLevel);
+    if(n != null)
+      func.accept(n);
+  }
+
+  public void withChildren(String name, Consumer<Node> func){
+    withChildren(name, -1, func);
+  }
+
+  public void withChildren(String name, int maxLevel, Consumer<Node> func){
+    List<Node> nodes = getChildrenWithName(name, maxLevel);
+    for(Node n : nodes)
+      func.accept(n);
+  }
+
+  public boolean isTouched(){
+    return bTouched;
+  }
+
+  /**
+   * Creates an extension that monitors the source for touch events and passed them on to this node
+   * These two methods create a circul dependency between Node and TouchEventForwarder, however they
+   * merely exist for providing a predictable API
+   *
+   */
+  public ExtensionBase copyAllTouchEventsFrom(TouchReceiver source){
+    return TouchEventForwarder.enableFromTo(source, this);
+  }
+
+  public ExtensionBase stopCopyingAllTouchEventsFrom(TouchReceiver source){
+    return TouchEventForwarder.disableFromTo(source, this);
   }
 }
