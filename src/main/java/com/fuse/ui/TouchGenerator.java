@@ -95,9 +95,10 @@ public class TouchGenerator {
       fromPos = new PVector(0,0,0);
 
     if(toPos == null){
-      if(delta != null && fromPos != null)
-        toPos = fromPos.copy().add(delta);
-      else
+      if(delta != null && fromPos != null){
+        toPos = fromPos.get();
+        toPos.add(delta);
+      } else
         return events;
     }
 
@@ -106,11 +107,14 @@ public class TouchGenerator {
     if(moveCount > 0){
       // if no touch up; then the last move event should end at the toPost
       int divAmount = bUpTouch ? (moveCount+1) : moveCount;
-      PVector stepDelta = toPos.copy().sub(fromPos).div(divAmount);
-      PVector currentPos = fromPos.copy();
+      PVector stepDelta = toPos.get();
+        stepDelta.sub(fromPos);
+        stepDelta.div(divAmount);
+      PVector currentPos = fromPos.get();
 
       for(int i=0; i<moveCount; i++){
-        events.add(TouchManager.createTouchMoveEvent(touchId, currentPos.add(stepDelta)));
+        currentPos.add(stepDelta);
+        events.add(TouchManager.createTouchMoveEvent(touchId, currentPos));
       }
     }
 

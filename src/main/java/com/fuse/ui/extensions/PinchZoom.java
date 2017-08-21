@@ -67,8 +67,9 @@ public class PinchZoom extends ExtensionBase {
 
       PVector scaler = getGlobalPinchScale();
       PVector translater = getGlobalPinchTranslate();
+      translater.add(originalNodePositionGlobal);
       // System.out.println("PinchZoom scale: "+scaler.toString());
-      getNode().setGlobalPosition(translater.add(originalNodePositionGlobal));
+      getNode().setGlobalPosition(translater);
 
       if(zoomMode == ZoomMode.SIZE){
         PVector newSize = new PVector(
@@ -96,13 +97,17 @@ public class PinchZoom extends ExtensionBase {
   /** @return PVector Distance between the start-points of the two touches */
   public PVector getGlobalStartDelta(){
     if(!isActive()) return new PVector();
-    return touchEvent2.startPosition.copy().sub(touchEvent1.startPosition);
+    PVector result = touchEvent2.startPosition.get();
+    result.sub(touchEvent1.startPosition);
+    return result;
   }
 
   /** @return PVector Distance between the current positions of the two touches */
   public PVector getGlobalCurrentDelta(){
     if(!isActive()) return new PVector();
-    return touchEvent2.position.copy().sub(touchEvent1.position);
+    PVector result = touchEvent2.position.get();
+    result.sub(touchEvent1.position);
+    return result;
   }
 
   public PVector getGlobalPinchScale(){
@@ -120,14 +125,21 @@ public class PinchZoom extends ExtensionBase {
 
 
     // start center of two touches
-    PVector delta = touchEvent2.startPosition.copy().sub(touchEvent1.startPosition);
-    PVector startCenter = PVector.add(delta.mult(0.5f), touchEvent1.startPosition);
+    PVector delta = touchEvent2.startPosition.get();
+    delta.sub(touchEvent1.startPosition);
+    delta.mult(0.5f);
+    PVector startCenter = PVector.add(delta, touchEvent1.startPosition);
 
-    PVector currentDelta = touchEvent2.position.copy().sub(touchEvent1.position);
-    PVector currentCenter = PVector.add(currentDelta.mult(0.5f), touchEvent1.position);
+    PVector currentDelta = touchEvent2.position.get();
+    currentDelta.sub(touchEvent1.position);
+    currentDelta.mult(0.5f);
+    PVector currentCenter = PVector.add(currentDelta, touchEvent1.position);
 
     PVector scale = getGlobalPinchScale();
-    PVector touchOffset = currentCenter.sub(startCenter).add(touchEvent1.offset());
+
+    PVector touchOffset = currentCenter;
+    touchOffset.sub(startCenter);
+    touchOffset.add(touchEvent1.offset());
 
     return new PVector(
       -Math.abs(scale.x*touchOffset.x),

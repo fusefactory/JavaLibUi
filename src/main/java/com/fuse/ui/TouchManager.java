@@ -42,7 +42,9 @@ class TouchMirror {
 
       PVector offset = event.offset();
       offset.mult(-1.0f);
-      mirror.position = offset.add(event.startPosition).add(mirrorOffset);
+      mirror.position = offset;
+      mirror.position.add(event.startPosition);
+      mirror.position.add(mirrorOffset);
 
       this.currentMirrorEvents.add(mirror);
       receiver.submitTouchEvent(mirror);

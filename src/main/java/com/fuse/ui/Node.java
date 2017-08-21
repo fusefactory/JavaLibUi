@@ -172,7 +172,7 @@ public class Node extends TouchReceiver {
   }
 
   public PVector getPosition(){
-    return position.copy();
+    return position.get();
   }
 
   public PVector getGlobalPosition(){
@@ -214,7 +214,7 @@ public class Node extends TouchReceiver {
   }
 
   public PVector getSize(){
-    return size.copy();
+    return size.get();
   }
 
   public void setWidth(float newWidth){
@@ -226,7 +226,7 @@ public class Node extends TouchReceiver {
   }
 
   public void setSize(PVector newSize){
-    size = newSize.copy();
+    size = newSize.get();
     sizeChangeEvent.trigger(this);
   }
 
