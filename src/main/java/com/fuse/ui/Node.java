@@ -48,7 +48,7 @@ public class Node extends TouchReceiver {
   private PMatrix3D localTransformMatrix;
   /** Makes sure all offspring Nodes only render within this node's boundaries */
   private Node clippingNode;
-  private List<ExtensionBase> extensions;
+  private List<ExtensionBase> extensions = null;
 
   /** Float-based z-level attribute used for re-ordering Nodes in the render-queue;
    * a higher plane value will put the Node later in the queue, which means
@@ -121,7 +121,11 @@ public class Node extends TouchReceiver {
   }
 
   public void update(float dt){
-    // virtual method
+    if(extensions!=null){
+      for(ExtensionBase ext : extensions){
+        ext.update(dt);
+      }
+    }
   }
 
   public void draw(){
@@ -688,9 +692,8 @@ public class Node extends TouchReceiver {
 
   /**
    * Creates an extension that monitors the source for touch events and passed them on to this node
-   * These two methods create a circul dependency between Node and TouchEventForwarder, however they
-   * merely exist for providing a predictable API
-   *
+   * These two methods create a circular dependency between Node and TouchEventForwarder, however they
+   * merely exist for providing an easy API
    */
   public ExtensionBase copyAllTouchEventsFrom(TouchReceiver source){
     return TouchEventForwarder.enableFromTo(source, this);
