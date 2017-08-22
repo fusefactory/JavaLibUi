@@ -56,6 +56,11 @@ public class TouchGenerator {
     return this;
   }
 
+  /* Specify the duration of the gesture in seconds */
+  public TouchGenerator duration(float timeInSeconds){
+    return this;
+  }
+
   public TouchGenerator noUp(){
     bUpTouch = false;
     return this;
