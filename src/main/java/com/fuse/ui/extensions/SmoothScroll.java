@@ -24,9 +24,10 @@ public class SmoothScroll extends ExtensionBase {
 
       // just started dragging?
       if(!isDragging()){
+        this.velocity = null; // this makes isDamping() false
         originalNodePosition = scrollableNode.getPosition(); // this makes isDragging true
         originalNodePositionGlobal = scrollableNode.getGlobalPosition();
-        // startEvent.trigger(this);
+        // startDragEvent.trigger(this);
       }
 
       apply(event.offset());
@@ -38,7 +39,9 @@ public class SmoothScroll extends ExtensionBase {
 
       apply(event.offset());
       originalNodePosition = null; // this makes isDragging() false
-      // endEvent.trigger(this);
+      // endDragEvent.trigger(this);
+      this.velocity = event.velocity; // this makes isDamping() true
+      // startDampEvent.trigger(this);
     }, this);
   }
 
@@ -61,6 +64,14 @@ public class SmoothScroll extends ExtensionBase {
 
   public boolean isDragging(){
     return originalNodePosition != null;
+  }
+
+  public boolean isDamping(){
+    return this.velocity != null;
+  }
+
+  public PVector getVelocity(){
+    return this.velocity == null ? new PVector(0,0,0) : velocity.get();
   }
 
   public Node getScrollableNode(){

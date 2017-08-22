@@ -23,26 +23,28 @@ public class SmoothScrollTest {
     Node scrollableNode = new Node();
     touchAreaNode.addChild(scrollableNode);
 
-    SmoothScroll.enableFor(touchAreaNode, scrollableNode);
+    SmoothScroll extension = SmoothScroll.enableFor(touchAreaNode, scrollableNode);
 
     // touch down on global position 15,15 and drag 100 pixels to the RIGHT
     // divide the gesture up into 15 touch-events
-    TouchGenerator.on(scene).from(15, 15).move(100, 0).moves(15).duration(0.2f).go();
+    TouchGenerator.on(scene).from(15, 15).move(100, 0).moves(10).duration(0.2f).go();
 
     // moved 100 to right
     assertEquals(scrollableNode.getPosition(), new PVector(100, 0, 0));
+    assertEquals(extension.getVelocity().x, 500, 0.111f);
 
     // same gesture
-    TouchGenerator.on(scene).from(15, 15).move(100, 0).moves(15).duration(0.2f).go();
+    TouchGenerator.on(scene).from(15, 15).move(100, 0).moves(10).duration(0.2f).go();
 
     // again moved 100 more to right
     assertEquals(scrollableNode.getPosition(), new PVector(200, 0, 0));
+    assertEquals(extension.getVelocity().x, 500, 0.111f);
 
     // disable smooth scroll
     SmoothScroll.disableFor(touchAreaNode, scrollableNode);
 
     // same gesture once more
-    TouchGenerator.on(scene).from(15, 15).move(100, 0).moves(15).duration(0.2f).go();
+    TouchGenerator.on(scene).from(15, 15).move(100, 0).moves(10).duration(0.2f).go();
 
     // didn't move because was disabled
     assertEquals(scrollableNode.getPosition(), new PVector(200, 0, 0));

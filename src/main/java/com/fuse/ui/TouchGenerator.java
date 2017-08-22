@@ -14,6 +14,7 @@ public class TouchGenerator {
   private TouchGenerator[] mixSources = null;
   private boolean bUpTouch = true;
   private int touchId = 0;
+  private Float duration = null;
 
 
   public static TouchGenerator on(Node rootNode){
@@ -58,6 +59,7 @@ public class TouchGenerator {
 
   /* Specify the duration of the gesture in seconds */
   public TouchGenerator duration(float timeInSeconds){
+    duration = timeInSeconds;
     return this;
   }
 
@@ -75,8 +77,18 @@ public class TouchGenerator {
     TouchManager touchManager = new TouchManager();
     touchManager.setNode(rootNode);
 
-    for(TouchEvent te : getTouchEvents()){
+    List<TouchEvent> touchEvents = getTouchEvents();
+
+    Float deltaTime = null;
+    if(duration != null && touchEvents.size() > 1){
+      deltaTime = duration / (touchEvents.size()-1);
+      touchManager.update(0.0f); // this enabled "controlled time" inside TouchManager
+    }
+
+    for(TouchEvent te : touchEvents){
       touchManager.submitTouchEvent(te);
+      if(deltaTime != null)
+        touchManager.update(deltaTime);
     }
   }
 
