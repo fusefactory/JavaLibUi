@@ -141,6 +141,12 @@ public class Node extends TouchReceiver {
     pg.noStroke();
     pg.fill(clr);
     pg.text(getName(), 0.0f, 15.0f);
+
+    if(extensions!=null){
+      for(ExtensionBase ext : extensions){
+        ext.drawDebug();
+      }
+    }
   }
 
   public boolean isVisible(){

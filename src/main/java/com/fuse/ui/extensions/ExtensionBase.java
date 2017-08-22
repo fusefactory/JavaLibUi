@@ -16,6 +16,10 @@ public class ExtensionBase {
     // override this method extension-specific functionality
   }
 
+  public void drawDebug(){
+    // override this method with extension-specific functionality
+  }
+
   public void setNode(Node newNode){
     node = newNode;
   }
