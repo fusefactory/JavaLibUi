@@ -31,6 +31,7 @@ public class TouchEvent {
   public Float time;
   /** The velocity of the touch movement */
   public PVector velocity;
+  public PVector velocitySmoothed;
 
 
   /** @return String A string-based representation of this TouchEvent instance (mainly for debugging) */

@@ -14,8 +14,12 @@ public class SmoothScroll extends ExtensionBase {
   private PVector originalNodePosition = null;
   private PVector originalNodePositionGlobal = null;
   private PVector velocity = null;
-  private float dampingFactor = 0.9f;
-  private final float minVelocityMag = 0.001f; // when velocity reaches this value (or lower), we finalize the movement
+  private PVector smoothedVelocity = null;
+
+  private final static float velocitySmoothCoeff = 0.1f;
+  private float dampingFactor = 0.001f;
+  private final static float minVelocityMag = 1.0f; // when velocity reaches this value (or lower), we finalize the movement
+  private final static float velocityReductionFactor = 0.05f; // factor to multipy the (already smoother) smoothedVelocity when setting the main velocity
 
   @Override
   public void update(float dt){
@@ -40,24 +44,25 @@ public class SmoothScroll extends ExtensionBase {
 
   @Override
   public void drawDebug(){
-    PVector offset = new PVector(0.0f, 0.0f, 0.0f);
+    float deltaX = node.getSize().x * 0.1f;
+    float deltaY = node.getSize().y * 0.1f;
+    float offsetX = 0.0f;
+    float offsetY = 0.0f;
 
     if(originalNodePositionGlobal != null){
-      offset.x = (scrollableNode.getGlobalPosition().x - originalNodePositionGlobal.x) % 100.0f;
-      offset.x = (scrollableNode.getGlobalPosition().y - originalNodePositionGlobal.y) % 100.0f;
-      offset.z = 0.0f;
-
-      PGraphics pg = Node.getPGraphics();
-      pg.stroke(255,0,0);
-      pg.strokeWeight(1.0f);
-
-      for(float x = offset.x; x < node.getSize().x; x += node.getSize().x * 0.2f)
-        pg.line(x, 0, x, 5);
-
-      for(float y = offset.y; y < node.getSize().y; y += node.getSize().y * 0.2f){
-        pg.line(0, y, 5, y);
-      }
+      offsetX = (scrollableNode.getGlobalPosition().x - originalNodePositionGlobal.x) % deltaX;
+      offsetY = (scrollableNode.getGlobalPosition().y - originalNodePositionGlobal.y) % deltaY;
     }
+
+    PGraphics pg = Node.getPGraphics();
+    pg.stroke(255,0,0, 150);
+    pg.strokeWeight(1.0f);
+
+    for(float x = offsetX; x < node.getSize().x; x += deltaX)
+      pg.line(x, 0, x, node.getSize().y);
+
+    for(float y = offsetY; y < node.getSize().y; y += deltaY)
+      pg.line(0, y, node.getSize().x, y);
   }
 
   public void enable(){
@@ -72,9 +77,10 @@ public class SmoothScroll extends ExtensionBase {
         this.velocity = null; // this makes isDamping() false
         originalNodePosition = scrollableNode.getPosition(); // this makes isDragging true
         originalNodePositionGlobal = scrollableNode.getGlobalPosition();
-        // startDragEvent.trigger(this);
+        smoothedVelocity = new PVector(0.0f, 0.0f, 0.0f);
       }
 
+      smoothedVelocity.lerp(event.velocitySmoothed, velocitySmoothCoeff);
       apply(event.offset());
     }, this);
 
@@ -85,8 +91,9 @@ public class SmoothScroll extends ExtensionBase {
       apply(event.offset());
       originalNodePosition = null; // this makes isDragging() false
       // endDragEvent.trigger(this);
-      this.velocity = event.velocity; // this makes isDamping() true
-      // startDampEvent.trigger(this);
+      smoothedVelocity.lerp(event.velocitySmoothed, velocitySmoothCoeff);
+      this.velocity = smoothedVelocity; // this makes isDamping() true
+      this.velocity.mult(velocityReductionFactor);
     }, this);
   }
 
