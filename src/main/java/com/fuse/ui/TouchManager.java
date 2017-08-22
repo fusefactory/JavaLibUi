@@ -143,6 +143,9 @@ public class TouchManager extends TouchReceiver {
    * takes a touch event and, depending on the dispatchOnUpdate setting, will immediately process or queue for processing during the next call to update()
    */
   @Override public void submitTouchEvent(TouchEvent event){
+    if(event.time == null)
+      event.time = this.getTime();
+
     if(dispatchOnUpdate){
       touchEventQueue.add(event);
       return;
@@ -176,6 +179,8 @@ public class TouchManager extends TouchReceiver {
         { // find and update existing active TouchEvent
           TouchEvent existing = activeTouchEvents.get(event.touchId);
           if(existing != null){
+            existing.velocity = calculateVelocity(existing.time, existing.position, event.time, event.position);
+            existing.time = event.time;
             existing.position = event.position;
             existing.eventType = event.eventType;
             event = existing;
@@ -220,6 +225,8 @@ public class TouchManager extends TouchReceiver {
         { // find and update existing active TouchEvent
           TouchEvent existing = activeTouchEvents.get(event.touchId);
           if(existing != null){
+            existing.velocity = calculateVelocity(existing.time, existing.position, event.time, event.position);
+            existing.time = event.time;
             existing.position = event.position;
             existing.eventType = event.eventType;
             event = existing;
@@ -241,11 +248,7 @@ public class TouchManager extends TouchReceiver {
           if(tlog == null){
             logger.warning("could not find touch log for touch up event: " + event.toString());
           } else {
-            float t;
-            if(controlledTime)
-              t = this.time;
-            else
-              t = (System.currentTimeMillis() / 1000.0f);
+            float t = this.getTime();
 
             // check if time and distance between touch-down and -up aren't too big
             if(t - tlog.time <= clickMaxInterval && PVector.dist(tlog.touchEvent.position, event.position) <= clickMaxDistance){
@@ -402,5 +405,20 @@ public class TouchManager extends TouchReceiver {
 
     for(TouchEvent event : activeTouchEvents.values())
       pg.ellipse(event.position.x, event.position.y, 25, 25);
+  }
+
+  private float getTime(){
+    if(controlledTime)
+      return this.time;
+    return (System.currentTimeMillis() / 1000.0f);
+  }
+
+  private PVector calculateVelocity(float t1, PVector p1, float t2, PVector p2){
+    float dt = t2-t1;
+    if(dt == 0.0f) dt = 0.000001f;
+    PVector movement = p2.get();
+    movement.sub(p1);
+    movement.div(dt);
+    return movement;
   }
 }
