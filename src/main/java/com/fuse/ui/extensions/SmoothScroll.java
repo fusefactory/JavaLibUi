@@ -14,6 +14,29 @@ public class SmoothScroll extends ExtensionBase {
   private PVector originalNodePositionGlobal = null;
   private PVector velocity = null;
   private float dampingFactor = 0.9f;
+  private final float minVelocityMag = 0.001f; // when velocity reaches this value (or lower), we finalize the movement
+
+  @Override
+  public void update(float dt){
+
+    if(!isDamping())
+      return;
+
+    // apply velocity
+    PVector deltaPos = velocity.get();
+    deltaPos.mult(dt);
+    PVector pos = scrollableNode.getPosition();
+    pos.add(deltaPos);
+    scrollableNode.setPosition(pos);
+
+    // apply damping
+    PVector dampedVelocity = velocity.get();
+    dampedVelocity.mult(dampingFactor);
+    velocity.lerp(dampedVelocity, dt);
+
+    if(velocity.mag() < minVelocityMag)
+      velocity = null; // isDamping() = false
+  }
 
   public void enable(){
     super.enable();
@@ -50,6 +73,9 @@ public class SmoothScroll extends ExtensionBase {
 
     node.touchMoveEvent.removeListeners(this);
     node.touchUpEvent.removeListeners(this);
+
+    velocity = null; // isDamping() = false
+    originalNodePosition = null; // isDragging() = false
   }
 
   private void apply(PVector dragOffset){
