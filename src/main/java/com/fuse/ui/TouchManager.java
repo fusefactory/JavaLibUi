@@ -42,7 +42,9 @@ class TouchMirror {
 
       PVector offset = event.offset();
       offset.mult(-1.0f);
-      mirror.position = offset.add(event.startPosition).add(mirrorOffset);
+      mirror.position = offset;
+      mirror.position.add(event.startPosition);
+      mirror.position.add(mirrorOffset);
 
       this.currentMirrorEvents.add(mirror);
       receiver.submitTouchEvent(mirror);
@@ -71,6 +73,10 @@ public class TouchManager extends TouchReceiver {
   private float clickMaxInterval;
   /// the maximum distance (in pixels) between the position of touch-down and the position of touch-up for it to be considered a click
   private float clickMaxDistance;
+  // velocity smoothing logic based on ofxInterface OpenFrameworks addon implementation
+  // see: https://github.com/galsasson/ofxInterface/blob/master/src/TouchManager.cpp
+  private final static float velocitySmoothCoeff = 0.25f;
+  private final static float velocityDump = 0.6f;
 
   private List<TouchEvent> touchEventQueue;
   private Map<Integer, TouchEvent> activeTouchEvents;
@@ -96,6 +102,10 @@ public class TouchManager extends TouchReceiver {
   }
 
   public void update(){
+    for(TouchEvent evt : activeTouchEvents.values()){
+      evt.velocitySmoothed = evt.velocitySmoothed.mult(velocityDump);
+    }
+
     if(dispatchOnUpdate){
       List<TouchEvent> queueCopy = new ArrayList<>();
       queueCopy.addAll(touchEventQueue);
@@ -141,6 +151,9 @@ public class TouchManager extends TouchReceiver {
    * takes a touch event and, depending on the dispatchOnUpdate setting, will immediately process or queue for processing during the next call to update()
    */
   @Override public void submitTouchEvent(TouchEvent event){
+    if(event.time == null)
+      event.time = this.getTime();
+
     if(dispatchOnUpdate){
       touchEventQueue.add(event);
       return;
@@ -153,6 +166,8 @@ public class TouchManager extends TouchReceiver {
   private void processTouchEvent(TouchEvent event){
     switch(event.eventType){
       case TOUCH_DOWN:
+        event.velocity = new PVector(0.0f, 0.0f, 0.0f);
+        event.velocitySmoothed = new PVector(0.0f, 0.0f, 0.0f);
         event.node = getNodeForTouchPosition(event.position);
         event.startPosition = event.position;
         activeTouchEvents.put(event.touchId, event);
@@ -174,6 +189,9 @@ public class TouchManager extends TouchReceiver {
         { // find and update existing active TouchEvent
           TouchEvent existing = activeTouchEvents.get(event.touchId);
           if(existing != null){
+            existing.velocity = calculateVelocity(existing.time, existing.position, event.time, event.position);
+            existing.velocitySmoothed.lerp(existing.velocity, velocitySmoothCoeff);
+            existing.time = event.time;
             existing.position = event.position;
             existing.eventType = event.eventType;
             event = existing;
@@ -218,6 +236,9 @@ public class TouchManager extends TouchReceiver {
         { // find and update existing active TouchEvent
           TouchEvent existing = activeTouchEvents.get(event.touchId);
           if(existing != null){
+            existing.velocity = calculateVelocity(existing.time, existing.position, event.time, event.position);
+            existing.velocitySmoothed.lerp(existing.velocity, velocitySmoothCoeff);
+            existing.time = event.time;
             existing.position = event.position;
             existing.eventType = event.eventType;
             event = existing;
@@ -239,11 +260,7 @@ public class TouchManager extends TouchReceiver {
           if(tlog == null){
             logger.warning("could not find touch log for touch up event: " + event.toString());
           } else {
-            float t;
-            if(controlledTime)
-              t = this.time;
-            else
-              t = (System.currentTimeMillis() / 1000.0f);
+            float t = this.getTime();
 
             // check if time and distance between touch-down and -up aren't too big
             if(t - tlog.time <= clickMaxInterval && PVector.dist(tlog.touchEvent.position, event.position) <= clickMaxDistance){
@@ -400,5 +417,20 @@ public class TouchManager extends TouchReceiver {
 
     for(TouchEvent event : activeTouchEvents.values())
       pg.ellipse(event.position.x, event.position.y, 25, 25);
+  }
+
+  private float getTime(){
+    if(controlledTime)
+      return this.time;
+    return (System.currentTimeMillis() / 1000.0f);
+  }
+
+  private PVector calculateVelocity(float t1, PVector p1, float t2, PVector p2){
+    float dt = t2-t1;
+    if(dt == 0.0f) dt = 0.001f;
+    PVector movement = p2.get();
+    movement.sub(p1);
+    movement.div(dt);
+    return movement;
   }
 }

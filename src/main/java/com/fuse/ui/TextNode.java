@@ -45,8 +45,8 @@ public class TextNode extends Node {
   public void setFont(PFont newFont){ this.font = newFont; }
   public PFont getFont(){ return this.font; }
 
-  public PVector getTextOffset(){ return textOffset.copy(); }
-  public void setTextOffset(PVector offset){ textOffset = offset.copy(); }
+  public PVector getTextOffset(){ return textOffset.get(); }
+  public void setTextOffset(PVector offset){ textOffset = offset.get(); }
 
   public void setAlignX(int align){ alignX = align; }
   public int getAlignX(int align){ return alignX; }
