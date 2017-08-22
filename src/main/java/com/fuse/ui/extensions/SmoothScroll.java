@@ -2,6 +2,7 @@ package com.fuse.ui.extensions;
 
 import processing.core.PApplet;
 import processing.core.PVector;
+import processing.core.PGraphics;
 
 import com.fuse.utils.Event;
 import com.fuse.ui.Node;
@@ -18,7 +19,6 @@ public class SmoothScroll extends ExtensionBase {
 
   @Override
   public void update(float dt){
-
     if(!isDamping())
       return;
 
@@ -36,6 +36,28 @@ public class SmoothScroll extends ExtensionBase {
 
     if(velocity.mag() < minVelocityMag)
       velocity = null; // isDamping() = false
+  }
+
+  @Override
+  public void drawDebug(){
+    PVector offset = new PVector(0.0f, 0.0f, 0.0f);
+
+    if(originalNodePositionGlobal != null){
+      offset.x = (scrollableNode.getGlobalPosition().x - originalNodePositionGlobal.x) % 100.0f;
+      offset.x = (scrollableNode.getGlobalPosition().y - originalNodePositionGlobal.y) % 100.0f;
+      offset.z = 0.0f;
+
+      PGraphics pg = Node.getPGraphics();
+      pg.stroke(255,0,0);
+      pg.strokeWeight(1.0f);
+
+      for(float x = offset.x; x < node.getSize().x; x += node.getSize().x * 0.2f)
+        pg.line(x, 0, x, 5);
+
+      for(float y = offset.y; y < node.getSize().y; y += node.getSize().y * 0.2f){
+        pg.line(0, y, 5, y);
+      }
+    }
   }
 
   public void enable(){
