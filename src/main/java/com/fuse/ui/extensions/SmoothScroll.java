@@ -9,11 +9,58 @@ import com.fuse.ui.TouchEvent;
 
 public class SmoothScroll extends ExtensionBase {
   private Node scrollableNode = null;
+
+  private PVector originalNodePosition = null;
+  private PVector originalNodePositionGlobal = null;
   private PVector velocity = null;
   private float dampingFactor = 0.9f;
 
   public void enable(){
     super.enable();
+
+    node.touchMoveEvent.addListener((TouchEvent event) -> {
+      if(scrollableNode == null || event.node != this.node)
+        return; // touch didn't start on our node
+
+      // just started dragging?
+      if(!isDragging()){
+        originalNodePosition = scrollableNode.getPosition(); // this makes isDragging true
+        originalNodePositionGlobal = scrollableNode.getGlobalPosition();
+        // startEvent.trigger(this);
+      }
+
+      apply(event.offset());
+    }, this);
+
+    node.touchUpEvent.addListener((TouchEvent event) -> {
+      if(!isDragging())
+        return;
+
+      apply(event.offset());
+      originalNodePosition = null; // this makes isDragging() false
+      // endEvent.trigger(this);
+    }, this);
+  }
+
+  public void disable(){
+    super.disable();
+
+    node.touchMoveEvent.removeListeners(this);
+    node.touchUpEvent.removeListeners(this);
+  }
+
+  private void apply(PVector dragOffset){
+    if(originalNodePositionGlobal == null) // should already be set at first processed touchMoveEvent, but just to be sure
+      originalNodePositionGlobal = scrollableNode.getGlobalPosition();
+
+    PVector globPos = originalNodePositionGlobal.get();
+    globPos.add(dragOffset);
+
+    scrollableNode.setGlobalPosition(globPos);
+  }
+
+  public boolean isDragging(){
+    return originalNodePosition != null;
   }
 
   public Node getScrollableNode(){
