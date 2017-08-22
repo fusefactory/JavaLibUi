@@ -15,11 +15,13 @@ public class SmoothScroll extends ExtensionBase {
   private PVector originalNodePositionGlobal = null;
   private PVector velocity = null;
   private PVector smoothedVelocity = null;
+  private PVector snapOffset = null;
 
   private final static float velocitySmoothCoeff = 0.1f;
   private float dampingFactor = 0.001f;
   private final static float minVelocityMag = 1.0f; // when velocity reaches this value (or lower), we finalize the movement
   private final static float velocityReductionFactor = 0.05f; // factor to multipy the (already smoother) smoothedVelocity when setting the main velocity
+  private final static float snapVelocityMag = 10.0f; // when velocity reaches this value (or lower), we start snapping
 
   @Override
   public void update(float dt){
@@ -37,6 +39,11 @@ public class SmoothScroll extends ExtensionBase {
     PVector dampedVelocity = velocity.get();
     dampedVelocity.mult(dampingFactor);
     velocity.lerp(dampedVelocity, dt);
+
+    float mag = velocity.mag();
+    if(snapOffset != null && mag <= snapVelocityMag){
+
+    }
 
     if(velocity.mag() < minVelocityMag)
       velocity = null; // isDamping() = false
@@ -152,6 +159,14 @@ public class SmoothScroll extends ExtensionBase {
     dampingFactor = newDampingFactor;
   }
 
+  public void setSnapEnabled(boolean enable){
+    if(!enable){
+      snapOffset = null;
+      return;
+    }
+
+    snapOffset = node.getSize();
+  }
 
   public static SmoothScroll enableFor(Node touchAreaNode, Node scrollableNode){
     SmoothScroll ext = getFor(touchAreaNode, scrollableNode);
