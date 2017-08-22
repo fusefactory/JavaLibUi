@@ -24,6 +24,7 @@ public class LambdaNode extends Node {
   }
 
   @Override public void update(float dt){
+    super.update(dt);
     if(updateFunc!=null) updateFunc.accept(dt);
   }
 

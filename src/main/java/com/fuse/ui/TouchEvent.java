@@ -27,6 +27,12 @@ public class TouchEvent {
   public Node node;
   /** Latest node that was touched */
   public Node mostRecentNode;
+  /** The time */
+  public Float time;
+  /** The velocity of the touch movement */
+  public PVector velocity;
+  public PVector velocitySmoothed;
+
 
   /** @return String A string-based representation of this TouchEvent instance (mainly for debugging) */
   public String toString(){
@@ -80,6 +86,8 @@ public class TouchEvent {
     touchEvent.startPosition = startPosition;
     touchEvent.node = node;
     touchEvent.mostRecentNode = mostRecentNode;
+    touchEvent.time = time;
+    touchEvent.velocity = velocity;
     return touchEvent;
   }
 
