@@ -103,7 +103,7 @@ public class TouchManager extends TouchReceiver {
 
   public void update(){
     for(TouchEvent evt : activeTouchEvents.values()){
-      evt.velocitySmoothed = evt.velocitySmoothed.mult(velocityDump);
+      evt.velocitySmoothed.mult(velocityDump);
     }
 
     if(dispatchOnUpdate){

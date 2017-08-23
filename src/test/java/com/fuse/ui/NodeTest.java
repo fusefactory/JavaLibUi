@@ -480,7 +480,8 @@ public class NodeTest {
         Node n = new Node();
         n.setSize(10, 10);
         assertEquals(n.getSize(), new PVector(10,10,0));
-        n.getSize().add(new PVector(10, 0, 0));
+        PVector tmp = n.getSize();
+        tmp.add(new PVector(10, 0, 0));
         assertEquals(n.getSize(), new PVector(10,10,0));
     }
 
