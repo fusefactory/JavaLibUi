@@ -15,16 +15,30 @@ public class SmoothScroll extends ExtensionBase {
   private PVector originalNodePositionGlobal = null;
   private PVector velocity = null;
   private PVector smoothedVelocity = null;
-  private PVector snapOffset = null;
 
   private final static float velocitySmoothCoeff = 0.1f;
   private float dampingFactor = 0.001f;
   private final static float minVelocityMag = 1.0f; // when velocity reaches this value (or lower), we finalize the movement
   private final static float velocityReductionFactor = 0.05f; // factor to multipy the (already smoother) smoothedVelocity when setting the main velocity
-  private final static float snapVelocityMag = 10.0f; // when velocity reaches this value (or lower), we start snapping
+
+  // snapping (falling back into place)
+  private PVector snapOffset = null;
+  private float snapVelocityMag = 75.0f; // when velocity reaches this value (or lower), we start snapping
+  private PVector snapGlobalPosition = null;
+  private float snapFactor = 0.3f;
 
   @Override
   public void update(float dt){
+    if(isSnapping()){
+      PVector delta = snapGlobalPosition.get();
+      PVector curGlobalPos = scrollableNode.getGlobalPosition();
+      delta.sub(curGlobalPos);
+      delta.mult(snapFactor);
+      curGlobalPos.add(delta);
+      scrollableNode.setGlobalPosition(curGlobalPos);
+      return;
+    }
+
     if(!isDamping())
       return;
 
@@ -41,8 +55,25 @@ public class SmoothScroll extends ExtensionBase {
     velocity.lerp(dampedVelocity, dt);
 
     float mag = velocity.mag();
-    if(snapOffset != null && mag <= snapVelocityMag){
 
+    if(snapOffset != null && mag <= snapVelocityMag){
+      this.velocity = null; // isDamping() == false
+
+      PVector globPos = scrollableNode.getGlobalPosition();
+      PVector curOffset = globPos.get();
+      curOffset.sub(originalNodePositionGlobal);
+
+      PVector targetOffset = new PVector(curOffset.x - curOffset.x % snapOffset.x,
+                                          curOffset.y - curOffset.y % snapOffset.y,
+                                          0.0f);
+      if(Math.abs(targetOffset.x - curOffset.x) > snapOffset.x * 0.5f)
+        targetOffset.x += curOffset.x < targetOffset.x ? -snapOffset.x : snapOffset.x;
+      if(Math.abs(targetOffset.y - curOffset.y) > snapOffset.y * 0.5f)
+        targetOffset.y += curOffset.y < targetOffset.y ? -snapOffset.y : snapOffset.y;
+
+      snapGlobalPosition = originalNodePositionGlobal.get();
+      snapGlobalPosition.add(targetOffset); // isSnapping() = true
+      return;
     }
 
     if(velocity.mag() < minVelocityMag)
@@ -82,20 +113,21 @@ public class SmoothScroll extends ExtensionBase {
       // just started dragging?
       if(!isDragging()){
         this.velocity = null; // this makes isDamping() false
+        this.snapGlobalPosition = null; // isSnapping() = false
         originalNodePosition = scrollableNode.getPosition(); // this makes isDragging true
         originalNodePositionGlobal = scrollableNode.getGlobalPosition();
         smoothedVelocity = new PVector(0.0f, 0.0f, 0.0f);
       }
 
       smoothedVelocity.lerp(event.velocitySmoothed, velocitySmoothCoeff);
-      apply(event.offset());
+      applyDragOffset(event.offset());
     }, this);
 
     node.touchUpEvent.addListener((TouchEvent event) -> {
       if(!isDragging())
         return;
 
-      apply(event.offset());
+      applyDragOffset(event.offset());
       originalNodePosition = null; // this makes isDragging() false
       // endDragEvent.trigger(this);
       smoothedVelocity.lerp(event.velocitySmoothed, velocitySmoothCoeff);
@@ -114,7 +146,7 @@ public class SmoothScroll extends ExtensionBase {
     originalNodePosition = null; // isDragging() = false
   }
 
-  private void apply(PVector dragOffset){
+  private void applyDragOffset(PVector dragOffset){
     if(originalNodePositionGlobal == null) // should already be set at first processed touchMoveEvent, but just to be sure
       originalNodePositionGlobal = scrollableNode.getGlobalPosition();
 
@@ -130,6 +162,10 @@ public class SmoothScroll extends ExtensionBase {
 
   public boolean isDamping(){
     return this.velocity != null;
+  }
+
+  public boolean isSnapping(){
+    return snapGlobalPosition != null;
   }
 
   public PVector getVelocity(){
@@ -166,6 +202,14 @@ public class SmoothScroll extends ExtensionBase {
     }
 
     snapOffset = node.getSize();
+  }
+
+  public void setSnapFactor(float newFactor){
+    snapFactor = newFactor;
+  }
+
+  public void setSnapVelocity(float newSnapVelocity){
+    snapVelocityMag = newSnapVelocity;
   }
 
   public static SmoothScroll enableFor(Node touchAreaNode, Node scrollableNode){
