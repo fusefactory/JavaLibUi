@@ -13,6 +13,7 @@ public class SmoothScroll extends ExtensionBase {
 
   private PVector originalNodePosition = null;
   private PVector originalNodePositionGlobal = null;
+  private PVector dragStartNodePositionGlobal = null;
   private PVector velocity = null;
   private PVector smoothedVelocity = null;
 
@@ -115,7 +116,7 @@ public class SmoothScroll extends ExtensionBase {
         this.velocity = null; // this makes isDamping() false
         this.snapGlobalPosition = null; // isSnapping() = false
         originalNodePosition = scrollableNode.getPosition(); // this makes isDragging true
-        originalNodePositionGlobal = scrollableNode.getGlobalPosition();
+        dragStartNodePositionGlobal = scrollableNode.getGlobalPosition();
         smoothedVelocity = new PVector(0.0f, 0.0f, 0.0f);
       }
 
@@ -147,10 +148,10 @@ public class SmoothScroll extends ExtensionBase {
   }
 
   private void applyDragOffset(PVector dragOffset){
-    if(originalNodePositionGlobal == null) // should already be set at first processed touchMoveEvent, but just to be sure
-      originalNodePositionGlobal = scrollableNode.getGlobalPosition();
+    if(dragStartNodePositionGlobal == null) // should already be set at first processed touchMoveEvent, but just to be sure
+      dragStartNodePositionGlobal = scrollableNode.getGlobalPosition();
 
-    PVector globPos = originalNodePositionGlobal.get();
+    PVector globPos = dragStartNodePositionGlobal.get();
     globPos.add(dragOffset);
 
     scrollableNode.setGlobalPosition(globPos);
@@ -177,14 +178,16 @@ public class SmoothScroll extends ExtensionBase {
   }
 
   public void setScrollableNode(Node newScrollableNode){
-    if(!isEnabled()){
-      scrollableNode = newScrollableNode;
-      return;
-    }
+    boolean wasEnabled = isEnabled();
 
-    disable();
+    if(wasEnabled)
+      disable();
+
     scrollableNode = newScrollableNode;
-    enable();
+    originalNodePositionGlobal = scrollableNode.getGlobalPosition();
+
+    if(wasEnabled)
+      enable();
   }
 
   public float getDampingFactor(){
