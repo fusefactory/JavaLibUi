@@ -59,4 +59,27 @@ public class SmoothScrollTest {
     // didn't move because was disabled
     assertEquals(scrollableNode.getPosition(), posAfterDisable);
   }
+
+  @Test public void setMinOffset_setMaxOffset(){
+    // create scene
+    Node scene = new Node();
+    Node touchAreaNode = new Node();
+    touchAreaNode.setPosition(10, 10);
+    touchAreaNode.setSize(300, 100);
+    scene.addChild(touchAreaNode);
+
+    Node scrollableNode = new Node();
+    touchAreaNode.addChild(scrollableNode);
+
+    SmoothScroll extension = SmoothScroll.enableFor(touchAreaNode, scrollableNode);
+
+    extension.setMinOffset(-300, 0);
+
+    // touch down on global position 15,15 and drag 100 pixels to the RIGHT
+    // divide the gesture up into 15 touch-events
+    TouchGenerator.on(scene).from(15, 15).move(-500, 0).moves(10).duration(1.0f).go();
+    assertEquals(scrollableNode.getPosition(), new PVector(-500, 0, 0));
+    assertTrue(extension.isSnapping());
+    assertEquals(extension.getSnapPosition(), new PVector(-300, 0, 0));
+  }
 }
