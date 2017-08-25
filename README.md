@@ -1,4 +1,7 @@
 # JavaLibUi
+
+[![Build Status](https://travis-ci.org/fusefactory/JavaLibUi.svg?branch=master)](https://travis-ci.org/fusefactory/JavaLibUi)
+
 _Java package that provides a framework, on top of processing, for building (touch-screen) user interfaces._
 
 The code in this package is heavily inspired by the [ofxInterface OpenFrameworks addon](https://github.com/galsasson/ofxInterface) and the [poScene cinder block](https://github.com/Potion/Cinder-poScene).
