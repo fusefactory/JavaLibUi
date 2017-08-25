@@ -83,7 +83,7 @@ public class Node extends TouchReceiver {
     position = new PVector();
     size = new PVector();
     rotation = new PVector();
-    scale = new PVector();
+    scale = new PVector(1.0f, 1.0f, 1.0f);
     localTransformMatrix = new PMatrix3D();
     name = "";
     newParentEvent = new Event<>();
@@ -260,6 +260,15 @@ public class Node extends TouchReceiver {
     localTransformMatrix.rotateY(rotation.y);
     localTransformMatrix.rotateZ(rotation.z);
     localTransformMatrix.scale(scale.x, scale.y, scale.z);
+  }
+
+  public PVector getRotation(){
+    return this.rotation.get();
+  }
+
+  public void setRotation(PVector newRot){
+    this.rotation = newRot.get();
+    updateLocalTransformMatrix();
   }
 
   public void rotate(float amount){
