@@ -28,6 +28,10 @@ public class SmoothScroll extends ExtensionBase {
   private PVector snapGlobalPosition = null;
   private float snapFactor = 0.3f;
 
+  public SmoothScroll(){
+    smoothedVelocity = new PVector(0.0f, 0.0f, 0.0f);
+  }
+  
   @Override
   public void update(float dt){
     if(isSnapping()){
@@ -120,7 +124,9 @@ public class SmoothScroll extends ExtensionBase {
         smoothedVelocity = new PVector(0.0f, 0.0f, 0.0f);
       }
 
-      smoothedVelocity.lerp(event.velocitySmoothed, velocitySmoothCoeff);
+      if(event.velocitySmoothed != null)
+        smoothedVelocity.lerp(event.velocitySmoothed, velocitySmoothCoeff);
+
       applyDragOffset(event.offset());
     }, this);
 
@@ -131,7 +137,8 @@ public class SmoothScroll extends ExtensionBase {
       applyDragOffset(event.offset());
       originalNodePosition = null; // this makes isDragging() false
       // endDragEvent.trigger(this);
-      smoothedVelocity.lerp(event.velocitySmoothed, velocitySmoothCoeff);
+      if(event.velocitySmoothed != null)
+        smoothedVelocity.lerp(event.velocitySmoothed, velocitySmoothCoeff);
       this.velocity = smoothedVelocity; // this makes isDamping() true
       this.velocity.mult(velocityReductionFactor);
     }, this);
