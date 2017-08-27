@@ -63,18 +63,22 @@ public class Draggable extends ExtensionBase {
     if(originalNodePositionGlobal == null) // should already be set at first processed touchMoveEvent, but just to be sure
       originalNodePositionGlobal = this.getNode().getGlobalPosition();
 
-    this.getNode().setGlobalPosition(dragOffset.add(originalNodePositionGlobal));
+    PVector globPos = dragOffset.get();
+    globPos.add(originalNodePositionGlobal);
+    this.getNode().setGlobalPosition(globPos);
   }
 
   public PVector getOffset(){
     if(originalNodePosition == null || node == null)
       return new PVector(0.0f,0.0f,0.0f);
 
-    return node.getPosition().sub(originalNodePosition);
+    PVector result = node.getPosition();
+    result.sub(originalNodePosition);
+    return result;
   }
 
   public PVector getOriginalPosition(){
-    return originalNodePosition == null ? null : originalNodePosition.copy();
+    return originalNodePosition == null ? null : originalNodePosition.get();
   }
 
   public boolean isDragging(){

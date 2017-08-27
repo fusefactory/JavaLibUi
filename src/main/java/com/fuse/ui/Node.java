@@ -48,7 +48,7 @@ public class Node extends TouchReceiver {
   private PMatrix3D localTransformMatrix;
   /** Makes sure all offspring Nodes only render within this node's boundaries */
   private Node clippingNode;
-  private List<ExtensionBase> extensions;
+  private List<ExtensionBase> extensions = null;
 
   /** Float-based z-level attribute used for re-ordering Nodes in the render-queue;
    * a higher plane value will put the Node later in the queue, which means
@@ -83,7 +83,7 @@ public class Node extends TouchReceiver {
     position = new PVector();
     size = new PVector();
     rotation = new PVector();
-    scale = new PVector();
+    scale = new PVector(1.0f, 1.0f, 1.0f);
     localTransformMatrix = new PMatrix3D();
     name = "";
     newParentEvent = new Event<>();
@@ -121,7 +121,11 @@ public class Node extends TouchReceiver {
   }
 
   public void update(float dt){
-    // virtual method
+    if(extensions!=null){
+      for(ExtensionBase ext : extensions){
+        ext.update(dt);
+      }
+    }
   }
 
   public void draw(){
@@ -137,6 +141,12 @@ public class Node extends TouchReceiver {
     pg.noStroke();
     pg.fill(clr);
     pg.text(getName(), 0.0f, 15.0f);
+
+    if(extensions!=null){
+      for(ExtensionBase ext : extensions){
+        ext.drawDebug();
+      }
+    }
   }
 
   public boolean isVisible(){
@@ -172,7 +182,7 @@ public class Node extends TouchReceiver {
   }
 
   public PVector getPosition(){
-    return position.copy();
+    return position.get();
   }
 
   public PVector getGlobalPosition(){
@@ -214,7 +224,7 @@ public class Node extends TouchReceiver {
   }
 
   public PVector getSize(){
-    return size.copy();
+    return size.get();
   }
 
   public void setWidth(float newWidth){
@@ -226,7 +236,7 @@ public class Node extends TouchReceiver {
   }
 
   public void setSize(PVector newSize){
-    size = newSize.copy();
+    size = newSize.get();
     sizeChangeEvent.trigger(this);
   }
 
@@ -250,6 +260,15 @@ public class Node extends TouchReceiver {
     localTransformMatrix.rotateY(rotation.y);
     localTransformMatrix.rotateZ(rotation.z);
     localTransformMatrix.scale(scale.x, scale.y, scale.z);
+  }
+
+  public PVector getRotation(){
+    return this.rotation.get();
+  }
+
+  public void setRotation(PVector newRot){
+    this.rotation = newRot.get();
+    updateLocalTransformMatrix();
   }
 
   public void rotate(float amount){
@@ -688,9 +707,8 @@ public class Node extends TouchReceiver {
 
   /**
    * Creates an extension that monitors the source for touch events and passed them on to this node
-   * These two methods create a circul dependency between Node and TouchEventForwarder, however they
-   * merely exist for providing a predictable API
-   *
+   * These two methods create a circular dependency between Node and TouchEventForwarder, however they
+   * merely exist for providing an easy API
    */
   public ExtensionBase copyAllTouchEventsFrom(TouchReceiver source){
     return TouchEventForwarder.enableFromTo(source, this);

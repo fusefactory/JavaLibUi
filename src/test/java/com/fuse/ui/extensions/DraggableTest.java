@@ -149,7 +149,7 @@ public class DraggableTest {
     scene.addChild(n);
 
     // redundant copy for clarity
-    PVector originalPosition = n.getPosition().copy();
+    PVector originalPosition = n.getPosition().get();
     Draggable.enableFor(n);
 
     // drag horizontally (mostly) to the right

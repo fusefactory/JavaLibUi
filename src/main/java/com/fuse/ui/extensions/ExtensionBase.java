@@ -12,6 +12,14 @@ public class ExtensionBase {
     logger = Logger.getLogger(ExtensionBase.class.getName());
   }
 
+  public void update(float dt){
+    // override this method extension-specific functionality
+  }
+
+  public void drawDebug(){
+    // override this method with extension-specific functionality
+  }
+
   public void setNode(Node newNode){
     node = newNode;
   }

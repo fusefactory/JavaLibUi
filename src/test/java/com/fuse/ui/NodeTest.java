@@ -480,7 +480,8 @@ public class NodeTest {
         Node n = new Node();
         n.setSize(10, 10);
         assertEquals(n.getSize(), new PVector(10,10,0));
-        n.getSize().add(new PVector(10, 0, 0));
+        PVector tmp = n.getSize();
+        tmp.add(new PVector(10, 0, 0));
         assertEquals(n.getSize(), new PVector(10,10,0));
     }
 
@@ -576,5 +577,29 @@ public class NodeTest {
 
 
 
+    }
+
+    @Test public void setRotation(){
+        Node n = new Node();
+        PVector vec = new PVector();
+        float radFactor = 1.0f / 180.0f * (float)Math.PI;
+
+        vec.z = 180.0f * radFactor;
+        n.setRotation(vec);
+        //assertEquals(n.getRotation().z, (float)Math.PI, 0.00001f);
+        assertEquals(n.toGlobal(new PVector(10,30,0)).x, -10.0f, 0.0001f);
+        assertEquals(n.toGlobal(new PVector(10,30,0)).y, -30.0f, 0.0001f);
+
+        vec.z = 45.0f * radFactor;
+        n.setRotation(vec);
+        assertEquals(n.getRotation(), vec);
+        // assertEquals(n.toGlobal(new PVector(10,30,0)).x, -10.0f, 0.0001f);
+        // assertEquals(n.toGlobal(new PVector(10,30,0)).y, 10.0f, 0.0001f);
+
+        vec.z = 0.0f * radFactor;
+        n.setRotation(vec);
+        assertEquals(n.getRotation(), vec);
+        assertEquals(n.toGlobal(new PVector(10,10,0)).x, 10.0f, 0.0001f);
+        assertEquals(n.toGlobal(new PVector(10,10,0)).y, 10.0f, 0.0001f);
     }
 }
