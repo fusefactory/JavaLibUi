@@ -25,7 +25,7 @@ public class SmoothScroll extends ExtensionBase {
   private PVector snapInterval = null;
   private float snapVelocityMag = 75.0f; // when velocity reaches this value (or lower), we start snapping
   private PVector snapPosition = null;
-  private float snapFactor = 0.8f;
+  private float snapFactor = 0.95f;
   private final static float snapDoneDist = 0.9f;
 
   // offset limits
