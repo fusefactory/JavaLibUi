@@ -122,7 +122,12 @@ public class Node extends TouchReceiver {
 
   public void update(float dt){
     if(extensions!=null){
-      for(ExtensionBase ext : extensions){
+      // Copy all extension into a temporary collection before iteration,
+      // because extensions might be added/removed while iterating
+      List<ExtensionBase> tmpExtensions = new ArrayList<>();
+      tmpExtensions.addAll(extensions);
+
+      for(ExtensionBase ext : tmpExtensions){
         ext.update(dt);
       }
     }
