@@ -90,20 +90,7 @@ public class SmoothScroll extends ExtensionBase {
     float mag = velocity.mag();
 
     if(snapInterval != null && mag <= snapVelocityMag){
-      this.velocity = null; // isDamping() == false
-
-      PVector curOffset = this.getCurrentOffset();
-
-      PVector targetOffset = new PVector(curOffset.x - curOffset.x % snapInterval.x,
-                                          curOffset.y - curOffset.y % snapInterval.y,
-                                          0.0f);
-      if(Math.abs(targetOffset.x - curOffset.x) > snapInterval.x * 0.5f)
-        targetOffset.x += curOffset.x < targetOffset.x ? -snapInterval.x : snapInterval.x;
-      if(Math.abs(targetOffset.y - curOffset.y) > snapInterval.y * 0.5f)
-        targetOffset.y += curOffset.y < targetOffset.y ? -snapInterval.y : snapInterval.y;
-
-      snapPosition = originalNodePosition.get();
-      snapPosition.add(targetOffset); // isSnapping() = true
+      this.startSnapping();
       return;
     }
 
@@ -203,6 +190,24 @@ public class SmoothScroll extends ExtensionBase {
     return this.velocity != null;
   }
 
+  private void startSnapping(){
+    this.velocity = null; // isDamping() == false
+
+    PVector curOffset = this.getCurrentOffset();
+
+    PVector targetOffset = new PVector(curOffset.x - curOffset.x % snapInterval.x,
+                                        curOffset.y - curOffset.y % snapInterval.y,
+                                        0.0f);
+
+    if(Math.abs(targetOffset.x - curOffset.x) > snapInterval.x * 0.5f)
+      targetOffset.x += curOffset.x < targetOffset.x ? -snapInterval.x : snapInterval.x;
+    if(Math.abs(targetOffset.y - curOffset.y) > snapInterval.y * 0.5f)
+      targetOffset.y += curOffset.y < targetOffset.y ? -snapInterval.y : snapInterval.y;
+
+    snapPosition = originalNodePosition.get();
+    snapPosition.add(targetOffset); // isSnapping() = true
+  }
+
   public boolean isSnapping(){
     return snapPosition != null;
   }
@@ -280,6 +285,17 @@ public class SmoothScroll extends ExtensionBase {
     snapPosition = getOffsetLimitSnapPosition();
   }
 
+  public void setScrollPosition(float x, float y){
+    this.setScrollPosition(new PVector(x,y,0.0f));
+  }
+
+  public void setScrollPosition(PVector pos){
+    this.scrollableNode.setPosition(pos);
+
+    if(this.snapInterval != null){
+      this.startSnapping();
+    }
+  }
 
   public PVector getOffsetLimitSnapPosition(){
     PVector curOffset = getCurrentOffset();
