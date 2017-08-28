@@ -19,7 +19,7 @@ public class SmoothScroll extends ExtensionBase {
   private final static float velocitySmoothCoeff = 0.1f;
   private float dampingFactor = 0.001f;
   private final static float minVelocityMag = 1.0f; // when velocity reaches this value (or lower), we finalize the movement
-  private final static float velocityReductionFactor = 0.05f; // factor to multipy the (already smoother) smoothedVelocity when setting the main velocity
+  private float velocityReductionFactor = 0.2f; // factor to multipy the (already smoother) smoothedVelocity when setting the main velocity
 
   // snapping (falling back into place)
   private PVector snapInterval = null;
@@ -240,6 +240,14 @@ public class SmoothScroll extends ExtensionBase {
 
   public void setDampingFactor(float newDampingFactor){
     dampingFactor = newDampingFactor;
+  }
+  
+  public float getVelocityReductionFactor(){
+    return velocityReductionFactor;
+  }
+  
+  public void setVelocityReductionFactor(float factor){
+    velocityReductionFactor = factor;
   }
 
   /**
