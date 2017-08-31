@@ -120,6 +120,30 @@ public class Node extends TouchReceiver {
     setName(nodeName);
   }
 
+  public void destroy(){
+    if(extensions != null){
+      for(int idx=extensions.size()-1; idx>=0; idx--){
+        ExtensionBase ext = extensions.get(idx);
+        this.stopUsing(ext);
+        ext.destroy();
+      }
+
+      this.extensions = null;
+    }
+
+    while(!childNodes.isEmpty()){
+      Node childNode = childNodes.get(0);
+      this.removeChild(childNode);
+      childNode.destroy();
+    }
+
+    newParentEvent.destroy();
+    newOffspringEvent.destroy();
+    newChildEvent.destroy();
+    positionChangeEvent.destroy();
+    sizeChangeEvent.destroy();
+  }
+
   public void update(float dt){
     if(extensions!=null){
       // Copy all extension into a temporary collection before iteration,
@@ -654,9 +678,8 @@ public class Node extends TouchReceiver {
   public void use(ExtensionBase newExtension){
     // lazy create so extensions attribute doesn't use any memory
     // unless this Node actually gets extensions
-    if(extensions == null){
+    if(extensions == null)
       extensions = new ArrayList<>();
-    }
 
     newExtension.setNode(this);
     newExtension.enable();
