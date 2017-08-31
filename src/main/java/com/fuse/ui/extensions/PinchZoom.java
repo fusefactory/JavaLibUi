@@ -1,6 +1,9 @@
 package com.fuse.ui.extensions;
 
+import java.util.List;
+
 import processing.core.PVector;
+import processing.core.PGraphics;
 
 import com.fuse.utils.Event;
 import com.fuse.ui.Node;
@@ -26,41 +29,46 @@ public class PinchZoom extends ExtensionBase {
   @Override public void enable(){
     super.enable();
 
-    node.touchDownEvent.addListener((TouchEvent event) -> {
+    // node.touchDownEvent.addListener((TouchEvent event) -> {
+    //   if(event.time - touchEvent1.time > 500)
+    //     if(touchEvent1.isFinished())
+    //       touchEvent1 = null;
+    //
+    //   if(touchEvent2 != null)
+    //     if(touchEvent2.isFinished())
+    //       touchEvent2 = null;
+    //
+    //   if(touchEvent1 == event)
+    //     return; // already known
+    //
+    //   if(touchEvent2 == event)
+    //     return; // already known
+    //
+    //   // not yet known
+    //   if(touchEvent1 == null){
+    //     touchEvent1 = event;
+    //     return;
+    //   }
+    //
+    //   if(touchEvent2 == null){
+    //     touchEvent2 = event;
+    //     originalNodePositionGlobal = node.getGlobalPosition();
+    //     originalNodeSize = node.getSize();
+    //   }
+    //
+    //   // already two touches; ignore any other touches
+    //
+    // }, this);
 
-      if(touchEvent1 == event)
-        return; // already known
-
-      if(touchEvent2 == event)
-        return; // already known
-
-      // not yet known
-
-      if(touchEvent1 == null){
-        touchEvent1 = event;
-        return;
-      }
-
-      if(touchEvent2 == null){
-        touchEvent2 = event;
-        originalNodePositionGlobal = node.getGlobalPosition();
-        originalNodeSize = node.getSize();
-      }
-
-      // already two touches; ignore any other touches
-
-    }, this);
-
-    getNode().touchUpEvent.addListener((TouchEvent event) -> {
-      if(touchEvent1 == event){
-        touchEvent1 = null; // touch#1 ended
-        return;
-      }
-
-      if(touchEvent2 == event){
-        touchEvent2 = null; // touch#2 ended
-      }
-    }, this);
+    // getNode().touchUpEvent.addListener((TouchEvent event) -> {
+    //   if(touchEvent1 == event){
+    //     touchEvent1 = null; // touch#1 ended
+    //   }
+    //
+    //   if(touchEvent2 == event){
+    //     touchEvent2 = null; // touch#2 ended
+    //   }
+    // }, this);
 
     getNode().touchMoveEvent.addListener((TouchEvent event) -> {
       if(!isActive()) return;
@@ -76,11 +84,11 @@ public class PinchZoom extends ExtensionBase {
           originalNodeSize.x * scaler.x,
           originalNodeSize.y * scaler.y,
           originalNodeSize.z * scaler.z);
-        getNode().setSize(newSize);
+        // getNode().setSize(newSize);
       }
 
       if(zoomMode == ZoomMode.SCALE){
-        getNode().setScale(scaler);
+        // getNode().setScale(scaler);
       }
     }, this);
   }
@@ -170,5 +178,23 @@ public class PinchZoom extends ExtensionBase {
       if(PinchZoom.class.isInstance(ext))
         return (PinchZoom)ext;
     return null;
+  }
+
+  @Override
+  public void drawDebug(){
+    PGraphics pg = Node.getPGraphics();
+    List<TouchEvent> activeTouchEvents = node.getActiveTouchEvents();
+
+    if(activeTouchEvents.size() == 2){
+      pg.colorMode(pg.RGB, 255);
+      pg.fill(pg.color(100,100,255,150));
+      pg.noStroke();
+      pg.ellipseMode(pg.CENTER);
+
+      PVector localPos = node.toLocal(activeTouchEvents.get(0).position);
+      pg.ellipse(localPos.x, localPos.y, 30, 30);
+      localPos = node.toLocal(activeTouchEvents.get(1).position);
+      pg.ellipse(localPos.x, localPos.y, 30, 30);
+    }
   }
 }

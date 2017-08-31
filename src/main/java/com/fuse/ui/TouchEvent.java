@@ -102,4 +102,8 @@ public class TouchEvent {
   public PVector offset(){
     return PVector.sub(position, startPosition);
   }
+  
+  public boolean isFinished(){
+    return this.eventType == EventType.TOUCH_UP;
+  }
 }
