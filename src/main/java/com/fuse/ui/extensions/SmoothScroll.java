@@ -157,7 +157,12 @@ public class SmoothScroll extends ExtensionBase {
       // endDragEvent.trigger(this);
       if(event.velocitySmoothed != null)
         smoothedVelocity.lerp(event.velocitySmoothed, velocitySmoothCoeff);
-      this.velocity = smoothedVelocity; // this makes isDamping() true
+
+      if(event.velocitySmoothed != null)
+        this.velocity = event.velocitySmoothed.get(); //smoothedVelocity; // this makes isDamping() true
+      else
+        this.velocity = smoothedVelocity.get();
+
       this.velocity.mult(velocityReductionFactor);
     }, this);
   }
@@ -241,11 +246,11 @@ public class SmoothScroll extends ExtensionBase {
   public void setDampingFactor(float newDampingFactor){
     dampingFactor = newDampingFactor;
   }
-  
+
   public float getVelocityReductionFactor(){
     return velocityReductionFactor;
   }
-  
+
   public void setVelocityReductionFactor(float factor){
     velocityReductionFactor = factor;
   }
