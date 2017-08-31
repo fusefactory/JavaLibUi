@@ -12,6 +12,11 @@ public class ExtensionBase {
     logger = Logger.getLogger(ExtensionBase.class.getName());
   }
 
+  public void destroy(){
+    this.disable();
+    node = null;
+  }
+
   public void update(float dt){
     // override this method extension-specific functionality
   }

@@ -19,7 +19,7 @@ public class SmoothScroll extends ExtensionBase {
   private final static float velocitySmoothCoeff = 0.1f;
   private float dampingFactor = 0.001f;
   private final static float minVelocityMag = 1.0f; // when velocity reaches this value (or lower), we finalize the movement
-  private final static float velocityReductionFactor = 0.05f; // factor to multipy the (already smoother) smoothedVelocity when setting the main velocity
+  private float velocityReductionFactor = 0.2f; // factor to multipy the (already smoother) smoothedVelocity when setting the main velocity
 
   // snapping (falling back into place)
   private PVector snapInterval = null;
@@ -34,6 +34,11 @@ public class SmoothScroll extends ExtensionBase {
 
   public SmoothScroll(){
     smoothedVelocity = new PVector(0.0f, 0.0f, 0.0f);
+  }
+
+  @Override public void destroy(){
+    super.destroy();
+    scrollableNode = null;
   }
 
   @Override
@@ -90,20 +95,7 @@ public class SmoothScroll extends ExtensionBase {
     float mag = velocity.mag();
 
     if(snapInterval != null && mag <= snapVelocityMag){
-      this.velocity = null; // isDamping() == false
-
-      PVector curOffset = this.getCurrentOffset();
-
-      PVector targetOffset = new PVector(curOffset.x - curOffset.x % snapInterval.x,
-                                          curOffset.y - curOffset.y % snapInterval.y,
-                                          0.0f);
-      if(Math.abs(targetOffset.x - curOffset.x) > snapInterval.x * 0.5f)
-        targetOffset.x += curOffset.x < targetOffset.x ? -snapInterval.x : snapInterval.x;
-      if(Math.abs(targetOffset.y - curOffset.y) > snapInterval.y * 0.5f)
-        targetOffset.y += curOffset.y < targetOffset.y ? -snapInterval.y : snapInterval.y;
-
-      snapPosition = originalNodePosition.get();
-      snapPosition.add(targetOffset); // isSnapping() = true
+      this.startSnapping();
       return;
     }
 
@@ -170,7 +162,12 @@ public class SmoothScroll extends ExtensionBase {
       // endDragEvent.trigger(this);
       if(event.velocitySmoothed != null)
         smoothedVelocity.lerp(event.velocitySmoothed, velocitySmoothCoeff);
-      this.velocity = smoothedVelocity; // this makes isDamping() true
+
+      if(event.velocitySmoothed != null)
+        this.velocity = event.velocitySmoothed.get(); //smoothedVelocity; // this makes isDamping() true
+      else
+        this.velocity = smoothedVelocity.get();
+
       this.velocity.mult(velocityReductionFactor);
     }, this);
   }
@@ -201,6 +198,24 @@ public class SmoothScroll extends ExtensionBase {
 
   public boolean isDamping(){
     return this.velocity != null;
+  }
+
+  private void startSnapping(){
+    this.velocity = null; // isDamping() == false
+
+    PVector curOffset = this.getCurrentOffset();
+
+    PVector targetOffset = new PVector(curOffset.x - curOffset.x % snapInterval.x,
+                                        curOffset.y - curOffset.y % snapInterval.y,
+                                        0.0f);
+
+    if(Math.abs(targetOffset.x - curOffset.x) > snapInterval.x * 0.5f)
+      targetOffset.x += curOffset.x < targetOffset.x ? -snapInterval.x : snapInterval.x;
+    if(Math.abs(targetOffset.y - curOffset.y) > snapInterval.y * 0.5f)
+      targetOffset.y += curOffset.y < targetOffset.y ? -snapInterval.y : snapInterval.y;
+
+    snapPosition = originalNodePosition.get();
+    snapPosition.add(targetOffset); // isSnapping() = true
   }
 
   public boolean isSnapping(){
@@ -235,6 +250,14 @@ public class SmoothScroll extends ExtensionBase {
 
   public void setDampingFactor(float newDampingFactor){
     dampingFactor = newDampingFactor;
+  }
+
+  public float getVelocityReductionFactor(){
+    return velocityReductionFactor;
+  }
+
+  public void setVelocityReductionFactor(float factor){
+    velocityReductionFactor = factor;
   }
 
   /**
@@ -280,6 +303,17 @@ public class SmoothScroll extends ExtensionBase {
     snapPosition = getOffsetLimitSnapPosition();
   }
 
+  public void setScrollPosition(float x, float y){
+    this.setScrollPosition(new PVector(x,y,0.0f));
+  }
+
+  public void setScrollPosition(PVector pos){
+    this.scrollableNode.setPosition(pos);
+
+    if(this.snapInterval != null){
+      this.startSnapping();
+    }
+  }
 
   public PVector getOffsetLimitSnapPosition(){
     PVector curOffset = getCurrentOffset();

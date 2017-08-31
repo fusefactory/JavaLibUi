@@ -23,6 +23,13 @@ public class Swiper extends ExtensionBase {
     swipeRightEvent = new Event<>();
   }
 
+  @Override public void destroy(){
+    super.destroy();
+    swipeEvent.destroy();
+    swipeLeftEvent.destroy();
+    swipeRightEvent.destroy();
+  }
+
   @Override public void enable(){
     super.enable();
 

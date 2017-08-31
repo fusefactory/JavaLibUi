@@ -25,6 +25,13 @@ public class Constrain extends ExtensionBase {
     zPercentageEvent = new Event<>();
   }
 
+  @Override public void destroy(){
+    super.destroy();
+    xPercentageEvent.destroy();
+    yPercentageEvent.destroy();
+    zPercentageEvent.destroy();
+  }
+
   @Override public void enable(){
     super.enable();
     constrainPos = node.getPosition();
