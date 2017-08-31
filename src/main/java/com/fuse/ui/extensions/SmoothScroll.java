@@ -36,6 +36,11 @@ public class SmoothScroll extends ExtensionBase {
     smoothedVelocity = new PVector(0.0f, 0.0f, 0.0f);
   }
 
+  @Override public void destroy(){
+    super.destroy();
+    scrollableNode = null;
+  }
+
   @Override
   public void update(float dt){
     if(isSnapping()){

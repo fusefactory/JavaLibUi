@@ -13,7 +13,7 @@ public class ExtensionBase {
   }
 
   public void destroy(){
-    disable();
+    this.disable();
     node = null;
   }
 

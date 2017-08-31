@@ -15,6 +15,11 @@ public class TouchEventForwarder extends ExtensionBase {
     this.source = source;
   }
 
+  @Override public void destroy(){
+    super.destroy();
+    source = null;
+  }
+
   @Override public void enable(){
     super.enable();
 
@@ -34,6 +39,8 @@ public class TouchEventForwarder extends ExtensionBase {
   }
 
   @Override public void disable(){
+    super.disable();
+
     if(this.source == null){
       logger.warning("no source");
       return;

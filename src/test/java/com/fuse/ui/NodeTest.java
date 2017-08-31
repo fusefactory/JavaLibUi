@@ -10,6 +10,12 @@ import java.util.ArrayList;
 import processing.core.*;
 
 import com.fuse.ui.extensions.ExtensionBase;
+import com.fuse.ui.extensions.Constrain;
+import com.fuse.ui.extensions.Draggable;
+import com.fuse.ui.extensions.PinchZoom;
+import com.fuse.ui.extensions.SmoothScroll;
+import com.fuse.ui.extensions.Swiper;
+import com.fuse.ui.extensions.TouchEventForwarder;
 
 public class NodeTest {
 
@@ -619,10 +625,7 @@ public class NodeTest {
         assertEquals(n.positionChangeEvent.size(), 1);
         assertEquals(n.sizeChangeEvent.size(), 1);
 
-        ExtensionBase ext = new ExtensionBase();
-        n.use(ext);
-        assertEquals(n.getExtensions().size(), 1);
-
+        // with child and grandchild
         Node child = new Node();
         child.sizeChangeEvent.addListener((Node nod) -> {});
         assertEquals(child.sizeChangeEvent.size(), 1);
@@ -637,6 +640,23 @@ public class NodeTest {
         assertEquals(grandchild.sizeChangeEvent.size(), 1);
         assertEquals(child.getChildNodes().size(), 1);
 
+        ExtensionBase ext = new ExtensionBase();
+
+        n.use(new ExtensionBase());
+        Draggable draggable = Draggable.enableFor(n);
+        draggable.startEvent.addListener((Draggable d) -> {});
+        assertEquals(draggable.startEvent.size(), 1);
+        Constrain constrain = Constrain.enableFor(n, true);
+        constrain.xPercentageEvent.addListener((Float f) -> {});
+        assertEquals(constrain.xPercentageEvent.size(), 1);
+        SmoothScroll smoothScroll = SmoothScroll.enableFor(n, child);
+        Swiper swiper = Swiper.enableFor(n);
+        swiper.swipeEvent.addListener((Swiper s) -> {});
+        assertEquals(swiper.swipeEvent.size(), 1);
+        PinchZoom pinchZoom = PinchZoom.enableFor(n);
+        TouchEventForwarder touchEventForwarder = TouchEventForwarder.enableFromTo(child, n);
+        assertEquals(n.getExtensions().size(), 7);
+
         n.destroy();
 
         assertEquals(n.newParentEvent.size(), 0);
@@ -644,10 +664,17 @@ public class NodeTest {
         assertEquals(n.newOffspringEvent.size(), 0);
         assertEquals(n.positionChangeEvent.size(), 0);
         assertEquals(n.sizeChangeEvent.size(), 0);
-        assertEquals(n.getExtensions().size(), 0);
+
         assertEquals(n.getChildNodes().size(), 0);
+
         assertEquals(child.sizeChangeEvent.size(), 0);
         assertEquals(child.getChildNodes().size(), 0);
+
         assertEquals(grandchild.sizeChangeEvent.size(), 0);
+
+        assertEquals(n.getExtensions().size(), 0);
+        assertEquals(draggable.startEvent.size(), 0);
+        assertEquals(swiper.swipeEvent.size(), 0);
+        assertEquals(constrain.xPercentageEvent.size(), 0);
     }
 }

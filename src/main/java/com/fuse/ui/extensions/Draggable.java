@@ -19,6 +19,12 @@ public class Draggable extends ExtensionBase {
     endEvent = new Event<>();
   }
 
+  @Override public void destroy(){
+    super.destroy();
+    startEvent.destroy();
+    endEvent.destroy();
+  }
+
   @Override public void enable(){
     super.enable();
 
@@ -55,8 +61,11 @@ public class Draggable extends ExtensionBase {
 
   @Override public void disable(){
     super.disable();
-    node.touchMoveEvent.removeListeners(this);
-    node.touchUpEvent.removeListeners(this);
+
+    if(node != null){
+      node.touchMoveEvent.removeListeners(this);
+      node.touchUpEvent.removeListeners(this);
+    }
   }
 
   public void apply(PVector dragOffset){
