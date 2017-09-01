@@ -1,12 +1,14 @@
 package com.fuse.ui;
 
 import java.util.logging.*;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
 import com.fuse.utils.Event;
 
 /** Base class for both Node and TouchManager; it provides touch events and method for receiving them */
 public class TouchReceiver {
+
+  private final static long IDLE_DURATION = 500l; // seconds after which an event if considered IDLE_DURATION
 
   public Event<TouchEvent>
     touchEvent,
@@ -19,6 +21,7 @@ public class TouchReceiver {
     touchDoubleClickEvent;
 
   private Logger logger;
+  private List<TouchEvent> activeTouchEvents = null;
 
   public TouchReceiver(){
     logger = Logger.getLogger(TouchReceiver.class.getName());
@@ -42,11 +45,38 @@ public class TouchReceiver {
 
     if(event.eventType != null){
       switch(event.eventType){
-        case TOUCH_DOWN: touchDownEvent.trigger(event); this.onTouchDown(event); break;
-        case TOUCH_MOVE: touchMoveEvent.trigger(event); this.onTouchMove(event); break;
-        case TOUCH_UP: touchUpEvent.trigger(event); this.onTouchUp(event); break;
-        case TOUCH_ENTER: touchEnterEvent.trigger(event); break;
-        case TOUCH_EXIT: touchExitEvent.trigger(event); break;
+        case TOUCH_DOWN: {
+          addActiveTouchEvent(event);
+          touchDownEvent.trigger(event);
+          this.onTouchDown(event);
+          break;
+        }
+
+        case TOUCH_MOVE: {
+          touchMoveEvent.trigger(event);
+          this.onTouchMove(event);
+          break;
+        }
+
+        case TOUCH_UP: {
+          touchUpEvent.trigger(event);
+          this.onTouchUp(event);
+          removeActiveTouchEvent(event);
+          break;
+        }
+
+        case TOUCH_ENTER: {
+          addActiveTouchEvent(event);
+          touchEnterEvent.trigger(event);
+          break;
+        }
+
+        case TOUCH_EXIT: {
+          touchExitEvent.trigger(event);
+          removeActiveTouchEvent(event);
+          break;
+        }
+
         case TOUCH_CLICK: touchClickEvent.trigger(event); break;
         case TOUCH_DOUBLECLICK: touchDoubleClickEvent.trigger(event); break;
         default: logger.warning("could not find touch-type specific event to trigger for touch event: " + event.toString());
@@ -64,5 +94,49 @@ public class TouchReceiver {
    */
   public void whenClicked(Runnable func){
     touchClickEvent.addListener( (TouchEvent evt) -> func.run() );
+  }
+
+  private void addActiveTouchEvent(TouchEvent evt){
+    // lazy initialize; a lot of Nodes will never receive events and thus don't need this
+    if(activeTouchEvents == null)
+      activeTouchEvents = new ArrayList<>();
+
+    if(!this.activeTouchEvents.contains(evt)){
+      for(int idx=this.activeTouchEvents.size()-1; idx>=0; idx--){
+        if(this.activeTouchEvents.get(idx).touchId == evt.touchId)
+          this.activeTouchEvents.remove(idx);
+      }
+
+      activeTouchEvents.add(evt);
+    }
+
+    if(evt.time != null)
+      removeActiveTouchEventsBefore(evt.time - IDLE_DURATION);
+  }
+
+  private void removeActiveTouchEvent(TouchEvent evt){
+    if(activeTouchEvents == null)
+      return;
+
+    activeTouchEvents.remove(evt);
+
+    if(evt.time != null)
+      removeActiveTouchEventsBefore(evt.time - IDLE_DURATION);
+  }
+
+  private void removeActiveTouchEventsBefore(long time){
+    for(int i=activeTouchEvents.size()-1; i>=0; i--){
+      Long eventTime = activeTouchEvents.get(i).time;
+      if(eventTime != null && eventTime < time)
+        activeTouchEvents.remove(i);
+    }
+  }
+
+  public List<TouchEvent> getActiveTouchEvents(){
+    List<TouchEvent> result = new ArrayList<>();
+    if(activeTouchEvents != null)
+      result.addAll(activeTouchEvents); // TODO; make copies of Event instances to not allow modification?
+
+    return result;
   }
 }
