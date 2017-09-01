@@ -18,7 +18,7 @@ class PinchMath {
   public PinchMath(TouchEvent[] events){
     this.events = events;
     this.node = events[0].node;
-    this.localStartPinchCenter = this.node.toLocal(this.getGlobalStartPinchCenter());
+    this.localStartPinchCenter = this.node.toLocal(this.calcGlobalStartPinchCenter());
   }
 
   public TouchEvent[] getEvents(){
@@ -28,19 +28,6 @@ class PinchMath {
   public void resetActiveCaches(){
     getGlobalCurrentPinchCenterCache = null;
     getGlobalCurrentDeltaCache = null;
-  }
-
-  public PVector getLocalCurrentPinchCenter(){
-    PVector p = getGlobalCurrentPinchCenter();
-    return this.node.toLocal(p);
-  }
-
-  private PVector getGlobalStartPinchCenterCache = null;
-
-  public PVector getGlobalStartPinchCenter(){
-    if(getGlobalStartPinchCenterCache == null)
-      getGlobalStartPinchCenterCache = calcGlobalStartPinchCenter();
-    return getGlobalStartPinchCenterCache;
   }
 
   private PVector calcGlobalStartPinchCenter(){
@@ -119,13 +106,29 @@ public class PinchZoom extends ExtensionBase {
   private PinchMath math = null;
   private PVector originalScale, originalPosition;
 
+  public Event<Node> startPinchEvent, endPinchEvent;
+
+  public PinchZoom(){
+    startPinchEvent = new Event<>();
+    endPinchEvent = new Event<>();
+  }
+
+  @Override public void destroy(){
+    super.destroy();
+    startPinchEvent.destroy();
+    endPinchEvent.destroy();
+  }
+
   private void start(TouchEvent[] events){
     this.math = new PinchMath(events);
     this.originalScale = this.node.getScale();
     this.originalPosition = this.node.getPosition();
+    this.startPinchEvent.trigger(this.node);
   }
 
   private void stop(){
+    this.endPinchEvent.trigger(this.node);
+
     this.math = null;
 
     if(this.originalScale != null){
@@ -180,12 +183,14 @@ public class PinchZoom extends ExtensionBase {
     scale.mult(pinchScale);
     this.node.setScale(scale);
 
+    // current "dragged" position of the pinch-center
     PVector p = math.getParentSpaceCurrentPinchCenter();
-    // p.sub(math.getLocalCurrentPinchCenter());
+    // offset of pinch-center to origin of pinched-node
     PVector offset = math.getLocalStartPinchCenter();
-
+    // scale offset
     p.x = p.x - offset.x * pinchScale;
     p.y = p.y - offset.y * pinchScale;
+    // update position
     this.node.setPosition(p);
   }
 
@@ -248,9 +253,6 @@ public class PinchZoom extends ExtensionBase {
     localPos = node.toLocal(this.math.getEvents()[1].position);
     pg.ellipse(localPos.x, localPos.y, 30, 30);
 
-    pg.fill(pg.color(100,100,255,60));
-    localPos = node.toLocal(math.getGlobalStartPinchCenter());
-    pg.ellipse(localPos.x, localPos.y, 15, 15);
 
     float scaler = math.getPinchScale();
     localPos = node.toLocal(math.getGlobalCurrentPinchCenter());
