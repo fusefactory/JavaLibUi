@@ -174,38 +174,19 @@ public class PinchZoom extends ExtensionBase {
     this.node.touchMoveEvent.removeListeners(this);
   }
 
-//  boolean isActive(){
-//    return this.math != null;
-//  }
-
   private void touchUpdate(){
     PVector scale = this.originalScale.get();
     float pinchScale = this.math.getPinchScale();
     scale.mult(pinchScale);
     this.node.setScale(scale);
 
-    // PVector p = math.getLocalStartPinchCenter();
-    // p.mult(-1.0f * pinchScale);
-    // p.add(this.originalPosition);
     PVector p = math.getParentSpaceCurrentPinchCenter();
-    //PVector offset = math.getCurrentGlobalStartPinchCenter();
-    p.sub(math.getLocalStartPinchCenter());
-    //p.sub(offset);
+    // p.sub(math.getLocalCurrentPinchCenter());
+    PVector offset = math.getLocalStartPinchCenter();
+
+    p.x = p.x - offset.x * pinchScale;
+    p.y = p.y - offset.y * pinchScale;
     this.node.setPosition(p);
-
-
-
-    // if(zoomMode == ZoomMode.SIZE){
-    //   PVector newSize = new PVector(
-    //     originalNodeSize.x * scaler.x,
-    //     originalNodeSize.y * scaler.y,
-    //     originalNodeSize.z * scaler.z);
-    //   // getNode().setSize(newSize);
-    // }
-    //
-    // if(zoomMode == ZoomMode.SCALE){
-    //   // getNode().setScale(scaler);
-    // }
   }
 
   /** returns null when not actively pinch-zooming, otherwise returns an array of exactly two touch-events */
@@ -226,58 +207,6 @@ public class PinchZoom extends ExtensionBase {
     return events;
   }
 
-//  /** @return PVector Distance between the start-points of the two touches */
-//  public PVector getGlobalStartDelta(){
-//    if(!isActive()) return new PVector();
-//    PVector result = touchEvent2.startPosition.get();
-//    result.sub(touchEvent1.startPosition);
-//    return result;
-//  }
-//
-//  /** @return PVector Distance between the current positions of the two touches */
-//  public PVector getGlobalCurrentDelta(){
-//    if(!isActive()) return new PVector();
-//    PVector result = touchEvent2.position.get();
-//    result.sub(touchEvent1.position);
-//    return result;
-//  }
-
-//  public PVector getGlobalPinchScale(){
-//    if(!isActive()) return new PVector();
-//    PVector start = getGlobalStartDelta();
-//    PVector current = getGlobalCurrentDelta();
-//    return new PVector(
-//      Math.abs(start.x == 0.0f ? 1.0f : current.x / start.x),
-//      Math.abs(start.y == 0.0f ? 1.0f : current.y / start.y),
-//      Math.abs(start.z == 0.0f ? 1.0f : current.z / start.z));
-//  }
-
-//  public PVector getGlobalPinchTranslate(){
-//    if(!isActive()) return new PVector();
-//
-//
-//    // start center of two touches
-//    PVector delta = touchEvent2.startPosition.get();
-//    delta.sub(touchEvent1.startPosition);
-//    delta.mult(0.5f);
-//    PVector startCenter = PVector.add(delta, touchEvent1.startPosition);
-//
-//    PVector currentDelta = touchEvent2.position.get();
-//    currentDelta.sub(touchEvent1.position);
-//    currentDelta.mult(0.5f);
-//    PVector currentCenter = PVector.add(currentDelta, touchEvent1.position);
-//
-//    PVector scale = getGlobalPinchScale();
-//
-//    PVector touchOffset = currentCenter;
-//    touchOffset.sub(startCenter);
-//    touchOffset.add(touchEvent1.offset());
-//
-//    return new PVector(
-//      -Math.abs(scale.x*touchOffset.x),
-//      -Math.abs(scale.y*touchOffset.y),
-//      -Math.abs(scale.z*touchOffset.z));
-//  }
 
   public static PinchZoom enableFor(Node n){
     PinchZoom d = getFor(n);
@@ -319,25 +248,18 @@ public class PinchZoom extends ExtensionBase {
     localPos = node.toLocal(this.math.getEvents()[1].position);
     pg.ellipse(localPos.x, localPos.y, 30, 30);
 
+    pg.fill(pg.color(100,100,255,60));
     localPos = node.toLocal(math.getGlobalStartPinchCenter());
     pg.ellipse(localPos.x, localPos.y, 15, 15);
 
     float scaler = math.getPinchScale();
     localPos = node.toLocal(math.getGlobalCurrentPinchCenter());
     pg.fill(pg.color(255,100,100,80));
-    pg.ellipse(localPos.x, localPos.y, 15 * scaler, 15 * scaler);
+    pg.ellipse(localPos.x, localPos.y, 10 * scaler, 10 * scaler);
 
     pg.stroke(pg.color(100,255,100,200));
     pg.strokeWeight(3.0f);
     PVector vec = math.getLocalStartPinchCenter();
     pg.line(0.0f, 0.0f, vec.x, vec.y);
-    // pg.stroke(pg.color(0,200,0));
-    // pg.line(0.0f, 0.0f, vec.x, vec.y);
-
-    // PVector p = math.getParentSpaceCurrentPinchCenter();
-    // PVector offset = math.getCurrentGlobalStartPinchCenter();
-    // p.sub(offset);
-    // this.node.setPosition(p);
-
   }
 }
