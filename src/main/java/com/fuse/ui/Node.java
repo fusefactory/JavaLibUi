@@ -121,6 +121,9 @@ public class Node extends TouchReceiver {
   }
 
   public void destroy(){
+    if(getParent() != null)
+      getParent().removeChild(this);
+
     if(extensions != null){
       while(extensions != null && !extensions.isEmpty()){
         ExtensionBase ext = extensions.get(0);
@@ -691,6 +694,11 @@ public class Node extends TouchReceiver {
 
     if(extensions.remove(ext))
       ext.disable();
+
+    if(extensions == null){
+      System.err.println("Node.stopUsing extensions suddenly null");
+      return;
+    }
 
     if(extensions.isEmpty())
       extensions = null; // cleanup
