@@ -166,6 +166,7 @@ public class Node extends TouchReceiver {
     int clr = pg.color(255,bTouched?0:255,0);
     pg.noFill();
     pg.stroke(clr);
+    pg.strokeWeight(1.0f);
     pg.rect(0.0f, 0.0f, size.x, size.y);
 
     pg.noStroke();

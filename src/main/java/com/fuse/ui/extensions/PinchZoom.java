@@ -12,20 +12,27 @@ import com.fuse.ui.TouchEvent;
 class PinchMath {
   private TouchEvent[] events;
   private Node node;
+  private PVector localStartPinchCenter;
 
   /** MUST be initialized with an array of exactly TWO touch event instances */
   public PinchMath(TouchEvent[] events){
     this.events = events;
     this.node = events[0].node;
+    this.localStartPinchCenter = this.node.toLocal(this.getGlobalStartPinchCenter());
   }
 
   public TouchEvent[] getEvents(){
     return events;
   }
-  
+
   public void resetActiveCaches(){
     getGlobalCurrentPinchCenterCache = null;
     getGlobalCurrentDeltaCache = null;
+  }
+
+  public PVector getLocalCurrentPinchCenter(){
+    PVector p = getGlobalCurrentPinchCenter();
+    return this.node.toLocal(p);
   }
 
   private PVector getGlobalStartPinchCenterCache = null;
@@ -92,26 +99,12 @@ class PinchMath {
     return this.getGlobalCurrentDelta() / this.getGlobalStartDelta();
   }
 
-  /** 
-   * Gives the two-dimensional (z-attribute can be ignored) _normalized_ coordinates of the
-   * touch within the node. This means the x and y attributes will have a value between 0.0 and 1.0,
-   * 0.0,0.0 meaning top-left corner of the node, 1.0f, 1.0f meaning bottom right corner.
-   * @return PVector with the x and y coordinates populated
-   */
-  public PVector getLocalPinchCenterNormalized(){
-    if(getLocalPinchCenterNormalizedCache==null)
-      getLocalPinchCenterNormalizedCache=this.calcLocalPinchCenterNormalized();
-    return getLocalPinchCenterNormalizedCache;
+  public PVector getLocalStartPinchCenter(){
+    return localStartPinchCenter;
   }
 
-  private PVector getLocalPinchCenterNormalizedCache = null;
-
-  private PVector calcLocalPinchCenterNormalized(){
-    PVector result = this.node.toLocal(this.getGlobalStartPinchCenter());
-    PVector nodeSize = this.node.getSize();
-    result.x = result.x / nodeSize.x;
-    result.y = result.y / nodeSize.y;
-    return result;
+  public PVector getCurrentGlobalStartPinchCenter(){
+    return node.toGlobal(getLocalStartPinchCenter());
   }
 
   public PVector getParentSpaceCurrentPinchCenter(){
@@ -119,22 +112,31 @@ class PinchMath {
     Node n = node.getParent();
     return (n == null) ? p : n.toLocal(p);
   }
-  
 }
 
 public class PinchZoom extends ExtensionBase {
 
   private PinchMath math = null;
-  private PVector originalScale;
+  private PVector originalScale, originalPosition;
 
   private void start(TouchEvent[] events){
     this.math = new PinchMath(events);
     this.originalScale = this.node.getScale();
+    this.originalPosition = this.node.getPosition();
   }
-  
+
   private void stop(){
     this.math = null;
-    this.originalScale = null;
+
+    if(this.originalScale != null){
+      this.node.setScale(this.originalScale);
+      this.originalScale = null;
+    }
+
+    if(this.originalPosition != null){
+      this.node.setPosition(this.originalPosition);
+      this.originalPosition = null;
+    }
   }
 
   @Override public void enable(){
@@ -155,7 +157,7 @@ public class PinchZoom extends ExtensionBase {
     this.node.touchUpEvent.addListener((TouchEvent event) -> {
       if(this.math != null && this.getPinchZoomTouchEvents() == null){
         this.stop();
-      } 
+      }
     });
 
     this.node.touchMoveEvent.addListener((TouchEvent event) -> {
@@ -178,16 +180,21 @@ public class PinchZoom extends ExtensionBase {
 
   private void touchUpdate(){
     PVector scale = this.originalScale.get();
-    scale.mult(this.math.getPinchScale());
+    float pinchScale = this.math.getPinchScale();
+    scale.mult(pinchScale);
     this.node.setScale(scale);
 
-    // PVector scaler = getGlobalPinchScale();
-    // PVector translater = getGlobalPinchTranslate();
+    // PVector p = math.getLocalStartPinchCenter();
+    // p.mult(-1.0f * pinchScale);
+    // p.add(this.originalPosition);
+    PVector p = math.getParentSpaceCurrentPinchCenter();
+    //PVector offset = math.getCurrentGlobalStartPinchCenter();
+    p.sub(math.getLocalStartPinchCenter());
+    //p.sub(offset);
+    this.node.setPosition(p);
 
-    // translater.add(originalNodePositionGlobal);
-    // // System.out.println("PinchZoom scale: "+scaler.toString());
-    // getNode().setGlobalPosition(translater);
-    //
+
+
     // if(zoomMode == ZoomMode.SIZE){
     //   PVector newSize = new PVector(
     //     originalNodeSize.x * scaler.x,
@@ -314,7 +321,23 @@ public class PinchZoom extends ExtensionBase {
 
     localPos = node.toLocal(math.getGlobalStartPinchCenter());
     pg.ellipse(localPos.x, localPos.y, 15, 15);
+
+    float scaler = math.getPinchScale();
     localPos = node.toLocal(math.getGlobalCurrentPinchCenter());
-    pg.ellipse(localPos.x, localPos.y, 20, 20);
+    pg.fill(pg.color(255,100,100,80));
+    pg.ellipse(localPos.x, localPos.y, 15 * scaler, 15 * scaler);
+
+    pg.stroke(pg.color(100,255,100,200));
+    pg.strokeWeight(3.0f);
+    PVector vec = math.getLocalStartPinchCenter();
+    pg.line(0.0f, 0.0f, vec.x, vec.y);
+    // pg.stroke(pg.color(0,200,0));
+    // pg.line(0.0f, 0.0f, vec.x, vec.y);
+
+    // PVector p = math.getParentSpaceCurrentPinchCenter();
+    // PVector offset = math.getCurrentGlobalStartPinchCenter();
+    // p.sub(offset);
+    // this.node.setPosition(p);
+
   }
 }
