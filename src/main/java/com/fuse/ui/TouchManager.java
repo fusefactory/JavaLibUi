@@ -70,7 +70,7 @@ public class TouchManager extends TouchReceiver {
   private boolean controlledTime;
   private long time;
   /// the maximum amount of time (in seconds) between a touch-down and a touch-up for it to be considered a click
-  private float clickMaxInterval;
+  private long clickMaxInterval;
   /// the maximum distance (in pixels) between the position of touch-down and the position of touch-up for it to be considered a click
   private float clickMaxDistance;
   // velocity smoothing logic based on ofxInterface OpenFrameworks addon implementation
@@ -86,7 +86,7 @@ public class TouchManager extends TouchReceiver {
     logger = Logger.getLogger(TouchManager.class.getName());
     dispatchOnUpdate = false;
     controlledTime = false;
-    clickMaxInterval = 0.2f; // seconds
+    clickMaxInterval = 200l; // milliseconds (0.2 seconds default)
     clickMaxDistance = 15; // pixels
     touchEventQueue = new ArrayList<TouchEvent>();
     activeTouchEvents = new HashMap<Integer, TouchEvent>();
@@ -362,7 +362,7 @@ public class TouchManager extends TouchReceiver {
     dispatchOnUpdate = newVal;
   }
 
-  public void setClickMaxInterval(float interval){
+  public void setClickMaxInterval(long interval){
     clickMaxInterval = interval;
   }
 
