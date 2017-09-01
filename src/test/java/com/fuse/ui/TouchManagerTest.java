@@ -292,7 +292,7 @@ public class TouchManagerTest {
 
     // change max interval
     strings.clear();
-    man.setClickMaxInterval(0.05f);
+    man.setClickMaxInterval(50l);
     man.touchDown(0, new PVector(10f, 10f, 0f));
     man.update(0.2f); // move 0.2 seconds into the future
     man.touchUp(0, new PVector(10f, 10f, 0f));

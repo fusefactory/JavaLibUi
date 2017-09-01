@@ -102,6 +102,10 @@ public class PinchZoom extends ExtensionBase {
     }
   }
 
+  public boolean isActive(){
+    return this.math != null;
+  }
+
   @Override public void enable(){
     if(this.isEnabled() || this.node == null) return;
     super.enable();
