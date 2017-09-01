@@ -16,7 +16,7 @@ import processing.core.PVector;
 
 class TouchLog {
   public TouchEvent touchEvent;
-  public float time;
+  public long time;
 }
 
 class TouchMirror {
@@ -68,7 +68,7 @@ public class TouchManager extends TouchReceiver {
   private Node node;
   private boolean dispatchOnUpdate;
   private boolean controlledTime;
-  private float time;
+  private long time;
   /// the maximum amount of time (in seconds) between a touch-down and a touch-up for it to be considered a click
   private float clickMaxInterval;
   /// the maximum distance (in pixels) between the position of touch-down and the position of touch-up for it to be considered a click
@@ -119,7 +119,7 @@ public class TouchManager extends TouchReceiver {
 
   public void update(float dt){
     controlledTime = true;
-    time += dt;
+    time += (int)(dt * 1000.0f);
     update();
   }
 
@@ -196,10 +196,7 @@ public class TouchManager extends TouchReceiver {
         { // create touch log for later calculations
           TouchLog tlog = new TouchLog();
           tlog.touchEvent = event.copy();
-          if(controlledTime)
-            tlog.time = this.time;
-          else
-            tlog.time = (System.currentTimeMillis() / 1000.0f);
+          tlog.time = this.getTime();
 
           activeTouchLogs.put(event.touchId, tlog);
         }
@@ -430,18 +427,18 @@ public class TouchManager extends TouchReceiver {
       pg.ellipse(event.position.x, event.position.y, 25, 25);
   }
 
-  private float getTime(){
+  private long getTime(){
     if(controlledTime)
       return this.time;
-    return (System.currentTimeMillis() / 1000.0f);
+    return System.currentTimeMillis();
   }
 
-  private PVector calculateVelocity(float t1, PVector p1, float t2, PVector p2){
-    float dt = t2-t1;
-    if(dt == 0.0f) dt = 0.001f;
+  private PVector calculateVelocity(long t1, PVector p1, long t2, PVector p2){
+    long dt = t2-t1;
+    if(dt == 0) dt = 10;
     PVector movement = p2.get();
     movement.sub(p1);
-    movement.div(dt);
+    movement.div((float)(dt / 1000.0f));
     return movement;
   }
 }

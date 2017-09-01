@@ -8,7 +8,7 @@ import com.fuse.utils.Event;
 /** Base class for both Node and TouchManager; it provides touch events and method for receiving them */
 public class TouchReceiver {
 
-  private final static float IDLE_DURATION = 500.0f; // seconds after which an event if considered IDLE_DURATION
+  private final static long IDLE_DURATION = 500l; // seconds after which an event if considered IDLE_DURATION
 
   public Event<TouchEvent>
     touchEvent,
@@ -101,8 +101,14 @@ public class TouchReceiver {
     if(activeTouchEvents == null)
       activeTouchEvents = new ArrayList<>();
 
-    if(!activeTouchEvents.contains(evt))
+    if(!this.activeTouchEvents.contains(evt)){
+      for(int idx=this.activeTouchEvents.size()-1; idx>=0; idx--){
+        if(this.activeTouchEvents.get(idx).touchId == evt.touchId)
+          this.activeTouchEvents.remove(idx);
+      }
+
       activeTouchEvents.add(evt);
+    }
 
     if(evt.time != null)
       removeActiveTouchEventsBefore(evt.time - IDLE_DURATION);
@@ -118,9 +124,9 @@ public class TouchReceiver {
       removeActiveTouchEventsBefore(evt.time - IDLE_DURATION);
   }
 
-  private void removeActiveTouchEventsBefore(float time){
+  private void removeActiveTouchEventsBefore(long time){
     for(int i=activeTouchEvents.size()-1; i>=0; i--){
-      Float eventTime = activeTouchEvents.get(i).time;
+      Long eventTime = activeTouchEvents.get(i).time;
       if(eventTime != null && eventTime < time)
         activeTouchEvents.remove(i);
     }

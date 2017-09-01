@@ -27,8 +27,8 @@ public class TouchEvent {
   public Node node;
   /** Latest node that was touched */
   public Node mostRecentNode;
-  /** The time */
-  public Float time;
+  /** The time in millis */
+  public Long time;
   /** The velocity of the touch movement */
   public PVector velocity;
   public PVector velocitySmoothed;
@@ -102,7 +102,7 @@ public class TouchEvent {
   public PVector offset(){
     return PVector.sub(position, startPosition);
   }
-  
+
   public boolean isFinished(){
     return this.eventType == EventType.TOUCH_UP;
   }
