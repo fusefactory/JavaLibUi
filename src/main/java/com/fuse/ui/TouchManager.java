@@ -73,6 +73,7 @@ public class TouchManager extends TouchReceiver {
   private long clickMaxInterval;
   /// the maximum distance (in pixels) between the position of touch-down and the position of touch-up for it to be considered a click
   private float clickMaxDistance;
+
   // velocity smoothing logic based on ofxInterface OpenFrameworks addon implementation
   // see: https://github.com/galsasson/ofxInterface/blob/master/src/TouchManager.cpp
   private final static float velocitySmoothCoeff = 0.25f;
@@ -164,10 +165,19 @@ public class TouchManager extends TouchReceiver {
 
   private TouchEvent updateExistingEvent(TouchEvent existing, TouchEvent event){
     // if(existing.touchId != event.touchId) logger.warning("updating existing event with different touchId");
-    if(event.velocity == null)
-      existing.velocity = calculateVelocity(existing.time, existing.position, event.time, event.position);
-    else
+    if(event.velocity == null){
+      // calculate velocity
+      long dt = event.time-existing.time;
+      if(dt > 0){
+        float deltaTime = ((float)dt)/1000.0f;
+        // update velocity
+        existing.velocity = event.position.get();
+        existing.velocity.sub(existing.position);
+        existing.velocity.div(deltaTime);
+      }
+    } else {
       existing.velocity = event.velocity;
+    }
 
     if(event.velocitySmoothed == null)
       existing.velocitySmoothed.lerp(existing.velocity, velocitySmoothCoeff);
@@ -431,14 +441,5 @@ public class TouchManager extends TouchReceiver {
     if(controlledTime)
       return this.time;
     return System.currentTimeMillis();
-  }
-
-  private PVector calculateVelocity(long t1, PVector p1, long t2, PVector p2){
-    long dt = t2-t1;
-    if(dt == 0) dt = 10;
-    PVector movement = p2.get();
-    movement.sub(p1);
-    movement.div((float)(dt / 1000.0f));
-    return movement;
   }
 }
