@@ -9,98 +9,6 @@ import com.fuse.utils.Event;
 import com.fuse.ui.Node;
 import com.fuse.ui.TouchEvent;
 
-class PinchMath {
-  private TouchEvent[] events;
-  private Node node;
-  private PVector localStartPinchCenter;
-
-  /** MUST be initialized with an array of exactly TWO touch event instances */
-  public PinchMath(TouchEvent[] events){
-    this.events = events;
-    this.node = events[0].node;
-    this.localStartPinchCenter = this.node.toLocal(this.calcGlobalStartPinchCenter());
-  }
-
-  public TouchEvent[] getEvents(){
-    return events;
-  }
-
-  public void resetActiveCaches(){
-    getGlobalCurrentPinchCenterCache = null;
-    getGlobalCurrentDeltaCache = null;
-  }
-
-  private PVector calcGlobalStartPinchCenter(){
-    PVector p1 = events[0].startPosition.get();
-    PVector p2 = events[1].startPosition.get();
-    // delta
-    p2.sub(p1);
-    // half-delta
-    p2.mult(0.5f);
-    // center
-    p1.add(p2);
-    return p1;
-  }
-
-  public PVector getGlobalCurrentPinchCenter(){
-    if(getGlobalCurrentPinchCenterCache == null)
-      getGlobalCurrentPinchCenterCache = calcGlobalCurrentPinchCenter();
-    return getGlobalCurrentPinchCenterCache;
-  }
-
-  private PVector getGlobalCurrentPinchCenterCache = null;
-
-  private PVector calcGlobalCurrentPinchCenter(){
-    PVector p1 = events[0].position.get();
-    PVector p2 = events[1].position.get();
-    // delta
-    p2.sub(p1);
-    // half-delta
-    p2.mult(0.5f);
-    // center
-    p1.add(p2);
-    return p1;
-  }
-
-  public float getGlobalStartDelta(){
-    if(getGlobalStartDeltaCache == null){
-      getGlobalStartDeltaCache = events[0].startPosition.dist(events[1].startPosition);
-    }
-
-    return getGlobalStartDeltaCache;
-  }
-
-  private Float getGlobalStartDeltaCache = null;
-
-  public float getGlobalCurrentDelta(){
-    if(getGlobalCurrentDeltaCache == null){
-      getGlobalCurrentDeltaCache = events[0].position.dist(events[1].position);
-    }
-
-    return getGlobalCurrentDeltaCache;
-  }
-
-  private Float getGlobalCurrentDeltaCache = null;
-
-  public float getPinchScale(){
-    return this.getGlobalCurrentDelta() / this.getGlobalStartDelta();
-  }
-
-  public PVector getLocalStartPinchCenter(){
-    return localStartPinchCenter;
-  }
-
-  public PVector getCurrentGlobalStartPinchCenter(){
-    return node.toGlobal(getLocalStartPinchCenter());
-  }
-
-  public PVector getParentSpaceCurrentPinchCenter(){
-    PVector p = this.getGlobalCurrentPinchCenter();
-    Node n = node.getParent();
-    return (n == null) ? p : n.toLocal(p);
-  }
-}
-
 public class PinchZoom extends ExtensionBase {
 
   private PinchMath math = null;
@@ -263,5 +171,101 @@ public class PinchZoom extends ExtensionBase {
     pg.strokeWeight(3.0f);
     PVector vec = math.getLocalStartPinchCenter();
     pg.line(0.0f, 0.0f, vec.x, vec.y);
+  }
+}
+
+//
+// Separate class for the math and cache
+//
+
+class PinchMath {
+  private TouchEvent[] events;
+  private Node node;
+  private PVector localStartPinchCenter;
+
+  /** MUST be initialized with an array of exactly TWO touch event instances */
+  public PinchMath(TouchEvent[] events){
+    this.events = events;
+    this.node = events[0].node;
+    this.localStartPinchCenter = this.node.toLocal(this.calcGlobalStartPinchCenter());
+  }
+
+  public TouchEvent[] getEvents(){
+    return events;
+  }
+
+  public void resetActiveCaches(){
+    getGlobalCurrentPinchCenterCache = null;
+    getGlobalCurrentDeltaCache = null;
+  }
+
+  private PVector calcGlobalStartPinchCenter(){
+    PVector p1 = events[0].startPosition.get();
+    PVector p2 = events[1].startPosition.get();
+    // delta
+    p2.sub(p1);
+    // half-delta
+    p2.mult(0.5f);
+    // center
+    p1.add(p2);
+    return p1;
+  }
+
+  public PVector getGlobalCurrentPinchCenter(){
+    if(getGlobalCurrentPinchCenterCache == null)
+      getGlobalCurrentPinchCenterCache = calcGlobalCurrentPinchCenter();
+    return getGlobalCurrentPinchCenterCache;
+  }
+
+  private PVector getGlobalCurrentPinchCenterCache = null;
+
+  private PVector calcGlobalCurrentPinchCenter(){
+    PVector p1 = events[0].position.get();
+    PVector p2 = events[1].position.get();
+    // delta
+    p2.sub(p1);
+    // half-delta
+    p2.mult(0.5f);
+    // center
+    p1.add(p2);
+    return p1;
+  }
+
+  public float getGlobalStartDelta(){
+    if(getGlobalStartDeltaCache == null){
+      getGlobalStartDeltaCache = events[0].startPosition.dist(events[1].startPosition);
+    }
+
+    return getGlobalStartDeltaCache;
+  }
+
+  private Float getGlobalStartDeltaCache = null;
+
+  public float getGlobalCurrentDelta(){
+    if(getGlobalCurrentDeltaCache == null){
+      getGlobalCurrentDeltaCache = events[0].position.dist(events[1].position);
+    }
+
+    return getGlobalCurrentDeltaCache;
+  }
+
+  private Float getGlobalCurrentDeltaCache = null;
+
+  public float getPinchScale(){
+    return this.getGlobalCurrentDelta() / this.getGlobalStartDelta();
+  }
+
+  public PVector getLocalStartPinchCenter(){
+    return localStartPinchCenter;
+  }
+
+  public PVector getCurrentGlobalStartPinchCenter(){
+    return node.toGlobal(getLocalStartPinchCenter());
+  }
+
+  public PVector getParentSpaceCurrentPinchCenter(){
+    PVector p = this.getGlobalCurrentPinchCenter();
+    Node n = node.getParent();
+    return (n == null) ? p : n.toLocal(p);
   }
 }
