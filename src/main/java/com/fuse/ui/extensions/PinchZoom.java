@@ -11,8 +11,14 @@ import com.fuse.ui.TouchEvent;
 
 public class PinchZoom extends ExtensionBase {
 
+  // attributes
   private PinchMath math = null;
   private PVector originalScale, originalPosition;
+  private PVector targetScale, targetPosition;
+  // configurables
+  private boolean bRestore = false;
+  private boolean bSmoothRestore = true;
+  private float smoothing = 7.0f;
 
   public Event<Node> startPinchEvent, endPinchEvent;
 
@@ -21,10 +27,38 @@ public class PinchZoom extends ExtensionBase {
     endPinchEvent = new Event<>();
   }
 
-  @Override public void destroy(){
+  @Override
+  public void destroy(){
     super.destroy();
     startPinchEvent.destroy();
     endPinchEvent.destroy();
+  }
+
+  @Override
+  public void update(float dt){
+    if(targetScale != null){
+      PVector scale = targetScale.get();
+      // delta
+      scale.sub(this.node.getScale());
+      // smoothed delta
+      scale.mult(1.0f / this.smoothing);
+      // applied delta
+      scale.add(this.node.getScale());
+      // apply
+      this.node.setScale(scale);
+    }
+
+    if(targetPosition != null){
+      PVector pos = targetPosition.get();
+      // delta
+      pos.sub(this.node.getPosition());
+      // smoothed delta
+      pos.mult(1.0f / this.smoothing);
+      // applied delta
+      pos.add(this.node.getPosition());
+      // apply
+      this.node.setPosition(pos);
+    }
   }
 
   private void start(TouchEvent[] events){
@@ -37,16 +71,30 @@ public class PinchZoom extends ExtensionBase {
   private void stop(){
     this.endPinchEvent.trigger(this.node);
 
-    this.math = null;
+    if(this.bRestore)
+      this.restore(this.bSmoothRestore);
 
+    if(!bSmoothRestore){
+      this.targetPosition = null;
+      this.targetScale = null;
+    }
+
+    this.math = null;
+  }
+
+  public void restore(boolean smooth){
     if(this.originalScale != null){
-      this.node.setScale(this.originalScale);
-      this.originalScale = null;
+      if(smooth)
+        this.targetScale = this.originalScale;
+      else
+        this.node.setScale(this.originalScale);
     }
 
     if(this.originalPosition != null){
-      this.node.setPosition(this.originalPosition);
-      this.originalPosition = null;
+      if(smooth)
+        this.targetPosition = this.originalPosition;
+      else
+        this.node.setPosition(this.originalPosition);
     }
   }
 
@@ -89,7 +137,8 @@ public class PinchZoom extends ExtensionBase {
     PVector scale = this.originalScale.get();
     float pinchScale = this.math.getPinchScale();
     scale.mult(pinchScale);
-    this.node.setScale(scale);
+    //this.node.setScale(scale);
+    this.targetScale = scale;
 
     // current "dragged" position of the pinch-center
     PVector p = math.getParentSpaceCurrentPinchCenter();
@@ -99,7 +148,8 @@ public class PinchZoom extends ExtensionBase {
     p.x = p.x - offset.x * pinchScale;
     p.y = p.y - offset.y * pinchScale;
     // update position
-    this.node.setPosition(p);
+    // this.node.setPosition(p);
+    this.targetPosition = p;
   }
 
   /** returns null when not actively pinch-zooming, otherwise returns an array of exactly two touch-events */
@@ -144,6 +194,22 @@ public class PinchZoom extends ExtensionBase {
       if(PinchZoom.class.isInstance(ext))
         return (PinchZoom)ext;
     return null;
+  }
+
+  public boolean getRestore(){
+    return bRestore;
+  }
+
+  public void setRestore(boolean enableRestore){
+    bRestore = enableRestore;
+  }
+
+  public float getSmoothing(){
+    return smoothing;
+  }
+
+  public void setSmoothing(float smoothing){
+    this.smoothing = smoothing;
   }
 
   @Override
