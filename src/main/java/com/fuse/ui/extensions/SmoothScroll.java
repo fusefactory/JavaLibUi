@@ -278,6 +278,10 @@ public class SmoothScroll extends ExtensionBase {
     snapInterval = node.getSize();
   }
 
+  public void setSnapInterval(PVector interval){
+    snapInterval = interval == null ? null : interval.get();
+  }
+
   public void setSnapFactor(float newFactor){
     snapFactor = newFactor;
   }
