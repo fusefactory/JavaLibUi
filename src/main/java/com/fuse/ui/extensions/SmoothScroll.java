@@ -64,7 +64,9 @@ public class SmoothScroll extends ExtensionBase {
       scrollableNode.setPosition(curPos);
 
       if(curPos.dist(snapPosition) <= snapDoneDist){
-        this.snapPosition = null; // isSnapping() = false
+        scrollableNode.setPosition(snapPosition);
+        // after snapping to desired position, snap again if beyonf offset limits
+        this.snapPosition = this.getOffsetLimitSnapPosition();
       }
 
       return;
@@ -372,6 +374,24 @@ public class SmoothScroll extends ExtensionBase {
   public PVector getSnapPosition(){
       return snapPosition;
   }
+
+  public void setSnapPosition(float x, float y){
+    this.setSnapPosition(new PVector(x,y));
+  }
+
+  public void setSnapPosition(PVector pos){
+    if(pos == null){ // abort snapping?
+      this.snapPosition = null;
+      return;
+    }
+
+    this.snapPosition = pos.get();
+    this.velocity = null; // isDamping() = false
+  }
+
+  //
+  // Static methods
+  //
 
   public static SmoothScroll enableFor(Node touchAreaNode, Node scrollableNode){
     SmoothScroll ext = getFor(touchAreaNode, scrollableNode);
