@@ -203,6 +203,9 @@ public class SmoothScroll extends ExtensionBase {
   private void startSnapping(){
     this.velocity = null; // isDamping() == false
 
+    if(this.snapInterval == null)
+      return;
+
     PVector curOffset = this.getCurrentOffset();
 
     PVector targetOffset = new PVector(curOffset.x - curOffset.x % snapInterval.x,
@@ -284,12 +287,18 @@ public class SmoothScroll extends ExtensionBase {
   public void setMinOffset(float x, float y){
     PVector offset = new PVector(x,y);
     minOffset = offset;
-    snapPosition = getOffsetLimitSnapPosition();
+
+    PVector p = getOffsetLimitSnapPosition();
+    if(p != null)
+     this.snapPosition = p;
   }
 
   public void setMinOffset(PVector offset){
-    this.minOffset = offset;
-    snapPosition = getOffsetLimitSnapPosition();
+    this.minOffset = offset.get();
+
+    PVector p = getOffsetLimitSnapPosition();
+    if(p != null)
+     this.snapPosition = p;
   }
 
   public void setMaxOffset(float x, float y){
