@@ -296,6 +296,10 @@ public class SmoothScroll extends ExtensionBase {
     snapInterval = node.getSize();
   }
 
+  public PVector getSnapInterval(){
+    return snapInterval;
+  }
+
   public void setSnapInterval(PVector interval){
     snapInterval = interval == null ? null : interval.get();
   }
@@ -421,6 +425,26 @@ public class SmoothScroll extends ExtensionBase {
     delta.x = -delta.x / this.snapInterval.x;
     delta.y = -delta.y / this.snapInterval.y;
     return delta;
+  }
+  
+  public void step(float x, float y){
+    this.step(new PVector(x,y,0.0f));
+  }
+
+  public void step(PVector offset){
+    if(this.snapInterval == null) return;
+    PVector current = this.calcSnapIntervalPage(this.scrollableNode.getPosition());
+    PVector delta = offset.get();
+    delta.mult(-1.0f); // invert; step left means offset to right
+    delta.x = delta.x * this.snapInterval.x;
+    delta.y = delta.y * this.snapInterval.y;
+    if(this.snapPosition != null){
+      delta.add(this.snapPosition);
+      this.setSnapPosition(delta);
+    } else {
+      delta.add(this.scrollableNode.getPosition());
+      this.setSnapPosition(delta);
+    }
   }
 
   //
