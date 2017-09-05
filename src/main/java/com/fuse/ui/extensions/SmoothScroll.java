@@ -33,10 +33,19 @@ public class SmoothScroll extends ExtensionBase {
 
   // events
   public Event<PVector> newSnapPositionEvent;
+  public Event<PVector> newSnapIntervalPageEvent;
 
   public SmoothScroll(){
     smoothedVelocity = new PVector(0.0f, 0.0f, 0.0f);
     newSnapPositionEvent = new Event<>();
+    newSnapIntervalPageEvent = new Event<>();
+
+    // newSnapIntervalPageEvent triggers everytime newSnapPositionEvent is triggered
+    newSnapPositionEvent.addListener((PVector snapPos) -> {
+      PVector value = this.calcSnapIntervalPage(snapPos);
+      if(value != null)
+        newSnapIntervalPageEvent.trigger(value);
+    }, this);
   }
 
   @Override public void destroy(){
@@ -401,6 +410,17 @@ public class SmoothScroll extends ExtensionBase {
     this.snapPosition = pos.get();
     this.velocity = null; // isDamping() = false
     newSnapPositionEvent.trigger(this.snapPosition.get());
+  }
+
+  public PVector calcSnapIntervalPage(PVector pos){
+    if(this.snapInterval == null) return null;
+    // offset of the position
+    PVector delta = pos.get();
+    delta.sub(this.originalNodePosition);
+    // divide by the interval
+    delta.x = -delta.x / this.snapInterval.x;
+    delta.y = -delta.y / this.snapInterval.y;
+    return delta;
   }
 
   //
