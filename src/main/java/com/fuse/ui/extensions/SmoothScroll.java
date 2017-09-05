@@ -9,31 +9,34 @@ import com.fuse.ui.Node;
 import com.fuse.ui.TouchEvent;
 
 public class SmoothScroll extends ExtensionBase {
+  // attributes
   private Node scrollableNode = null;
-
+  // original values
   private PVector originalNodePosition = null;
   private PVector dragStartNodePositionGlobal = null;
+  // velocity
   private PVector velocity = null;
   private PVector smoothedVelocity = null;
-
   private final static float velocitySmoothCoeff = 0.1f;
   private float dampingFactor = 0.001f;
   private final static float minVelocityMag = 1.0f; // when velocity reaches this value (or lower), we finalize the movement
   private float velocityReductionFactor = 0.2f; // factor to multipy the (already smoother) smoothedVelocity when setting the main velocity
-
   // snapping (falling back into place)
   private PVector snapInterval = null;
   private float snapVelocityMag = 75.0f; // when velocity reaches this value (or lower), we start snapping
   private PVector snapPosition = null;
   private float snapFactor = 0.95f;
   private final static float snapDoneDist = 0.9f;
-
   // offset limits
   private PVector minOffset = null;
   private PVector maxOffset = null;
 
+  // events
+  public Event<PVector> newSnapPositionEvent;
+
   public SmoothScroll(){
     smoothedVelocity = new PVector(0.0f, 0.0f, 0.0f);
+    newSnapPositionEvent = new Event<>();
   }
 
   @Override public void destroy(){
@@ -67,6 +70,8 @@ public class SmoothScroll extends ExtensionBase {
         scrollableNode.setPosition(snapPosition);
         // after snapping to desired position, snap again if beyonf offset limits
         this.snapPosition = this.getOffsetLimitSnapPosition();
+        if(this.snapPosition != null)
+          newSnapPositionEvent.trigger(this.snapPosition.get());
       }
 
       return;
@@ -86,6 +91,7 @@ public class SmoothScroll extends ExtensionBase {
     this.snapPosition = getOffsetLimitSnapPosition();
     if(this.snapPosition != null){ // isSnapping() == true
       this.velocity = null; // isDamping() = false
+      newSnapPositionEvent.trigger(this.snapPosition.get());
       return;
     }
 
@@ -158,8 +164,10 @@ public class SmoothScroll extends ExtensionBase {
       dragStartNodePositionGlobal = null; // this makes isDragging() false
 
       snapPosition = getOffsetLimitSnapPosition();
-      if(snapPosition != null) // isSnapping() = true
+      if(snapPosition != null){ // isSnapping() = true
+        newSnapPositionEvent.trigger(this.snapPosition.get());
         return;
+      }
 
       // endDragEvent.trigger(this);
       if(event.velocitySmoothed != null)
@@ -221,6 +229,7 @@ public class SmoothScroll extends ExtensionBase {
 
     snapPosition = originalNodePosition.get();
     snapPosition.add(targetOffset); // isSnapping() = true
+    newSnapPositionEvent.trigger(this.snapPosition.get());
   }
 
   public boolean isSnapping(){
@@ -291,31 +300,31 @@ public class SmoothScroll extends ExtensionBase {
   }
 
   public void setMinOffset(float x, float y){
-    PVector offset = new PVector(x,y);
-    minOffset = offset;
-
-    PVector p = getOffsetLimitSnapPosition();
-    if(p != null)
-     this.snapPosition = p;
+    this.setMinOffset(new PVector(x,y,0.0f));
   }
 
   public void setMinOffset(PVector offset){
     this.minOffset = offset.get();
 
     PVector p = getOffsetLimitSnapPosition();
-    if(p != null)
-     this.snapPosition = p;
+    if(p != null){
+      this.snapPosition = p;
+      newSnapPositionEvent.trigger(this.snapPosition.get());
+    }
   }
 
   public void setMaxOffset(float x, float y){
-    PVector offset = new PVector(x,y);
-    maxOffset = offset;
-    snapPosition = getOffsetLimitSnapPosition();
+    this.setMaxOffset(new PVector(x,y,0.0f));
   }
 
   public void setMaxOffset(PVector offset){
     this.maxOffset = offset;
-    snapPosition = getOffsetLimitSnapPosition();
+
+    PVector p = getOffsetLimitSnapPosition();
+    if(p != null){
+      this.snapPosition = p;
+      newSnapPositionEvent.trigger(this.snapPosition.get());
+    }
   }
 
   public void setScrollPosition(float x, float y){
@@ -391,6 +400,7 @@ public class SmoothScroll extends ExtensionBase {
 
     this.snapPosition = pos.get();
     this.velocity = null; // isDamping() = false
+    newSnapPositionEvent.trigger(this.snapPosition.get());
   }
 
   //
