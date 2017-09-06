@@ -59,72 +59,12 @@ public class SmoothScroll extends ExtensionBase {
   @Override
   public void update(float dt){
     if(isSnapping()){
-      PVector curPos = scrollableNode.getPosition();
-      float local_dt = dt;
-
-      while(local_dt > 1.0f){
-        PVector delta = snapPosition.get();
-        delta.sub(curPos);
-        delta.mult(snapFactor);
-        curPos.add(delta);
-        local_dt -= 1.0f;
-      }
-
-      PVector delta = snapPosition.get();
-      delta.sub(curPos);
-      delta.mult(snapFactor);
-      delta.lerp(new PVector(0,0,0), 1.0f-local_dt);
-      curPos.add(delta);
-
-      scrollableNode.setPosition(curPos);
-
-      if(curPos.dist(snapPosition) <= snapDoneDist){
-        scrollableNode.setPosition(snapPosition);
-        // after snapping to desired position, snap again if beyonf offset limits
-        this.snapPosition = this.getOffsetLimitSnapPosition();
-        if(this.snapPosition != null)
-          newSnapPositionEvent.trigger(this.snapPosition.get());
-        else
-          restEvent.trigger(scrollableNode);
-      }
-
+      this.updateSnapping(dt);
       return;
     }
 
-    if(!isDamping())
-      return;
-
-    // apply velocity
-    PVector deltaPos = velocity.get();
-    deltaPos.mult(dt);
-    PVector pos = scrollableNode.getPosition();
-    pos.add(deltaPos);
-    scrollableNode.setPosition(pos);
-
-    // "snap back" when damping beyond limits
-    this.snapPosition = getOffsetLimitSnapPosition();
-    if(this.snapPosition != null){ // isSnapping() == true
-      this.velocity = null; // isDamping() = false
-      newSnapPositionEvent.trigger(this.snapPosition.get());
-      return;
-    }
-
-    // apply damping
-    PVector dampedVelocity = velocity.get();
-    dampedVelocity.mult(dampingFactor);
-    velocity.lerp(dampedVelocity, dt);
-
-    float mag = velocity.mag();
-
-    if(snapInterval != null && mag <= snapVelocityMag){
-      this.startSnapping();
-      return;
-    }
-
-    if(velocity.mag() < minVelocityMag){
-      velocity = null; // isDamping() = false
-      restEvent.trigger(scrollableNode);
-    }
+    if(isDamping())
+      this.updateDamping(dt);
   }
 
   @Override
@@ -256,6 +196,42 @@ public class SmoothScroll extends ExtensionBase {
 
   // velocity/damping methods // // // // //
 
+  private void updateDamping(float dt){
+    // apply current velocity
+    PVector deltaPos = velocity.get();
+    deltaPos.mult(dt);
+    PVector pos = scrollableNode.getPosition();
+    pos.add(deltaPos);
+    scrollableNode.setPosition(pos);
+
+    // start "snap back" when damping beyond limits
+    this.snapPosition = getOffsetLimitSnapPosition();
+    if(this.snapPosition != null){ // isSnapping() == true
+      this.velocity = null; // isDamping() = false
+      newSnapPositionEvent.trigger(this.snapPosition.get());
+      return;
+    }
+
+    // apply damping (velocity reducation due to "friction")
+    PVector dampedVelocity = velocity.get();
+    dampedVelocity.mult(dampingFactor);
+    velocity.lerp(dampedVelocity, dt);
+
+    float mag = velocity.mag();
+
+    // start snap-back (if enabled) when velocity has dropped low enough
+    if(this.isSnapEnabled() && mag <= snapVelocityMag){
+      this.startSnapping();
+      return;
+    }
+
+    // no snapping; finalize damping
+    if(mag < minVelocityMag){
+      velocity = null; // isDamping() = false
+      restEvent.trigger(scrollableNode);
+    }
+  }
+
   public boolean isDamping(){
     return this.velocity != null;
   }
@@ -281,6 +257,42 @@ public class SmoothScroll extends ExtensionBase {
   }
 
   // 'snapping' methods // // // // //
+
+  private void updateSnapping(float dt){
+    PVector curPos = scrollableNode.getPosition();
+    float local_dt = dt;
+
+    while(local_dt > 1.0f){
+      PVector delta = snapPosition.get();
+      delta.sub(curPos);
+      delta.mult(snapFactor);
+      curPos.add(delta);
+      local_dt -= 1.0f;
+    }
+
+    PVector delta = snapPosition.get();
+    delta.sub(curPos);
+    delta.mult(snapFactor);
+    delta.lerp(new PVector(0,0,0), 1.0f-local_dt);
+    curPos.add(delta);
+
+    scrollableNode.setPosition(curPos);
+
+    // current snap finished?
+    if(curPos.dist(snapPosition) <= snapDoneDist){
+      // apply target snap-position (unsmoothed)
+      scrollableNode.setPosition(snapPosition);
+      // after snapping to desired position, snap again if beyond offset limits
+      this.snapPosition = this.getOffsetLimitSnapPosition();
+      // trigger appropriate events
+      if(this.snapPosition != null)
+        newSnapPositionEvent.trigger(this.snapPosition.get());
+      else
+        restEvent.trigger(scrollableNode);
+    }
+
+    return;
+  }
 
   /**
    * Enables/disables snapping. When enabling, it sets the snap interval to the extended node's size
@@ -370,12 +382,18 @@ public class SmoothScroll extends ExtensionBase {
    */
   public void setSnapPosition(PVector pos){
     if(pos == null){ // abort snapping?
-      this.snapPosition = null;
+      // abort current snapping operation (if any) and apply
+      // offset-limit exceeded snap position if necessary
+      this.snapPosition = this.getOffsetLimitSnapPosition();
       return;
     }
 
-    this.snapPosition = pos.get();
-    this.velocity = null; // isDamping() = false
+    // apply offset limit correction (if necessary). TODO: too rigid? make this optional?
+    PVector correctedPosition = this.getOffsetLimitsCorrection(pos);
+    this.snapPosition = correctedPosition == null ? pos.get() : correctedPosition;
+    // reset damping (isDamping() = false)
+    this.velocity = null;
+    // trigger notification
     newSnapPositionEvent.trigger(this.snapPosition.get());
   }
 
@@ -455,6 +473,10 @@ public class SmoothScroll extends ExtensionBase {
 
   // offset limits methods // // // // //
 
+  public boolean hasOffsetLimits(){
+    return this.minOffset != null || this.maxOffset != null;
+  }
+
   public void setMinOffset(float x, float y){
     this.setMinOffset(new PVector(x,y,0.0f));
   }
@@ -485,39 +507,44 @@ public class SmoothScroll extends ExtensionBase {
 
   /** @return PVector target position for snap-back after offset limit is exceeded. Returns null if offset limit is not exceeded */
   private PVector getOffsetLimitSnapPosition(){
-    PVector curOffset = getCurrentOffset();
-    PVector snapPos = scrollableNode.getPosition();
+    return this.getOffsetLimitsCorrection(scrollableNode.getPosition());
+  }
 
+  private PVector getOffsetLimitsCorrection(PVector pos){
+    if(originalNodePosition == null) return pos.get();
+
+    PVector offset = pos.get();
+    offset.sub(originalNodePosition);
+
+    PVector snapPos = pos.get();
     boolean snap = false;
 
     if(minOffset!=null){
-      if(curOffset.x < minOffset.x){
+      if(offset.x < minOffset.x){
         snapPos.x = minOffset.x;
         snap = true;
       }
 
-      if(curOffset.y < minOffset.y){
+      if(offset.y < minOffset.y){
         snapPos.y = minOffset.y;
         snap = true;
       }
     }
 
     if(maxOffset!=null){
-      if(curOffset.x > maxOffset.x){
+      if(offset.x > maxOffset.x){
         snapPos.x = maxOffset.x;
         snap = true;
       }
 
-      if(curOffset.y > maxOffset.y){
+      if(offset.y > maxOffset.y){
         snapPos.y = maxOffset.y;
         snap = true;
       }
     }
 
-    if(snap)
-      return snapPos;
-
-    return null;
+    // return null if nothing to correct
+    return snap ? snapPos : null;
   }
 
   public void setScrollPosition(float x, float y){
