@@ -26,6 +26,7 @@ public class SmoothScroll extends ExtensionBase {
   private float snapVelocityMag = 75.0f; // when velocity reaches this value (or lower), we start snapping
   private PVector snapPosition = null;
   private float snapFactor = 0.95f;
+  private float snapThrowFactor = 1.0f; // multiplier for the smoothed 'throwing' velocity after dragging
   private final static float snapDoneDist = 0.9f;
   // offset limits
   private PVector minOffset = null;
@@ -44,7 +45,7 @@ public class SmoothScroll extends ExtensionBase {
 
     // newSnapIntervalPageEvent triggers everytime newSnapPositionEvent is triggered
     newSnapPositionEvent.addListener((PVector snapPos) -> {
-      PVector value = this.calcSnapIntervalPage(snapPos);
+      PVector value = this.toStepPosition(snapPos);
       if(value != null)
         newSnapIntervalPageEvent.trigger(value);
     }, this);
@@ -166,7 +167,9 @@ public class SmoothScroll extends ExtensionBase {
       }
 
       if(event.velocitySmoothed != null)
-        smoothedVelocity.lerp(event.velocitySmoothed, velocitySmoothCoeff);
+        this.smoothedVelocity = event.velocitySmoothed; // use TouchEvent's velocity smoothing
+      else
+        smoothedVelocity.lerp(event.velocity, velocitySmoothCoeff); // apply our own smoothing
 
       applyDragOffset(event.offset());
     }, this);
@@ -178,21 +181,31 @@ public class SmoothScroll extends ExtensionBase {
       applyDragOffset(event.offset());
       dragStartNodePositionGlobal = null; // this makes isDragging() false
 
+      // check offset limits; snap-back if necessary
       snapPosition = getOffsetLimitSnapPosition();
       if(snapPosition != null){ // isSnapping() = true
         newSnapPositionEvent.trigger(this.snapPosition.get());
         return;
       }
 
-      // endDragEvent.trigger(this);
+      // update our smoothed velocity
       if(event.velocitySmoothed != null)
-        smoothedVelocity.lerp(event.velocitySmoothed, velocitySmoothCoeff);
-
-      if(event.velocitySmoothed != null)
-        this.velocity = event.velocitySmoothed.get(); //smoothedVelocity; // this makes isDamping() true
+        this.smoothedVelocity = event.velocitySmoothed; // use TouchEvent's velocity smoothing
       else
-        this.velocity = smoothedVelocity.get();
+        smoothedVelocity.lerp(event.velocity, velocitySmoothCoeff); // apply our own smoothing
 
+      // when snapping-behaviour is enabled we don't use velocity/damping;
+      // instead, we calculate a target position to snap to
+      if(this.isSnapEnabled()){
+        PVector throwTarget = this.smoothedVelocity.get();
+        throwTarget.mult(this.snapThrowFactor);
+        throwTarget.add(this.scrollableNode.getPosition());
+        this.setSnapPosition(this.toClosestSnapPosition(throwTarget));
+        return;
+      }
+
+      // initialize a velocity and start damping
+      this.velocity = this.smoothedVelocity.get();
       this.velocity.mult(velocityReductionFactor);
     }, this);
   }
@@ -366,10 +379,40 @@ public class SmoothScroll extends ExtensionBase {
     newSnapPositionEvent.trigger(this.snapPosition.get());
   }
 
+  public float getSnapThrowFactor(){
+    return snapThrowFactor;
+  }
+
+  /**
+   * Configures snap-back behaviour after dragging.
+   * @param multiplier multiplies the -smoothed- velocity when calculating
+   * the snapping-target-position. A higher value makes it "further" throwable.
+   */
+  public void setSnapThrowFactor(float multiplier){
+    snapThrowFactor = multiplier;
+  }
+
+  private PVector toClosestSnapPosition(PVector pos){
+    PVector stepPos = this.toStepPosition(pos);
+    // round to nearest stepPosition
+    stepPos.x = Math.round(stepPos.x);
+    stepPos.y = Math.round(stepPos.y);
+    // convert back to scrollPosition
+    return this.stepPositionToNodePosition(stepPos);
+  }
+
   // 'stepping' methods - 'paginated' extension of snapping // // // // //
 
-  private PVector calcSnapIntervalPage(PVector pos){
+  /**
+   * Converts a given PVector position into a "step-position"
+   * (the offset of the given position to the original scrollable node's position,
+   * divided by the snapInterval).
+   * @param pos the position to convert
+   * @return PVector calculated step-position
+   */
+  private PVector toStepPosition(PVector pos){
     if(this.snapInterval == null) return null;
+
     // offset of the position
     PVector delta = pos.get();
     delta.sub(this.originalNodePosition);
@@ -379,8 +422,15 @@ public class SmoothScroll extends ExtensionBase {
     return delta;
   }
 
+  private PVector stepPositionToNodePosition(PVector pos){
+    PVector p = pos.get();
+    p.x = -p.x * this.snapInterval.x;
+    p.y = -p.y * this.snapInterval.y;
+    return p;
+  }
+
   public PVector getStepPosition(){
-    return this.calcSnapIntervalPage(this.scrollableNode.getPosition());
+    return this.toStepPosition(this.scrollableNode.getPosition());
   }
 
   public void step(float x, float y){
@@ -389,7 +439,7 @@ public class SmoothScroll extends ExtensionBase {
 
   public void step(PVector offset){
     if(this.snapInterval == null) return;
-    PVector current = this.calcSnapIntervalPage(this.scrollableNode.getPosition());
+    PVector current = this.toStepPosition(this.scrollableNode.getPosition());
     PVector delta = offset.get();
     delta.mult(-1.0f); // invert; step left means offset to right
     delta.x = delta.x * this.snapInterval.x;
