@@ -207,6 +207,26 @@ public class SmoothScroll extends ExtensionBase {
     dragStartNodePositionGlobal = null; // isDragging() = false
   }
 
+  public Node getScrollableNode(){
+    return scrollableNode;
+  }
+
+  public void setScrollableNode(Node newScrollableNode){
+    boolean wasEnabled = isEnabled();
+
+    if(wasEnabled)
+      disable();
+
+    scrollableNode = newScrollableNode;
+    originalNodePosition = scrollableNode.getPosition();
+
+
+    if(wasEnabled)
+      enable();
+  }
+
+  // dragging methods // // // // //
+
   private void applyDragOffset(PVector dragOffset){
     if(dragStartNodePositionGlobal == null) // should already be set at first processed touchMoveEvent, but just to be sure
       dragStartNodePositionGlobal = scrollableNode.getGlobalPosition();
@@ -221,8 +241,57 @@ public class SmoothScroll extends ExtensionBase {
     return dragStartNodePositionGlobal != null;
   }
 
+  // velocity/damping methods // // // // //
+
   public boolean isDamping(){
     return this.velocity != null;
+  }
+
+  public PVector getVelocity(){
+    return this.velocity == null ? new PVector(0,0,0) : velocity.get();
+  }
+
+  public float getDampingFactor(){
+    return dampingFactor;
+  }
+
+  public void setDampingFactor(float newDampingFactor){
+    dampingFactor = newDampingFactor;
+  }
+
+  public float getVelocityReductionFactor(){
+    return velocityReductionFactor;
+  }
+
+  public void setVelocityReductionFactor(float factor){
+    velocityReductionFactor = factor;
+  }
+
+  // 'snapping' methods // // // // //
+
+  /**
+   * Enables/disables snapping. When enabling, it sets the snap interval to the extended node's size
+   * @param enable when true enables snapping, when false disables snapping.
+   */
+  public void setSnapEnabled(boolean enable){
+    setSnapInterval(enable ? node.getSize() : null);
+  }
+
+  public PVector getSnapInterval(){
+    return snapInterval;
+  }
+
+  /**
+   * Enables/disables/configures snapping bahaviour.
+   * @param interval specifies the two-dimensional (z-attribute is ignored) snap interval. When null, disables snapping behaviour.
+   */
+  public void setSnapInterval(PVector interval){
+    snapInterval = interval == null ? null : interval.get();
+  }
+
+  /** @return true if snapping behaviour is enabled */
+  public boolean isSnapEnabled(){
+    return this.snapInterval != null;
   }
 
   private void startSnapping(){
@@ -247,76 +316,94 @@ public class SmoothScroll extends ExtensionBase {
     newSnapPositionEvent.trigger(this.snapPosition.get());
   }
 
+  /** @return boolean true only if currently snapping to a target position */
   public boolean isSnapping(){
     return snapPosition != null;
   }
 
-  public PVector getVelocity(){
-    return this.velocity == null ? new PVector(0,0,0) : velocity.get();
-  }
-
-  public Node getScrollableNode(){
-    return scrollableNode;
-  }
-
-  public void setScrollableNode(Node newScrollableNode){
-    boolean wasEnabled = isEnabled();
-
-    if(wasEnabled)
-      disable();
-
-    scrollableNode = newScrollableNode;
-    originalNodePosition = scrollableNode.getPosition();
-
-
-    if(wasEnabled)
-      enable();
-  }
-
-  public float getDampingFactor(){
-    return dampingFactor;
-  }
-
-  public void setDampingFactor(float newDampingFactor){
-    dampingFactor = newDampingFactor;
-  }
-
-  public float getVelocityReductionFactor(){
-    return velocityReductionFactor;
-  }
-
-  public void setVelocityReductionFactor(float factor){
-    velocityReductionFactor = factor;
-  }
-
   /**
-   * Enables/disabled snapping, when enabling sets the snap interval to the extended node's size
-   * @param enable Flag that specifies if snapping should be enabled or disabled
+   * Configures snapping behaviour smoothness
+   * @param newFactor offset multiplier; higher value means faster snapping.
    */
-  public void setSnapEnabled(boolean enable){
-    if(!enable){
-      snapInterval = null;
-      return;
-    }
-
-    snapInterval = node.getSize();
-  }
-
-  public PVector getSnapInterval(){
-    return snapInterval;
-  }
-
-  public void setSnapInterval(PVector interval){
-    snapInterval = interval == null ? null : interval.get();
-  }
-
   public void setSnapFactor(float newFactor){
     snapFactor = newFactor;
   }
 
-  public void setSnapVelocity(float newSnapVelocity){
-    snapVelocityMag = newSnapVelocity;
+  /**
+   * Configures snapping behaviour responsiveness
+   * @param newSnapVelocity specifies the velocity at which we'll start snapping into place
+   */
+  public void setSnapVelocity(float snapVelocity){
+    snapVelocityMag = snapVelocity;
   }
+
+  /** @return PVector current target position for snap-back behaviour. Returns null if not currently snapping */
+  public PVector getSnapPosition(){
+      return snapPosition;
+  }
+
+  /**
+   * Configures the current snapping-target-position (starts snap-back)
+   * @param x the horizontal target-position
+   * @param y the vertical target-position
+   */
+  public void setSnapPosition(float x, float y){
+    this.setSnapPosition(new PVector(x,y));
+  }
+
+  /**
+   * Configures the current snapping-target-position (starts snap-back)
+   * @param pos the snapping target-position
+   */
+  public void setSnapPosition(PVector pos){
+    if(pos == null){ // abort snapping?
+      this.snapPosition = null;
+      return;
+    }
+
+    this.snapPosition = pos.get();
+    this.velocity = null; // isDamping() = false
+    newSnapPositionEvent.trigger(this.snapPosition.get());
+  }
+
+  // 'stepping' methods - 'paginated' extension of snapping // // // // //
+
+  private PVector calcSnapIntervalPage(PVector pos){
+    if(this.snapInterval == null) return null;
+    // offset of the position
+    PVector delta = pos.get();
+    delta.sub(this.originalNodePosition);
+    // divide by the interval
+    delta.x = -delta.x / this.snapInterval.x;
+    delta.y = -delta.y / this.snapInterval.y;
+    return delta;
+  }
+
+  public PVector getStepPosition(){
+    return this.calcSnapIntervalPage(this.scrollableNode.getPosition());
+  }
+
+  public void step(float x, float y){
+    this.step(new PVector(x,y,0.0f));
+  }
+
+  public void step(PVector offset){
+    if(this.snapInterval == null) return;
+    PVector current = this.calcSnapIntervalPage(this.scrollableNode.getPosition());
+    PVector delta = offset.get();
+    delta.mult(-1.0f); // invert; step left means offset to right
+    delta.x = delta.x * this.snapInterval.x;
+    delta.y = delta.y * this.snapInterval.y;
+    if(this.snapPosition != null){
+      delta.add(this.snapPosition);
+      this.setSnapPosition(delta);
+    } else {
+      delta.add(this.scrollableNode.getPosition());
+      this.setSnapPosition(delta);
+    }
+  }
+
+  // offset limits methods // // // // //
 
   public void setMinOffset(float x, float y){
     this.setMinOffset(new PVector(x,y,0.0f));
@@ -346,19 +433,8 @@ public class SmoothScroll extends ExtensionBase {
     }
   }
 
-  public void setScrollPosition(float x, float y){
-    this.setScrollPosition(new PVector(x,y,0.0f));
-  }
-
-  public void setScrollPosition(PVector pos){
-    this.scrollableNode.setPosition(pos);
-
-    if(this.snapInterval != null){
-      this.startSnapping();
-    }
-  }
-
-  public PVector getOffsetLimitSnapPosition(){
+  /** @return PVector target position for snap-back after offset limit is exceeded. Returns null if offset limit is not exceeded */
+  private PVector getOffsetLimitSnapPosition(){
     PVector curOffset = getCurrentOffset();
     PVector snapPos = scrollableNode.getPosition();
 
@@ -394,6 +470,18 @@ public class SmoothScroll extends ExtensionBase {
     return null;
   }
 
+  public void setScrollPosition(float x, float y){
+    this.setScrollPosition(new PVector(x,y,0.0f));
+  }
+
+  public void setScrollPosition(PVector pos){
+    this.scrollableNode.setPosition(pos);
+
+    if(this.snapInterval != null){
+      this.startSnapping();
+    }
+  }
+
   public PVector getCurrentOffset(){
     if(originalNodePosition == null || scrollableNode == null)
       return new PVector(0,0,0);
@@ -403,63 +491,7 @@ public class SmoothScroll extends ExtensionBase {
     return vec;
   }
 
-  public PVector getSnapPosition(){
-      return snapPosition;
-  }
-
-  public void setSnapPosition(float x, float y){
-    this.setSnapPosition(new PVector(x,y));
-  }
-
-  public void setSnapPosition(PVector pos){
-    if(pos == null){ // abort snapping?
-      this.snapPosition = null;
-      return;
-    }
-
-    this.snapPosition = pos.get();
-    this.velocity = null; // isDamping() = false
-    newSnapPositionEvent.trigger(this.snapPosition.get());
-  }
-
-  public PVector calcSnapIntervalPage(PVector pos){
-    if(this.snapInterval == null) return null;
-    // offset of the position
-    PVector delta = pos.get();
-    delta.sub(this.originalNodePosition);
-    // divide by the interval
-    delta.x = -delta.x / this.snapInterval.x;
-    delta.y = -delta.y / this.snapInterval.y;
-    return delta;
-  }
-
-  public PVector getStepPosition(){
-    return this.calcSnapIntervalPage(this.scrollableNode.getPosition());
-  }
-
-  public void step(float x, float y){
-    this.step(new PVector(x,y,0.0f));
-  }
-
-  public void step(PVector offset){
-    if(this.snapInterval == null) return;
-    PVector current = this.calcSnapIntervalPage(this.scrollableNode.getPosition());
-    PVector delta = offset.get();
-    delta.mult(-1.0f); // invert; step left means offset to right
-    delta.x = delta.x * this.snapInterval.x;
-    delta.y = delta.y * this.snapInterval.y;
-    if(this.snapPosition != null){
-      delta.add(this.snapPosition);
-      this.setSnapPosition(delta);
-    } else {
-      delta.add(this.scrollableNode.getPosition());
-      this.setSnapPosition(delta);
-    }
-  }
-
-  //
-  // Static methods
-  //
+  // Static factory methods // // // // //
 
   public static SmoothScroll enableFor(Node touchAreaNode, Node scrollableNode){
     SmoothScroll ext = getFor(touchAreaNode, scrollableNode);
