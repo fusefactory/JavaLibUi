@@ -433,6 +433,10 @@ public class SmoothScroll extends ExtensionBase {
     return delta;
   }
 
+  public PVector getStepPosition(){
+    return this.calcSnapIntervalPage(this.scrollableNode.getPosition());
+  }
+
   public void step(float x, float y){
     this.step(new PVector(x,y,0.0f));
   }
