@@ -34,20 +34,20 @@ public class SmoothScroll extends ExtensionBase {
 
   // events
   public Event<PVector> newSnapPositionEvent;
-  public Event<PVector> newSnapIntervalPageEvent;
+  public Event<PVector> newStepPositionEvent;
   public Event<Node> restEvent;
 
   public SmoothScroll(){
     smoothedVelocity = new PVector(0.0f, 0.0f, 0.0f);
     newSnapPositionEvent = new Event<>();
-    newSnapIntervalPageEvent = new Event<>();
+    newStepPositionEvent = new Event<>();
     restEvent = new Event<>();
 
-    // newSnapIntervalPageEvent triggers everytime newSnapPositionEvent is triggered
+    // newStepPositionEvent triggers everytime newSnapPositionEvent is triggered
     newSnapPositionEvent.addListener((PVector snapPos) -> {
       PVector value = this.toStepPosition(snapPos);
       if(value != null)
-        newSnapIntervalPageEvent.trigger(value);
+        newStepPositionEvent.trigger(value);
     }, this);
   }
 
