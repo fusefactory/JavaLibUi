@@ -276,7 +276,7 @@ public class Node extends TouchReceiver {
   }
 
   public PVector getScale(){
-    return scale;
+    return scale.get();
   }
 
   public void setScale(PVector newScale){
@@ -315,8 +315,16 @@ public class Node extends TouchReceiver {
     return position.x + size.x;
   }
 
+  public float getRightScaled(){
+    return position.x + size.x * scale.x;
+  }
+
   public float getBottom(){
     return position.y + size.y;
+  }
+
+  public float getBottomScaled(){
+    return position.y + size.y * scale.y;
   }
 
   public void setGlobalPosition(PVector globalPos){
@@ -345,7 +353,7 @@ public class Node extends TouchReceiver {
 
     // try to invert the matrix
     if(!mat.invert()){
-      System.out.println("could not invert Model's globalTransformMatrix");
+      // System.out.println("could not invert Model's globalTransformMatrix");
       return pos;
     }
 

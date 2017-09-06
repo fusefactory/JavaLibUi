@@ -59,14 +59,14 @@ public class Constrain extends ExtensionBase {
         PVector nodeSize = node.getSize();
         PVector parentSize = parent.getSize();
 
-        if(nodeSize.x > parentSize.x){
+        if(nodeSize.x >= parentSize.x){
           if(newPos.x > 0.0f) newPos.x = 0.0f;
-          else if(node.getRight() < parent.getSize().x) newPos.x = parent.getSize().x - node.getSize().x;
+          else if(node.getRightScaled() < parent.getSize().x) newPos.x = parent.getSize().x - node.getSize().x * node.getScale().x;
         }
 
-        if(nodeSize.y > parentSize.y){
+        if(nodeSize.y >= parentSize.y){
           if(newPos.y > 0.0f) newPos.y = 0.0f;
-          else if(node.getBottom() < parent.getSize().y) newPos.y = parent.getSize().y - node.getSize().y;
+          else if(node.getBottomScaled() < parent.getSize().y) newPos.y = parent.getSize().y - node.getSize().y * node.getScale().y;
         }
       }
     }
@@ -189,12 +189,10 @@ public class Constrain extends ExtensionBase {
       n.use(d);
     }
 
-    if(onByDefault){
-      d.setFixX(true);
-      d.setFixY(true);
-      d.setFixZ(true);
-    }
 
+    d.setFixX(onByDefault);
+    d.setFixY(onByDefault);
+    d.setFixZ(onByDefault);
     return d;
   }
 
