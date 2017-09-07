@@ -71,7 +71,8 @@ public class Constrain extends ExtensionBase {
       }
     }
 
-    node.setPosition(newPos);
+    if(newPos.dist(node.getPosition()) > 0.1f)
+      node.setPosition(newPos);
 
     Float p = getPercentageX();
     if(p != null) xPercentageEvent.trigger(p);
