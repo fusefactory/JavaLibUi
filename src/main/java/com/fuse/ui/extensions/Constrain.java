@@ -12,6 +12,9 @@ public class Constrain extends ExtensionBase {
   private Float[] axisMaxValues = {null, null, null};
   private PVector constrainPos;
   private boolean bFillParent = false;
+  private float smoothing = 1.0f;
+
+  private PVector targetPos = null;
 
   public Event<Float> xPercentageEvent, yPercentageEvent, zPercentageEvent;
 
@@ -41,6 +44,21 @@ public class Constrain extends ExtensionBase {
   }
 
   void update(){
+    if(targetPos != null){
+      PVector delta = targetPos.get();
+      delta.sub(node.getPosition());
+      delta.mult(1.0f/smoothing);
+      if(delta.mag() < 0.1f){
+        node.setPosition(targetPos);
+        targetPos = null;
+      } else {
+        delta.add(node.getPosition());
+        node.setPosition(delta);
+      }
+
+      return;
+    }
+
     PVector newPos = node.getPosition();
 
     if(axisMinValues[0] != null && axisMinValues[0] > newPos.x) newPos.x = axisMinValues[0];
@@ -71,8 +89,10 @@ public class Constrain extends ExtensionBase {
       }
     }
 
-    if(newPos.dist(node.getPosition()) > 0.1f)
-      node.setPosition(newPos);
+    if(newPos.dist(node.getPosition()) > 0.1f){
+      targetPos = newPos;
+      //node.setPosition(newPos);
+    }
 
     Float p = getPercentageX();
     if(p != null) xPercentageEvent.trigger(p);

@@ -185,7 +185,9 @@ public class SmoothScroll extends ExtensionBase {
       dragStartNodePositionGlobal = scrollableNode.getGlobalPosition();
 
     PVector globPos = dragStartNodePositionGlobal.get();
-    globPos.add(dragOffset);
+    PVector offs = dragOffset.get();
+    offs.y = 0.0f;
+    globPos.add(offs);
 
     scrollableNode.setGlobalPosition(globPos);
   }
