@@ -74,8 +74,8 @@ public class ImageNode extends Node {
       }
       case FILL : {
         // "cache" the centered fit size
-        if(fillSize == null)
-          fillSize = calculateFillSize();
+        //if(fillSize == null)
+        fillSize = calculateFillSize();
         PVector pos = PVector.mult(getSize(), 0.5f);
         pg.imageMode(PApplet.CENTER);
         pg.image(image, pos.x, pos.y, fillSize.x, fillSize.y);
