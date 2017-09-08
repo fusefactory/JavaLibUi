@@ -15,12 +15,12 @@ public class ImageNode extends Node {
     FILL // image is strechted/squeed to exactly fill the node, but aspect ratio is respected
   }
 
-  private PImage image;
-  private Mode mode;
+  protected PImage image;
+  protected Mode mode;
   private boolean autoResizeToImage = false;
-  private Integer tintColor = null;
-  private PVector fitCenteredSize = null;
-  private PVector fillSize = null;
+  protected Integer tintColor = null;
+  protected PVector fitCenteredSize = null;
+  protected PVector fillSize = null;
 
   private void _init(){
     image = null;
@@ -102,7 +102,7 @@ public class ImageNode extends Node {
   public PImage getImage(){ return image; }
 
   public Mode getMode(){ return mode; }
-  public void setMode(Mode newMode){ mode = newMode; }
+  public void setMode(Mode newMode){ if(newMode != null) mode = newMode; }
 
   public boolean getAutoResizeToImage(){ return autoResizeToImage; }
   public void setAutoResizeToImage(boolean enable){
