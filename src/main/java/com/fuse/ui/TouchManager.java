@@ -135,6 +135,11 @@ public class TouchManager extends TouchReceiver {
 
   /// finds the targeted node and triggers events
   private void processTouchEvent(TouchEvent event){
+    if(event == null || event.eventType == null){
+      logger.warning("TouchManager.processTouchEvent got null event or eventType");
+      return;
+    }
+
     switch(event.eventType){
       case TOUCH_DOWN:
         // init time
@@ -236,6 +241,10 @@ public class TouchManager extends TouchReceiver {
         // this is the end of this touch
         activeTouchEvents.remove(event.touchId);
         break;
+
+      default:
+        logger.warning("TouchManager.processTouchEvent got unknown eventType");
+        return;
     }
 
     // trigger appropriate events on event's original node
