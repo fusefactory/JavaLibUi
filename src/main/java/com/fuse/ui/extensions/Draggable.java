@@ -10,6 +10,7 @@ public class Draggable extends ExtensionBase {
   private PVector originalNodePosition = null;
   private PVector originalNodePositionGlobal = null;
   private boolean bDragging = false;
+  private TouchEvent dragEvent = null;
 
   public Event<Draggable> startEvent;
   public Event<Draggable> endEvent;
@@ -30,6 +31,8 @@ public class Draggable extends ExtensionBase {
 
     node.touchMoveEvent.addListener((TouchEvent event) -> {
       if(originalNodePosition == null || !bDragging){
+        dragEvent = event;
+
         Node ourNode = this.getNode();
 
         if(event.node != ourNode)
@@ -44,11 +47,12 @@ public class Draggable extends ExtensionBase {
         startEvent.trigger(this);
       }
 
-      apply(event.offset());
+      if(event == dragEvent && this.getNode().getActiveTouchEvents().size() == 1)
+        apply(event.offset());
     }, this);
 
     node.touchUpEvent.addListener((TouchEvent event) -> {
-      if(!bDragging)
+      if(!bDragging || event != dragEvent)
         return;
 
       apply(event.offset());
