@@ -647,8 +647,7 @@ public class NodeTest {
         draggable.startEvent.addListener((Draggable d) -> {});
         assertEquals(draggable.startEvent.size(), 1);
         Constrain constrain = Constrain.enableFor(n, true);
-        constrain.xPercentageEvent.addListener((Float f) -> {});
-        assertEquals(constrain.xPercentageEvent.size(), 1);
+
         SmoothScroll smoothScroll = SmoothScroll.enableFor(n, child);
         Swiper swiper = Swiper.enableFor(n);
         swiper.swipeEvent.addListener((Swiper s) -> {});
@@ -675,6 +674,5 @@ public class NodeTest {
         assertEquals(n.getExtensions().size(), 0);
         assertEquals(draggable.startEvent.size(), 0);
         assertEquals(swiper.swipeEvent.size(), 0);
-        assertEquals(constrain.xPercentageEvent.size(), 0);
     }
 }

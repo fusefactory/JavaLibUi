@@ -3,7 +3,6 @@ package com.fuse.ui.extensions;
 import processing.core.PApplet;
 import processing.core.PVector;
 
-import com.fuse.utils.Event;
 import com.fuse.ui.Node;
 import com.fuse.ui.TouchEvent;
 
@@ -12,27 +11,19 @@ public class Constrain extends ExtensionBase {
   private Float[] axisMaxValues = {null, null, null};
   private PVector constrainPos;
   private boolean bFillParent = false;
-  private float smoothing = 1.0f;
+  private Float smoothing = null;
 
   private PVector targetPos = null;
-
-  public Event<Float> xPercentageEvent, yPercentageEvent, zPercentageEvent;
 
   public Constrain(){
     setFixX(true);
     setFixY(true);
     setFixZ(true);
     constrainPos = new PVector();
-    xPercentageEvent = new Event<>();
-    yPercentageEvent = new Event<>();
-    zPercentageEvent = new Event<>();
   }
 
   @Override public void destroy(){
     super.destroy();
-    xPercentageEvent.destroy();
-    yPercentageEvent.destroy();
-    zPercentageEvent.destroy();
   }
 
   @Override public void enable(){
@@ -90,16 +81,12 @@ public class Constrain extends ExtensionBase {
     }
 
     if(newPos.dist(node.getPosition()) > 0.1f){
-      targetPos = newPos;
-      //node.setPosition(newPos);
+      if(smoothing == null){
+        node.setPosition(newPos);
+      } else {
+        targetPos = newPos;
+      }
     }
-
-    Float p = getPercentageX();
-    if(p != null) xPercentageEvent.trigger(p);
-    p = getPercentageY();
-    if(p != null) yPercentageEvent.trigger(p);
-    p = getPercentageZ();
-    if(p != null) zPercentageEvent.trigger(p);
   }
 
   @Override public void disable(){
