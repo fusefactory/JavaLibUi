@@ -29,6 +29,7 @@ public class TouchEvent {
   public Node mostRecentNode;
   /** The time in millis */
   public Long time;
+  public Long startTime;
   /** The velocity of the touch movement */
   public PVector velocity;
   public PVector velocitySmoothed;
@@ -93,16 +94,21 @@ public class TouchEvent {
 
   /** @return float The distance between the original position (the position at which the touch started) and the current position */
   public float distance(){
-    if(startPosition == null || position == null)
-      return 0.0f;
-    return PVector.dist(startPosition, position);
+    return startPosition == null || position == null ? 0.0f : PVector.dist(startPosition, position);
   }
 
   /** @return PVector The vector form the original position (the position at which the touch started) and the current position */
   public PVector offset(){
-    return PVector.sub(position, startPosition);
+    if(startPosition == null || position == null)
+      return new PVector(0.0f, 0.0f, 0.0f);
+    PVector result = position.get();
+    result.sub(startPosition);
+    return result;
   }
 
+  public Long getDuration(){
+    return time == null || startTime == null ? null : time-startTime;
+  }
   public boolean isFinished(){
     return this.eventType == EventType.TOUCH_UP;
   }

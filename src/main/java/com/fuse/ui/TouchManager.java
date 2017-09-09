@@ -5,74 +5,22 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.logging.*;
-import java.util.function.Consumer;
-
-import com.fuse.utils.Event;
 
 import processing.core.PGraphics;
 import processing.core.PVector;
 
-class TouchLog {
-  public TouchEvent touchEvent;
-  public long time;
-}
-
-class TouchMirror {
-  private TouchReceiver receiver;
-  private List<TouchEvent> currentMirrorEvents;
-  private PVector mirrorOffset;
-
-  public TouchMirror(TouchReceiver receiver){
-    this.receiver = receiver;
-    currentMirrorEvents = new ArrayList<>();
-    mirrorOffset = new PVector(10,10,0);
-    enable();
-  }
-
-  public void enable(){
-    Consumer<TouchEvent> func = (TouchEvent event) -> {
-      for(TouchEvent activeEvent : this.currentMirrorEvents)
-        if(activeEvent.touchId == event.touchId)
-          return;
-
-      TouchEvent mirror = event.copy();
-      mirror.touchId = event.touchId + 1;
-
-      PVector offset = event.offset();
-      offset.mult(-1.0f);
-      mirror.position = offset;
-      mirror.position.add(event.startPosition);
-      mirror.position.add(mirrorOffset);
-
-      this.currentMirrorEvents.add(mirror);
-      receiver.submitTouchEvent(mirror);
-      this.currentMirrorEvents.remove(mirror);
-    };
-
-    receiver.touchDownEvent.addListener(func, this);
-    receiver.touchMoveEvent.addListener(func, this);
-    receiver.touchUpEvent.addListener(func, this);
-  }
-
-  public void disable(){
-    receiver.touchDownEvent.removeListeners(this);
-    receiver.touchUpEvent.removeListeners(this);
-    receiver.touchMoveEvent.removeListeners(this);
-  }
-}
-
 public class TouchManager extends TouchReceiver {
   private Logger logger;
   private Node node;
-  private boolean dispatchOnUpdate;
-  private boolean controlledTime;
-  private long time;
+  private boolean dispatchOnUpdate = false;
+  private boolean controlledTime = false;
+  private long time = 0;
   /// the maximum amount of time (in seconds) between a touch-down and a touch-up for it to be considered a click
-  private long clickMaxInterval;
+  private long clickMaxInterval = 200l;
   /// the maximum distance (in pixels) between the position of touch-down and the position of touch-up for it to be considered a click
-  private float clickMaxDistance;
+  private float clickMaxDistance = 15.0f;
+
   // velocity smoothing logic based on ofxInterface OpenFrameworks addon implementation
   // see: https://github.com/galsasson/ofxInterface/blob/master/src/TouchManager.cpp
   private final static float velocitySmoothCoeff = 0.25f;
@@ -80,18 +28,13 @@ public class TouchManager extends TouchReceiver {
 
   private List<TouchEvent> touchEventQueue;
   private Map<Integer, TouchEvent> activeTouchEvents;
-  private Map<Integer, TouchLog> activeTouchLogs;
 
   private void _init(){
     logger = Logger.getLogger(TouchManager.class.getName());
-    dispatchOnUpdate = false;
-    controlledTime = false;
-    clickMaxInterval = 200l; // milliseconds (0.2 seconds default)
-    clickMaxDistance = 15; // pixels
     touchEventQueue = new ArrayList<TouchEvent>();
     activeTouchEvents = new HashMap<Integer, TouchEvent>();
-    activeTouchLogs = new HashMap<Integer, TouchLog>();
   }
+
   public TouchManager(){
     _init();
   }
@@ -164,10 +107,19 @@ public class TouchManager extends TouchReceiver {
 
   private TouchEvent updateExistingEvent(TouchEvent existing, TouchEvent event){
     // if(existing.touchId != event.touchId) logger.warning("updating existing event with different touchId");
-    if(event.velocity == null)
-      existing.velocity = calculateVelocity(existing.time, existing.position, event.time, event.position);
-    else
+    if(event.velocity == null){
+      // calculate velocity
+      long dt = event.time-existing.time;
+      if(dt > 0){
+        float deltaTime = ((float)dt)/1000.0f;
+        // update velocity
+        existing.velocity = event.position.get();
+        existing.velocity.sub(existing.position);
+        existing.velocity.div(deltaTime);
+      }
+    } else {
       existing.velocity = event.velocity;
+    }
 
     if(event.velocitySmoothed == null)
       existing.velocitySmoothed.lerp(existing.velocity, velocitySmoothCoeff);
@@ -185,22 +137,19 @@ public class TouchManager extends TouchReceiver {
   private void processTouchEvent(TouchEvent event){
     switch(event.eventType){
       case TOUCH_DOWN:
+        // init time
+        if(event.startTime == null)
+          event.startTime = event.time;
+        // init velocity
         if(event.velocity == null)
           event.velocity = new PVector(0.0f, 0.0f, 0.0f);
         if(event.velocitySmoothed == null)
           event.velocitySmoothed = new PVector(0.0f, 0.0f, 0.0f);
+        // init target
         event.node = getNodeForTouchPosition(event.position);
         event.startPosition = event.position;
+        // store
         activeTouchEvents.put(event.touchId, event);
-
-        { // create touch log for later calculations
-          TouchLog tlog = new TouchLog();
-          tlog.touchEvent = event.copy();
-          tlog.time = this.getTime();
-
-          activeTouchLogs.put(event.touchId, tlog);
-        }
-
         break;
 
       case TOUCH_MOVE:
@@ -248,6 +197,7 @@ public class TouchManager extends TouchReceiver {
       case TOUCH_UP:
         { // find and update existing active TouchEvent
           TouchEvent existing = activeTouchEvents.get(event.touchId);
+
           if(existing != null){
             event = updateExistingEvent(existing, event);
           } else {
@@ -264,34 +214,27 @@ public class TouchManager extends TouchReceiver {
         }
 
         { // check for click
-          TouchLog tlog = activeTouchLogs.get(event.touchId);
-          if(tlog == null){
-            logger.warning("could not find touch log for touch up event: " + event.toString());
-          } else {
-            float t = this.getTime();
+          Long dur = event.getDuration();
 
-            // check if time and distance between touch-down and -up aren't too big
-            if(t - tlog.time <= clickMaxInterval && PVector.dist(tlog.touchEvent.position, event.position) <= clickMaxDistance){
-              TouchEvent tmpEvent = event.copy();
-              tmpEvent.eventType = TouchEvent.EventType.TOUCH_CLICK;
+          if(dur != null && dur <= clickMaxInterval && event.distance() <= clickMaxDistance){
+            TouchEvent tmpEvent = event.copy();
+            tmpEvent.eventType = TouchEvent.EventType.TOUCH_CLICK;
 
-              // logger.warning("CLICK: dist=" + Float.toString(PVector.dist(tlog.touchEvent.position, event.position)));
-              // logger.warning("pos1=" + tlog.touchEvent.position.toString());
-              // logger.warning("pos2=" + event.position.toString());
+            // logger.warning("CLICK: dist=" + Float.toString(PVector.dist(tlog.touchEvent.position, event.position)));
+            // logger.warning("pos1=" + tlog.touchEvent.position.toString());
+            // logger.warning("pos2=" + event.position.toString());
 
-              // trigger touch click events
-              this.receiveTouchEvent(tmpEvent);
-              if(event.node != null){
-                logger.finest("TouchManager triggering TOUCH_CLICK event on Node: "+event.node.getName());
-                event.node.receiveTouchEvent(tmpEvent);
-              }
+            // trigger touch click events
+            this.receiveTouchEvent(tmpEvent);
+            if(event.node != null){
+              logger.finest("TouchManager triggering TOUCH_CLICK event on Node: "+event.node.getName());
+              event.node.receiveTouchEvent(tmpEvent);
             }
           }
         }
 
         // this is the end of this touch
         activeTouchEvents.remove(event.touchId);
-        activeTouchLogs.remove(event.touchId);
         break;
     }
 
@@ -394,27 +337,6 @@ public class TouchManager extends TouchReceiver {
     return e;
   }
 
-
-  /** For debugging! (TODO: remove?) */
-  private TouchMirror touchMirror = null;
-
-  /** DEBUG FEATURE for pinch-zoom without touchscreen! (TODO: remove?) */
-  public void setMirrorNodeEventsEnabled(boolean enable){
-    if(enable){
-      if(touchMirror != null)
-        return;
-      touchMirror = new TouchMirror(this);
-      return;
-    }
-
-    if(touchMirror != null){
-      touchMirror.disable();
-      touchMirror = null;
-    }
-  }
-
-  public boolean getMirrorNodeEventsEnabled(){ return touchMirror != null; }
-
   public void drawActiveTouches(){
     PGraphics pg = Node.getPGraphics();
 
@@ -431,14 +353,5 @@ public class TouchManager extends TouchReceiver {
     if(controlledTime)
       return this.time;
     return System.currentTimeMillis();
-  }
-
-  private PVector calculateVelocity(long t1, PVector p1, long t2, PVector p2){
-    long dt = t2-t1;
-    if(dt == 0) dt = 10;
-    PVector movement = p2.get();
-    movement.sub(p1);
-    movement.div((float)(dt / 1000.0f));
-    return movement;
   }
 }
