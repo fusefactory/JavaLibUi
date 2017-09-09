@@ -391,34 +391,5 @@ public class TouchManagerTest {
     clipper.setClipContent(false);
     man.touchDown(0, new PVector(350, 150));
     assertEquals(subject.touchDownEvent.getHistory().size(), 3); // touch event triggered
-
   }
-
-  @Test public void setMirrorNodeEventsEnabled(){
-    Node n = new Node();
-    n.setSize(100, 100);
-    n.touchMoveEvent.enableHistory();
-
-    TouchManager man = new TouchManager(n);
-    man.touchDown(0, new PVector(9, 9, 0));
-    man.touchMove(0, new PVector(8, 8, 0));
-
-    assertEquals(n.touchMoveEvent.getHistory().size(), 1);
-    assertEquals(n.touchMoveEvent.getHistory().get(0).touchId, 0);
-
-    man.setMirrorNodeEventsEnabled(true);
-    man.touchDown(1, new PVector(9, 9, 0)); // needed for the move events to be "accepted"
-    man.touchMove(1, new PVector(9, 9, 0));
-    man.touchMove(1, new PVector(7, 7, 0));
-
-    assertEquals(n.touchMoveEvent.getHistory().size(), 5); // 4 new events triggered, not 2 new
-    assertEquals(n.touchMoveEvent.getHistory().get(1).touchId, 1);
-    assertEquals(n.touchMoveEvent.getHistory().get(2).touchId, 2);
-    assertEquals(n.touchMoveEvent.getHistory().get(3).touchId, 1);
-    assertEquals(n.touchMoveEvent.getHistory().get(3).position, new PVector(7, 7, 0));
-    assertEquals(n.touchMoveEvent.getHistory().get(4).touchId, 2);
-    assertEquals(n.touchMoveEvent.getHistory().get(4).position, new PVector(21, 21, 0));
-  }
-
-
 }
