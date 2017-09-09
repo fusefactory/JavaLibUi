@@ -1,0 +1,47 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'application'
+
+mainClassName = 'com.fuse.ui.example.App'
+group = 'com.fuse.ui.example'
+version = '0.0.1'
+description = """com.fuse.ui PinchZoom Example App"""
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8'
+}
+
+sourceSets {
+    main {
+         java {
+             srcDir sourceSets.main.java.srcDirs + '../src/main/java'
+        }
+    }
+}
+
+repositories {
+     mavenLocal()
+     mavenCentral()
+     maven { url "http://repo.maven.apache.org/maven2" }
+     maven { url "https://jitpack.io" }
+}
+
+dependencies {
+    compile group: 'com.github.fusefactory', name: 'JavaLibEvent', version:'1.1.7' // can also be loaded as local submodule; see sourceSets
+    compile group: 'org.processing', name: 'core', version:'3.2.3'
+    // testCompile group: 'junit', name: 'junit', version:'4.12'
+}
+
+// avoid windows error when running the generated distribution's .bat script
+// reduces the super long CLASSPATH line which explicitly mentions every jar separately,
+// into a single shot %APP_HOME%\lib\* wildcard
+tasks.withType(CreateStartScripts).each { task ->
+    task.doLast {
+        String text = task.windowsScript.text
+        text = text.replaceFirst(/(set CLASSPATH=%APP_HOME%\\lib\\).*/, { "${it[1]}*" })
+        task.windowsScript.write text
+    }
+}
