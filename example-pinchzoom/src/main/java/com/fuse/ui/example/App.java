@@ -21,6 +21,9 @@ public class App extends PApplet {
   private TouchManager touchManager;
   private Node sceneNode;
   private RectNode containerNode, zoomableNode;
+  private Draggable draggable;
+  private Constrain constrain;
+  private PinchZoom pinchZoom;
 
   public static void main( String[] args )
   {
@@ -84,17 +87,24 @@ public class App extends PApplet {
   public void populateScene(Node scene){
     // Container
     this.containerNode = new RectNode();
+    this.containerNode.setName("container");
     this.containerNode.setPosition(100,100);
     this.containerNode.setSize(600,400);
     this.containerNode.setRectColor(pg.color(100,100,100));
     this.containerNode.setClipContent(true); // toggle-able with the 'c' key
+    this.sceneNode.addChild(this.containerNode);
 
     // zoomable
     this.zoomableNode = new RectNode();
+    this.zoomableNode.setName("zoomable");
     this.zoomableNode.setPosition(100,100);
     this.zoomableNode.setSize(200,133);
     this.zoomableNode.setRectColor(pg.color(200,150,150));
     this.containerNode.addChild(this.zoomableNode);
+
+    this.draggable = Draggable.enableFor(this.zoomableNode);
+    this.constrain = Constrain.enableFor(this.zoomableNode);
+    this.constrain.setFillParent(true);
   }
 
   public void mousePressed(){
