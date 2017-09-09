@@ -7,34 +7,67 @@ import com.fuse.ui.Node;
 import com.fuse.ui.TouchEvent;
 
 public class Constrain extends ExtensionBase {
+  // constrain parameters
   private Float[] axisMinValues = {null, null, null};
   private Float[] axisMaxValues = {null, null, null};
-  private PVector constrainPos;
   private boolean bFillParent = false;
+  // avoiding inifinite loops
+  private static int maxPositionCorrectionPerUpdate = 3;
+  private int positionCorrectionsThisUpdate = 0;
+  // smoothing
   private Float smoothing = null;
-
   private PVector targetPos = null;
 
   public Constrain(){
     setFixX(true);
     setFixY(true);
     setFixZ(true);
-    constrainPos = new PVector();
   }
 
   @Override public void destroy(){
     super.destroy();
   }
 
-  @Override public void enable(){
-    super.enable();
-    constrainPos = node.getPosition();
+  private PVector getConstrainedPosition(){
+    positionCorrectionsThisUpdate = 0;
 
-    node.positionChangeEvent.whenTriggered(() -> { this.update(); }, this);
-    node.sizeChangeEvent.whenTriggered(() -> { this.update(); }, this);
+    PVector result = node.getPosition();
+
+    if(axisMinValues[0] != null && axisMinValues[0] > result.x) result.x = axisMinValues[0];
+    if(axisMinValues[1] != null && axisMinValues[1] > result.y) result.y = axisMinValues[1];
+    if(axisMinValues[2] != null && axisMinValues[2] > result.z) result.z = axisMinValues[2];
+
+    if(axisMaxValues[0] != null && axisMaxValues[0] < result.x) result.x = axisMaxValues[0];
+    if(axisMaxValues[1] != null && axisMaxValues[1] < result.y) result.y = axisMaxValues[1];
+    if(axisMaxValues[2] != null && axisMaxValues[2] < result.z) result.z = axisMaxValues[2];
+
+    if(bFillParent){
+      Node parent = node.getParent();
+      if(parent != null){
+        // TODO; consider node's scaling property?
+
+        PVector nodeSize = node.getSize();
+        PVector parentSize = parent.getSize();
+
+        if(nodeSize.x >= parentSize.x){
+          if(result.x > 0.0f) result.x = 0.0f;
+          else if(node.getRightScaled() < parent.getSize().x) result.x = parent.getSize().x - node.getSize().x * node.getScale().x;
+        }
+
+        if(nodeSize.y >= parentSize.y){
+          if(result.y > 0.0f) result.y = 0.0f;
+          else if(node.getBottomScaled() < parent.getSize().y) result.y = parent.getSize().y - node.getSize().y * node.getScale().y;
+        }
+      }
+    }
+
+    return result;
   }
 
-  void update(){
+  @Override
+  public void update(float dt){
+    positionCorrectionsThisUpdate = 0; // reset
+
     if(targetPos != null){
       PVector delta = targetPos.get();
       delta.sub(node.getPosition());
@@ -46,47 +79,28 @@ public class Constrain extends ExtensionBase {
         delta.add(node.getPosition());
         node.setPosition(delta);
       }
+    }
+  }
 
+  private void onNodeChange(){
+    PVector pos = this.getConstrainedPosition();
+
+    if(pos.dist(node.getPosition()) < 0.1f) // negligable
       return;
+
+    if(smoothing == null && positionCorrectionsThisUpdate < maxPositionCorrectionPerUpdate){
+      positionCorrectionsThisUpdate++;
+      node.setPosition(pos);
+    } else {
+      targetPos = pos;
     }
+  }
 
-    PVector newPos = node.getPosition();
+  @Override public void enable(){
+    super.enable();
 
-    if(axisMinValues[0] != null && axisMinValues[0] > newPos.x) newPos.x = axisMinValues[0];
-    if(axisMinValues[1] != null && axisMinValues[1] > newPos.y) newPos.y = axisMinValues[1];
-    if(axisMinValues[2] != null && axisMinValues[2] > newPos.z) newPos.z = axisMinValues[2];
-
-    if(axisMaxValues[0] != null && axisMaxValues[0] < newPos.x) newPos.x = axisMaxValues[0];
-    if(axisMaxValues[1] != null && axisMaxValues[1] < newPos.y) newPos.y = axisMaxValues[1];
-    if(axisMaxValues[2] != null && axisMaxValues[2] < newPos.z) newPos.z = axisMaxValues[2];
-
-    if(bFillParent){
-      Node parent = node.getParent();
-      if(parent != null){
-        // TODO; consider node's scaling property?
-
-        PVector nodeSize = node.getSize();
-        PVector parentSize = parent.getSize();
-
-        if(nodeSize.x >= parentSize.x){
-          if(newPos.x > 0.0f) newPos.x = 0.0f;
-          else if(node.getRightScaled() < parent.getSize().x) newPos.x = parent.getSize().x - node.getSize().x * node.getScale().x;
-        }
-
-        if(nodeSize.y >= parentSize.y){
-          if(newPos.y > 0.0f) newPos.y = 0.0f;
-          else if(node.getBottomScaled() < parent.getSize().y) newPos.y = parent.getSize().y - node.getSize().y * node.getScale().y;
-        }
-      }
-    }
-
-    if(newPos.dist(node.getPosition()) > 0.1f){
-      if(smoothing == null){
-        node.setPosition(newPos);
-      } else {
-        targetPos = newPos;
-      }
-    }
+    node.positionChangeEvent.whenTriggered(() -> { this.onNodeChange(); }, this);
+    node.sizeChangeEvent.whenTriggered(() -> { this.onNodeChange(); }, this);
   }
 
   @Override public void disable(){
