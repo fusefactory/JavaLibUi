@@ -21,6 +21,9 @@ public class TransformerExtension extends ExtensionBase {
   // limits
   private Float[] minScale = {null, null, null}; // x,y,z axis
   private Float[] maxScale = {null, null, null}; // x,y,z axis
+  // time-based transformation expiration
+  private Float maxTransformationTime;
+  private float positionTimer;
 
   // endless recursion detection
   private static int maxTransformationsPerUpdate = 9;
@@ -37,7 +40,11 @@ public class TransformerExtension extends ExtensionBase {
     transformationsThisUpdate = 0; // reset endless recursion detection counter
 
     if(targetPosition != null){
-      if(smoothValue <= 1.0f){
+      this.positionTimer += dt;
+      if( this.maxTransformationTime != null && this.positionTimer > this.maxTransformationTime){
+        logger.fine("position transformation expired");
+        this.targetPosition = null;
+      } else if(smoothValue <= 1.0f){
         // smoothing disabled, apply directly
         this.node.setPosition(targetPosition);
         targetPosition = null;
@@ -117,6 +124,7 @@ public class TransformerExtension extends ExtensionBase {
   protected void transformPosition(PVector vec){
     if(this.isSmoothing()){
       this.targetPosition = vec.get();
+      this.positionTimer = 0.0f;
       return; // let the update method take it from here
     }
 
@@ -206,5 +214,13 @@ public class TransformerExtension extends ExtensionBase {
     maxScale[0] = value;
     maxScale[1] = value;
     maxScale[2] = value;
+  }
+
+  public void setMaxTransformationTime(Float time){
+    maxTransformationTime = time;
+  }
+
+  public Float getMaxTransformationTime(){
+    return maxTransformationTime;
   }
 }

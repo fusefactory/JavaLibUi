@@ -11,9 +11,51 @@ public class Constrain extends TransformerExtension {
   private Float[] axisMinValues = {null, null, null};
   private Float[] axisMaxValues = {null, null, null};
   private boolean bFillParent = false;
+  private boolean bLock = false;
 
+  public Constrain(){
+    super();
+    super.setMaxTransformationTime(10.0f); /// by default Constrain extension is very persistant
+  }
   @Override public void destroy(){
     super.destroy();
+  }
+
+  @Override public void enable(){
+    super.enable();
+    node.positionChangeEvent.whenTriggered(() -> { this.onNodeChange(); }, this);
+    node.sizeChangeEvent.whenTriggered(() -> { this.onNodeChange(); }, this);
+  }
+
+  @Override public void disable(){
+    super.disable();
+    node.positionChangeEvent.stopWhenTriggeredCallbacks(this);
+    node.sizeChangeEvent.stopWhenTriggeredCallbacks(this);
+  }
+
+  @Override public void update(float dt){
+    bLock = true;
+    super.update(dt);
+    bLock = false;
+  }
+
+
+  @Override protected void transformPosition(PVector vec){
+    bLock = true;
+    super.transformPosition(vec);
+    bLock = false;
+  }
+
+  @Override protected void transformRotation(PVector vec){
+    bLock = true;
+    super.transformRotation(vec);
+    bLock = false;
+  }
+
+  @Override protected void transformScale(PVector vec){
+    bLock = true;
+    super.transformScale(vec);
+    bLock = false;
   }
 
   private PVector getConstrainedPosition(){
@@ -51,6 +93,9 @@ public class Constrain extends TransformerExtension {
   }
 
   private void onNodeChange(){
+    if(bLock)
+      return;
+
     PVector pos = this.getConstrainedPosition();
     logger.info("Constrained pos:"+pos.toString()+", cur pos: "+node.getPosition());
     if(pos.dist(node.getPosition()) < 0.1f) // negligable
@@ -58,18 +103,6 @@ public class Constrain extends TransformerExtension {
 
     logger.info("constrain transforming to: "+pos.toString());
     super.transformPosition(pos);
-  }
-
-  @Override public void enable(){
-    super.enable();
-    node.positionChangeEvent.whenTriggered(() -> { this.onNodeChange(); }, this);
-    node.sizeChangeEvent.whenTriggered(() -> { this.onNodeChange(); }, this);
-  }
-
-  @Override public void disable(){
-    super.disable();
-    node.positionChangeEvent.stopWhenTriggeredCallbacks(this);
-    node.sizeChangeEvent.stopWhenTriggeredCallbacks(this);
   }
 
   public void setFixX(){ setFixX(true); }
