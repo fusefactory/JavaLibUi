@@ -166,12 +166,14 @@ public class Constrain extends TransformerExtension {
   public void setMaxY(Float max){ axisMaxValues[1] = max; if(max != null && node.getPosition().y > max) onNodeChange(); }
   public void setMaxZ(Float max){ axisMaxValues[2] = max; if(max != null && node.getPosition().z > max) onNodeChange(); }
 
+  @Override
   public void setMinScale(Float value){
     this.minScale[0] = value;
     this.minScale[1] = value;
     this.minScale[2] = value;
   }
 
+  @Override
   public void setMaxScale(Float value){
     this.maxScale[0] = value;
     this.maxScale[1] = value;

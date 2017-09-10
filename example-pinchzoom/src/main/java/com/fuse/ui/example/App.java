@@ -120,12 +120,12 @@ public class App extends PApplet {
     this.constrain.setMaxX(0.0f); //.setFillParent(true);
     this.constrain.setMinY(-100.0f); //.setFillParent(true);
     this.constrain.setMaxY(0.0f); //.setFillParent(true);
-    this.constrain.setMaxScale(2.5f);
-    this.constrain.setMinScale(0.5f);
 
     this.pinchZoom = PinchZoom.enableFor(this.zoomableNode);
-    this.pinchZoom.disable();
-    this.pinchZoom.setRestore(false);
+    // this.pinchZoom.disable();
+    this.pinchZoom.setRestore(true);
+    this.pinchZoom.setMaxScale(2.5f);
+    this.pinchZoom.setMinScale(0.5f);
   }
 
   public void mousePressed(){

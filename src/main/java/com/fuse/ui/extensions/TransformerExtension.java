@@ -22,6 +22,9 @@ public class TransformerExtension extends ExtensionBase {
   private Float maxTransformationTime = 3.0f;
   private float positionTimer;
   private float scaleTimer;
+  // limits
+  private Float[] minScale = {null, null, null}; // x,y,z axis
+  private Float[] maxScale = {null, null, null}; // x,y,z axis
 
   // endless recursion detection
   private static int maxTransformationsPerUpdate = 9;
@@ -164,7 +167,23 @@ public class TransformerExtension extends ExtensionBase {
     this.transformationsThisUpdate++;
   }
 
+  private PVector limitedScale(PVector vec){
+    PVector result = vec.get();
+
+    if(minScale[0] != null && minScale[0] > result.x) result.x = minScale[0];
+    if(minScale[1] != null && minScale[1] > result.y) result.y = minScale[1];
+    if(minScale[2] != null && minScale[2] > result.z) result.z = minScale[2];
+
+    if(maxScale[0] != null && maxScale[0] < result.x) result.x = maxScale[0];
+    if(maxScale[1] != null && maxScale[1] < result.y) result.y = maxScale[1];
+    if(maxScale[2] != null && maxScale[2] < result.z) result.z = maxScale[2];
+
+    return result;
+  }
+
   protected void transformScale(PVector vec){
+    vec = this.limitedScale(vec);
+
     if(this.isSmoothing()){
       this.targetScale = vec.get();
       scaleTimer = 0.0f;
@@ -213,5 +232,17 @@ public class TransformerExtension extends ExtensionBase {
 
   public Float getMaxTransformationTime(){
     return maxTransformationTime;
+  }
+
+  public void setMinScale(Float value){
+    this.minScale[0] = value;
+    this.minScale[1] = value;
+    this.minScale[2] = value;
+  }
+
+  public void setMaxScale(Float value){
+    this.maxScale[0] = value;
+    this.maxScale[1] = value;
+    this.maxScale[2] = value;
   }
 }
