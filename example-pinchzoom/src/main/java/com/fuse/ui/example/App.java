@@ -166,12 +166,12 @@ public class App extends PApplet {
     }
     switch (keyCode){
       case UP:
-        this.pinchZoom.setSmoothing(this.pinchZoom.getSmoothing()+0.5f);
-        System.out.println("smoothing: "+Float.toString(this.pinchZoom.getSmoothing()));
+        this.pinchZoom.setSmoothValue(this.pinchZoom.getSmoothValue()+0.5f);
+        System.out.println("smoothing: "+Float.toString(this.pinchZoom.getSmoothValue()));
         return;
       case DOWN:
-        this.pinchZoom.setSmoothing(this.pinchZoom.getSmoothing()-0.5f);
-        System.out.println("smoothing: "+Float.toString(this.pinchZoom.getSmoothing()));
+        this.pinchZoom.setSmoothValue(this.pinchZoom.getSmoothValue()-0.5f);
+        System.out.println("smoothing: "+Float.toString(this.pinchZoom.getSmoothValue()));
         return;
     }
   }

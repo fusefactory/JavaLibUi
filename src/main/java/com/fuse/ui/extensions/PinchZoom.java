@@ -9,17 +9,14 @@ import com.fuse.utils.Event;
 import com.fuse.ui.Node;
 import com.fuse.ui.TouchEvent;
 
-public class PinchZoom extends ExtensionBase {
-
+public class PinchZoom extends TransformerExtension {
   // attributes
   private PinchMath math = null;
   private PVector originalScale, originalPosition;
-  private PVector targetScale, targetPosition;
   // configurables
   private boolean bRestore = false;
-  private boolean bSmoothRestore = true;
-  private float smoothing = 7.0f;
 
+  // events
   public Event<Node> startPinchEvent, endPinchEvent;
 
   public PinchZoom(){
@@ -34,33 +31,6 @@ public class PinchZoom extends ExtensionBase {
     endPinchEvent.destroy();
   }
 
-  @Override
-  public void update(float dt){
-    if(targetScale != null){
-      PVector scale = targetScale.get();
-      // delta
-      scale.sub(this.node.getScale());
-      // smoothed delta
-      scale.mult(1.0f / this.smoothing);
-      // applied delta
-      scale.add(this.node.getScale());
-      // apply
-      this.node.setScale(scale);
-    }
-
-    if(targetPosition != null){
-      PVector pos = targetPosition.get();
-      // delta
-      pos.sub(this.node.getPosition());
-      // smoothed delta
-      pos.mult(1.0f / this.smoothing);
-      // applied delta
-      pos.add(this.node.getPosition());
-      // apply
-      this.node.setPosition(pos);
-    }
-  }
-
   private void start(TouchEvent[] events){
     this.math = new PinchMath(events);
     this.originalScale = this.node.getScale();
@@ -72,29 +42,18 @@ public class PinchZoom extends ExtensionBase {
     this.endPinchEvent.trigger(this.node);
 
     if(this.bRestore)
-      this.restore(this.bSmoothRestore);
-
-    if(!bSmoothRestore){
-      this.targetPosition = null;
-      this.targetScale = null;
-    }
+      this.restore();
 
     this.math = null;
   }
 
-  public void restore(boolean smooth){
+  public void restore(){
     if(this.originalScale != null){
-      if(smooth)
-        this.targetScale = this.originalScale;
-      else
-        this.node.setScale(this.originalScale);
+      super.transformScale(this.originalScale);
     }
 
     if(this.originalPosition != null){
-      if(smooth)
-        this.targetPosition = this.originalPosition;
-      else
-        this.node.setPosition(this.originalPosition);
+      super.transformPosition(this.originalPosition);
     }
   }
 
@@ -134,27 +93,30 @@ public class PinchZoom extends ExtensionBase {
   @Override public void disable(){
     super.disable();
     if(this.node == null) return;
+    this.node.touchDownEvent.removeListeners(this);
     this.node.touchMoveEvent.removeListeners(this);
+    this.node.touchUpEvent.removeListeners(this);
   }
 
   private void touchUpdate(){
     PVector scale = this.originalScale.get();
     float pinchScale = this.math.getPinchScale();
     scale.mult(pinchScale);
-    //this.node.setScale(scale);
-    this.targetScale = scale;
 
     // current "dragged" position of the pinch-center
     PVector p = math.getParentSpaceCurrentPinchCenter();
     // offset of pinch-center to origin of pinched-node
     PVector offset = math.getLocalStartPinchCenter();
-    // scale offset
+    // scale offset; have to multiply by pinchScale, because
+    // the pinchscale is not yet applied to the node (because of smoothing)
     p.x = p.x - offset.x * pinchScale;
     p.y = p.y - offset.y * pinchScale;
-    // update position
-    // this.node.setPosition(p);
-    this.targetPosition = p;
+
+    super.transformScale(scale);
+    super.transformPosition(p);
   }
+
+  // state reader methods // // // // //
 
   /** returns null when not actively pinch-zooming, otherwise returns an array of exactly two touch-events */
   private TouchEvent[] getPinchZoomTouchEvents(){
@@ -174,6 +136,17 @@ public class PinchZoom extends ExtensionBase {
     return events;
   }
 
+  // configure methods // // // // //
+
+  public boolean getRestore(){
+    return bRestore;
+  }
+
+  public void setRestore(boolean enableRestore){
+    bRestore = enableRestore;
+  }
+
+  // static factory methods // // // // //
 
   public static PinchZoom enableFor(Node n){
     PinchZoom d = getFor(n);
@@ -198,22 +171,6 @@ public class PinchZoom extends ExtensionBase {
       if(PinchZoom.class.isInstance(ext))
         return (PinchZoom)ext;
     return null;
-  }
-
-  public boolean getRestore(){
-    return bRestore;
-  }
-
-  public void setRestore(boolean enableRestore){
-    bRestore = enableRestore;
-  }
-
-  public float getSmoothing(){
-    return smoothing;
-  }
-
-  public void setSmoothing(float smoothing){
-    Math.max(this.smoothing = smoothing, 1.0f);
   }
 
   @Override
