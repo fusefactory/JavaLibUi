@@ -114,9 +114,11 @@ public class App extends PApplet {
     this.containerNode.addChild(this.zoomableNode);
 
     this.draggable = Draggable.enableFor(this.zoomableNode);
-    //this.constrain = Constrain.enableFor(this.zoomableNode);
-    //this.constrain.setFillParent(true);
+    this.constrain = Constrain.enableFor(this.zoomableNode);
+    this.constrain.setMaxX(0.0f); //.setFillParent(true);
+
     this.pinchZoom = PinchZoom.enableFor(this.zoomableNode);
+    this.pinchZoom.disable();
     this.pinchZoom.setRestore(false);
   }
 
@@ -161,6 +163,12 @@ public class App extends PApplet {
       case 'p': {
         if(this.pinchZoom.isEnabled()) this.pinchZoom.disable(); else this.pinchZoom.enable();
         System.out.println("pinchzoom: "+Boolean.toString(this.pinchZoom.isEnabled()));
+        return;
+      }
+
+      case 'o': {
+        if(this.constrain.isEnabled()) this.constrain.disable(); else this.constrain.enable();
+        System.out.println("constrain: "+Boolean.toString(this.constrain.isEnabled()));
         return;
       }
     }

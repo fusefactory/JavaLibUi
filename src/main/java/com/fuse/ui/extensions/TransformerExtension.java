@@ -18,12 +18,22 @@ public class TransformerExtension extends ExtensionBase {
   // smoothing
   private PVector targetPosition, targetRotation, targetScale;
   private float smoothValue = 7.0f;
+  // limits
+  private Float[] minScale = {null, null, null}; // x,y,z axis
+  private Float[] maxScale = {null, null, null}; // x,y,z axis
+
   // endless recursion detection
   private static int maxTransformationsPerUpdate = 9;
   private int transformationsThisUpdate = 0;
 
-  @Override
-  public void update(float dt){
+  @Override public void disable(){
+    super.disable();
+    targetPosition = null;
+    targetScale = null;
+    targetRotation = null;
+  }
+
+  @Override public void update(float dt){
     transformationsThisUpdate = 0; // reset endless recursion detection counter
 
     if(targetPosition != null){
@@ -33,6 +43,7 @@ public class TransformerExtension extends ExtensionBase {
         targetPosition = null;
       } else {
         PVector vec = targetPosition.get();
+        logger.info("TransformExtension update pos smoothing to: "+vec.toString());
         // delta
         vec.sub(this.node.getPosition());
         // smoothed delta
@@ -45,6 +56,7 @@ public class TransformerExtension extends ExtensionBase {
         } else {
           // apply delta to current node value
           vec.add(this.node.getPosition());
+          logger.info("TransformExtension applying smoothed pos: "+vec.toString());
           // apply update to node
           this.node.setPosition(vec);
         }
@@ -182,5 +194,17 @@ public class TransformerExtension extends ExtensionBase {
 
   public void disableSmoothing(){
     setSmoothValue(0.0f);
+  }
+
+  public void setMinScale(float value){
+    minScale[0] = value;
+    minScale[1] = value;
+    minScale[2] = value;
+  }
+
+  public void setMaxScale(float value){
+    maxScale[0] = value;
+    maxScale[1] = value;
+    maxScale[2] = value;
   }
 }

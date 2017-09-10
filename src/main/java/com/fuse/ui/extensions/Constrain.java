@@ -6,31 +6,17 @@ import processing.core.PVector;
 import com.fuse.ui.Node;
 import com.fuse.ui.TouchEvent;
 
-public class Constrain extends ExtensionBase {
-  // constrain parameters
+public class Constrain extends TransformerExtension {
+  // constrain parameter attributes
   private Float[] axisMinValues = {null, null, null};
   private Float[] axisMaxValues = {null, null, null};
   private boolean bFillParent = false;
-  // avoiding inifinite loops
-  private static int maxPositionCorrectionPerUpdate = 3;
-  private int positionCorrectionsThisUpdate = 0;
-  // smoothing
-  private Float smoothing = null;
-  private PVector targetPos = null;
-
-  public Constrain(){
-    setFixX(true);
-    setFixY(true);
-    setFixZ(true);
-  }
 
   @Override public void destroy(){
     super.destroy();
   }
 
   private PVector getConstrainedPosition(){
-    positionCorrectionsThisUpdate = 0;
-
     PVector result = node.getPosition();
 
     if(axisMinValues[0] != null && axisMinValues[0] > result.x) result.x = axisMinValues[0];
@@ -64,41 +50,18 @@ public class Constrain extends ExtensionBase {
     return result;
   }
 
-  @Override
-  public void update(float dt){
-    positionCorrectionsThisUpdate = 0; // reset
-
-    if(targetPos != null){
-      PVector delta = targetPos.get();
-      delta.sub(node.getPosition());
-      delta.mult(1.0f/smoothing);
-      if(delta.mag() < 0.1f){
-        node.setPosition(targetPos);
-        targetPos = null;
-      } else {
-        delta.add(node.getPosition());
-        node.setPosition(delta);
-      }
-    }
-  }
-
   private void onNodeChange(){
     PVector pos = this.getConstrainedPosition();
-
+    logger.info("Constrained pos:"+pos.toString()+", cur pos: "+node.getPosition());
     if(pos.dist(node.getPosition()) < 0.1f) // negligable
       return;
 
-    if(smoothing == null && positionCorrectionsThisUpdate < maxPositionCorrectionPerUpdate){
-      positionCorrectionsThisUpdate++;
-      node.setPosition(pos);
-    } else {
-      targetPos = pos;
-    }
+    logger.info("constrain transforming to: "+pos.toString());
+    super.transformPosition(pos);
   }
 
   @Override public void enable(){
     super.enable();
-
     node.positionChangeEvent.whenTriggered(() -> { this.onNodeChange(); }, this);
     node.sizeChangeEvent.whenTriggered(() -> { this.onNodeChange(); }, this);
   }
@@ -142,13 +105,13 @@ public class Constrain extends ExtensionBase {
     }
   }
 
-  public void setMinX(Float min){ axisMinValues[0] = min; if(min != null && node.getPosition().x < min) node.setX(min); }
-  public void setMinY(Float min){ axisMinValues[1] = min; if(min != null && node.getPosition().y < min) node.setY(min); }
-  public void setMinZ(Float min){ axisMinValues[2] = min; if(min != null && node.getPosition().z < min) node.setZ(min); }
+  public void setMinX(Float min){ axisMinValues[0] = min; if(min != null && node.getPosition().x < min) onNodeChange(); }
+  public void setMinY(Float min){ axisMinValues[1] = min; if(min != null && node.getPosition().y < min) onNodeChange(); }
+  public void setMinZ(Float min){ axisMinValues[2] = min; if(min != null && node.getPosition().z < min) onNodeChange(); }
 
-  public void setMaxX(Float max){ axisMaxValues[0] = max; if(max != null && node.getPosition().x > max) node.setX(max); }
-  public void setMaxY(Float max){ axisMaxValues[1] = max; if(max != null && node.getPosition().y > max) node.setY(max); }
-  public void setMaxZ(Float max){ axisMaxValues[2] = max; if(max != null && node.getPosition().z > max) node.setZ(max); }
+  public void setMaxX(Float max){ axisMaxValues[0] = max; if(max != null && node.getPosition().x > max) onNodeChange(); }
+  public void setMaxY(Float max){ axisMaxValues[1] = max; if(max != null && node.getPosition().y > max) onNodeChange(); }
+  public void setMaxZ(Float max){ axisMaxValues[2] = max; if(max != null && node.getPosition().z > max) onNodeChange(); }
 
   public Float getPercentageX(){
     if(axisMinValues[0] == null || axisMaxValues[0] == null)
@@ -180,23 +143,9 @@ public class Constrain extends ExtensionBase {
     return PApplet.map(node.getPosition().z, axisMinValues[2], axisMaxValues[2], 0.0f, 1.0f);
   }
 
-  public void setPercentageX(float percentage){
-    if(axisMinValues[0] != null && axisMaxValues[0] != null)
-      node.setX(PApplet.lerp(axisMinValues[0], axisMaxValues[0], percentage));
-  }
-
-  public void setPercentageY(float percentage){
-    if(axisMinValues[1] != null && axisMaxValues[1] != null)
-      node.setY(PApplet.lerp(axisMinValues[1], axisMaxValues[1], percentage));
-  }
-
-  public void setPercentageZ(float percentage){
-    if(axisMinValues[2] != null && axisMaxValues[2] != null)
-      node.setZ(PApplet.lerp(axisMinValues[2], axisMaxValues[2], percentage));
-  }
-
   public void setFillParent(boolean enable){
     bFillParent = true;
+    onNodeChange();
   }
 
   public static Constrain enableFor(Node n){
@@ -211,10 +160,10 @@ public class Constrain extends ExtensionBase {
       n.use(d);
     }
 
-
     d.setFixX(onByDefault);
     d.setFixY(onByDefault);
     d.setFixZ(onByDefault);
+
     return d;
   }
 
