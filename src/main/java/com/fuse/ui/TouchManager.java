@@ -58,12 +58,41 @@ public class TouchManager extends TouchReceiver {
         touchEventQueue.remove(e);
       }
     }
+
+    finalizeIdleTouchEvents();
   }
 
   public void update(float dt){
     controlledTime = true;
     time += (int)(dt * 1000.0f);
     update();
+  }
+
+  private void finalizeIdleTouchEvents(){
+    List<TouchEvent> events = super.getActiveTouchEvents();
+    long limit = this.getTime() - super.IDLE_DURATION;
+
+
+    for(int i=events.size()-1; i>=0; i--){
+      TouchEvent event = activeTouchEvents.get(i);
+
+      if((event.time != null && event.time < limit)
+      || (event.lastChangeTime == null && event.getDuration() > super.IDLE_DURATION)
+      || (event.lastChangeTime != null && event.lastChangeTime < limit)){
+        logger.info("TouchManager removing event");
+        if(event.node != null){
+            logger.info("ON NODE");
+          event.node.removeActiveTouchEvent(event);
+        }
+
+        if(event.mostRecentNode != null && event.mostRecentNode != event.node){
+            logger.info("ON MOST RECENT");
+          event.mostRecentNode.removeActiveTouchEvent(event);
+        }
+
+        this.removeActiveTouchEvent(event);
+      }
+    }
   }
 
   /**
@@ -106,6 +135,11 @@ public class TouchManager extends TouchReceiver {
   }
 
   private TouchEvent updateExistingEvent(TouchEvent existing, TouchEvent event){
+    if(existing.position == null && event.position != null
+    || (existing.position != null && event.position != null && !existing.position.equals(event.position))){
+      existing.lastChangeTime = event.time;
+    }
+
     // if(existing.touchId != event.touchId) logger.warning("updating existing event with different touchId");
     if(event.velocity == null){
       // calculate velocity

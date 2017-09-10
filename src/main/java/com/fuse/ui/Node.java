@@ -134,7 +134,8 @@ public class Node extends TouchReceiver {
       tmpExtensions.addAll(extensions);
 
       for(ExtensionBase ext : tmpExtensions){
-        ext.update(dt);
+        if(ext.isEnabled())
+          ext.update(dt);
       }
     }
   }

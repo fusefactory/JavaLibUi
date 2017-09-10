@@ -13,6 +13,7 @@ public class Constrain extends TransformerExtension {
   private Float[] minScale = {null, null, null}; // x,y,z axisMaxValues
   private Float[] maxScale = {null, null, null}; // x,y,z axisMaxValues
   private boolean bFillParent = false;
+  private boolean bCenterWhenFitting = false;
   private boolean bLock = false;
 
   public Constrain(){
@@ -21,11 +22,7 @@ public class Constrain extends TransformerExtension {
     super.setMaxTransformationTime(10.0f); /// by default Constrain extension is very persistant
   }
 
-  @Override public void destroy(){
-    super.destroy();
-  }
-
-  @Override public void enable(){
+  /*@Override public void enable(){
     super.enable();
     node.positionChangeEvent.whenTriggered(() -> { this.onNodeChange(); }, this);
     node.sizeChangeEvent.whenTriggered(() -> { this.onNodeChange(); }, this);
@@ -39,12 +36,12 @@ public class Constrain extends TransformerExtension {
     node.sizeChangeEvent.stopWhenTriggeredCallbacks(this);
     node.touchMoveEvent.stopWhenTriggeredCallbacks(this);
     node.touchUpEvent.stopWhenTriggeredCallbacks(this);
-  }
+  }*/
 
   @Override public void update(float dt){
+    applyConstrains();
     //bLock = true;
     super.update(dt);
-    bLock = false;
   }
 
   @Override protected void transformPosition(PVector vec){
@@ -77,21 +74,31 @@ public class Constrain extends TransformerExtension {
     if(axisMaxValues[2] != null && axisMaxValues[2] < result.z) result.z = axisMaxValues[2];
 
     if(bFillParent){
-      Node parent = node.getParent();
-      if(parent != null){
-        // TODO; consider node's scaling property?
+      Node parentNode = node.getParent();
+      if(parentNode != null){
+        PVector sizeScaled = node.getSizeScaled();
 
-        PVector nodeSize = node.getSize();
-        PVector parentSize = parent.getSize();
-
-        if(nodeSize.x >= parentSize.x){
-          if(result.x > 0.0f) result.x = 0.0f;
-          else if(node.getRightScaled() < parent.getSize().x) result.x = parent.getSize().x - node.getSize().x * node.getScale().x;
+        if(sizeScaled.x > parentNode.getSize().x){ // can only fill if bigger
+          result.x = Math.min(0.0f, Math.max(-sizeScaled.x, result.x));
         }
 
-        if(nodeSize.y >= parentSize.y){
-          if(result.y > 0.0f) result.y = 0.0f;
-          else if(node.getBottomScaled() < parent.getSize().y) result.y = parent.getSize().y - node.getSize().y * node.getScale().y;
+        if(sizeScaled.y > parentNode.getSize().y){
+          result.y = Math.min(0.0f, Math.max(-sizeScaled.y, result.y));
+        }
+      }
+    }
+
+    if(bCenterWhenFitting){
+      Node parentNode = node.getParent();
+      if(parentNode != null){
+        PVector sizeScaled = node.getSizeScaled();
+
+        if(sizeScaled.x < parentNode.getSize().x){
+          result.x = (parentNode.getSize().x - sizeScaled.x) * 0.5f;
+        }
+
+        if(sizeScaled.y < parentNode.getSize().y){
+          result.y = (parentNode.getSize().y - sizeScaled.y) * 0.5f;
         }
       }
     }
@@ -113,7 +120,7 @@ public class Constrain extends TransformerExtension {
     return result;
   }
 
-  private void onNodeChange(){
+  private void applyConstrains(){
     if(bLock)
       return;
 
@@ -163,13 +170,13 @@ public class Constrain extends TransformerExtension {
     }
   }
 
-  public void setMinX(Float min){ axisMinValues[0] = min; if(min != null && node.getPosition().x < min) onNodeChange(); }
-  public void setMinY(Float min){ axisMinValues[1] = min; if(min != null && node.getPosition().y < min) onNodeChange(); }
-  public void setMinZ(Float min){ axisMinValues[2] = min; if(min != null && node.getPosition().z < min) onNodeChange(); }
+  public void setMinX(Float min){ axisMinValues[0] = min; if(min != null && node.getPosition().x < min) applyConstrains(); }
+  public void setMinY(Float min){ axisMinValues[1] = min; if(min != null && node.getPosition().y < min) applyConstrains(); }
+  public void setMinZ(Float min){ axisMinValues[2] = min; if(min != null && node.getPosition().z < min) applyConstrains(); }
 
-  public void setMaxX(Float max){ axisMaxValues[0] = max; if(max != null && node.getPosition().x > max) onNodeChange(); }
-  public void setMaxY(Float max){ axisMaxValues[1] = max; if(max != null && node.getPosition().y > max) onNodeChange(); }
-  public void setMaxZ(Float max){ axisMaxValues[2] = max; if(max != null && node.getPosition().z > max) onNodeChange(); }
+  public void setMaxX(Float max){ axisMaxValues[0] = max; if(max != null && node.getPosition().x > max) applyConstrains(); }
+  public void setMaxY(Float max){ axisMaxValues[1] = max; if(max != null && node.getPosition().y > max) applyConstrains(); }
+  public void setMaxZ(Float max){ axisMaxValues[2] = max; if(max != null && node.getPosition().z > max) applyConstrains(); }
 
   @Override
   public void setMinScale(Float value){
@@ -215,9 +222,18 @@ public class Constrain extends TransformerExtension {
     return PApplet.map(node.getPosition().z, axisMinValues[2], axisMaxValues[2], 0.0f, 1.0f);
   }
 
+  @Override
   public void setFillParent(boolean enable){
     bFillParent = true;
-    onNodeChange();
+    applyConstrains();
+  }
+
+  public void setCenterWhenFitting(boolean enable){
+    bCenterWhenFitting = enable;
+  }
+
+  public boolean getCenterWhenFitting(){
+    return bCenterWhenFitting;
   }
 
   public static Constrain enableFor(Node n){

@@ -61,7 +61,7 @@ public class PinchZoom extends TransformerExtension {
     return this.math != null;
   }
 
-  @Override public void enable(){
+  /*@Override public void enable(){
     if(this.isEnabled() || this.node == null) return;
     super.enable();
 
@@ -88,6 +88,26 @@ public class PinchZoom extends TransformerExtension {
         this.touchUpdate();
       }
     }, this);
+  }*/
+
+  @Override public void update(float dt){
+      TouchEvent[] events = this.getPinchZoomTouchEvents();
+
+      if(isActive()){
+        if(events == null){
+          stop();
+        } else {
+          this.math.resetActiveCaches();
+          this.touchUpdate();
+        }
+      } else {
+        if(events != null){
+          start(events);
+          this.touchUpdate();
+        }
+      }
+
+      super.update(dt);
   }
 
   @Override public void disable(){
