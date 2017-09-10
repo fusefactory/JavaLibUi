@@ -72,9 +72,10 @@ public class TouchManager extends TouchReceiver {
     List<TouchEvent> events = super.getActiveTouchEvents();
     long limit = this.getTime() - super.IDLE_DURATION;
 
-
     for(int i=events.size()-1; i>=0; i--){
       TouchEvent event = activeTouchEvents.get(i);
+      if(event == null)
+        continue;
 
       if((event.time != null && event.time < limit)
       || (event.lastChangeTime == null && event.getDuration() > super.IDLE_DURATION)

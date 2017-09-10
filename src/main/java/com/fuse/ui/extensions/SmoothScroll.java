@@ -98,6 +98,8 @@ public class SmoothScroll extends ExtensionBase {
       if(scrollableNode == null || event.node != this.node)
         return; // touch didn't start on our node
 
+      TouchEvent localEvent = this.node.toLocal(event);
+
       // just started dragging?
       if(!isDragging()){
         this.velocity = null; // this makes isDamping() false
@@ -106,19 +108,22 @@ public class SmoothScroll extends ExtensionBase {
         smoothedVelocity = new PVector(0.0f, 0.0f, 0.0f);
       }
 
-      if(event.velocitySmoothed != null)
-        this.smoothedVelocity = event.velocitySmoothed; // use TouchEvent's velocity smoothing
+      if(localEvent.velocitySmoothed != null)
+        this.smoothedVelocity = localEvent.velocitySmoothed; // use TouchEvent's velocity smoothing
       else
-        smoothedVelocity.lerp(event.velocity, velocitySmoothCoeff); // apply our own smoothing
+        smoothedVelocity.lerp(localEvent.velocity, velocitySmoothCoeff); // apply our own smoothing
 
-      applyDragOffset(event.offset());
+
+      applyDragOffset(event.offset()); // not localized event because dragging is global
     }, this);
 
     node.touchUpEvent.addListener((TouchEvent event) -> {
       if(!isDragging())
         return;
 
-      applyDragOffset(event.offset());
+      TouchEvent localEvent = this.node.toLocal(event);
+
+      applyDragOffset(event.offset());  // not localized event because dragging is global
       dragStartNodePositionGlobal = null; // this makes isDragging() false
 
       // check offset limits; snap-back if necessary
@@ -129,10 +134,10 @@ public class SmoothScroll extends ExtensionBase {
       }
 
       // update our smoothed velocity
-      if(event.velocitySmoothed != null)
-        this.smoothedVelocity = event.velocitySmoothed; // use TouchEvent's velocity smoothing
+      if(localEvent.velocitySmoothed != null)
+        this.smoothedVelocity = localEvent.velocitySmoothed; // use TouchEvent's velocity smoothing
       else
-        smoothedVelocity.lerp(event.velocity, velocitySmoothCoeff); // apply our own smoothing
+        smoothedVelocity.lerp(localEvent.velocity, velocitySmoothCoeff); // apply our own smoothing
 
       // when snapping-behaviour is enabled we don't use velocity/damping;
       // instead, we calculate a target position to snap to
@@ -180,16 +185,16 @@ public class SmoothScroll extends ExtensionBase {
 
   // dragging methods // // // // //
 
-  private void applyDragOffset(PVector dragOffset){
+  private void applyDragOffset(PVector globalDragOffset){
     if(dragStartNodePositionGlobal == null) // should already be set at first processed touchMoveEvent, but just to be sure
       dragStartNodePositionGlobal = scrollableNode.getGlobalPosition();
 
-    PVector globPos = dragStartNodePositionGlobal.get();
-    PVector offs = dragOffset.get();
-    offs.y = 0.0f;
-    globPos.add(offs);
+    PVector localPosBefore = scrollableNode.getPosition();
 
+    PVector globPos = dragStartNodePositionGlobal.get();
+    globPos.add(globalDragOffset);
     scrollableNode.setGlobalPosition(globPos);
+    scrollableNode.setY(localPosBefore.y); // Y-axis locked HACK
   }
 
   public boolean isDragging(){
