@@ -18,7 +18,7 @@ public class PinchZoom extends ExtensionBase {
   // configurables
   private boolean bRestore = false;
   private boolean bSmoothRestore = true;
-  private float smoothing = 4.0f;
+  private float smoothing = 7.0f;
 
   public Event<Node> startPinchEvent, endPinchEvent;
 
@@ -63,12 +63,8 @@ public class PinchZoom extends ExtensionBase {
 
   private void start(TouchEvent[] events){
     this.math = new PinchMath(events);
-    // don't grab new values if already initialized. this avoids getting unwanted
-    // original values, for example when user starts pinching again while still restoring
-    if(this.originalScale == null)
-      this.originalScale = this.node.getScale();
-    if(this.originalPosition == null)
-      this.originalPosition = this.node.getPosition();
+    this.originalScale = this.node.getScale();
+    this.originalPosition = this.node.getPosition();
     this.startPinchEvent.trigger(this.node);
   }
 
@@ -217,7 +213,7 @@ public class PinchZoom extends ExtensionBase {
   }
 
   public void setSmoothing(float smoothing){
-    this.smoothing = smoothing;
+    Math.max(this.smoothing = smoothing, 1.0f);
   }
 
   @Override

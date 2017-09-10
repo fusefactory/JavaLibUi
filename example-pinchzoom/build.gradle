@@ -30,7 +30,9 @@ repositories {
 }
 
 dependencies {
-    compile group: 'com.github.fusefactory', name: 'JavaLibEvent', version:'1.1.7' // can also be loaded as local submodule; see sourceSets
+		compile group: 'com.github.fusefactory', name: 'JavaLibOsc', version:'1.0' // can also be loaded as local submodule; see sourceSets
+
+		compile group: 'com.github.fusefactory', name: 'JavaLibEvent', version:'1.1.7' // can also be loaded as local submodule; see sourceSets
     compile group: 'org.processing', name: 'core', version:'3.2.3'
 
 		compile group: 'org.jogamp.gluegen', name: 'gluegen-rt', version:'2.3.2'

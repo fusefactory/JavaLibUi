@@ -4,23 +4,29 @@ import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PVector;
 
+import com.fuse.utils.TuioInput;
 import com.fuse.ui.TouchManager;
 import com.fuse.ui.Node;
 import com.fuse.ui.RectNode;
-import com.fuse.ui.TextNode;
+import com.fuse.ui.ImageNode;
 import com.fuse.ui.extensions.Draggable;
 import com.fuse.ui.extensions.PinchZoom;
 import com.fuse.ui.extensions.Constrain;
 
 public class App extends PApplet {
+  private static int TUIO_PORT = 3333;
   private PApplet papplet;
   private PGraphics pg;
   private float timeBetweenFrames;
   private boolean bDrawDebug;
 
+  // input for processing Tuio (OSC-based touch protocol) events;
+  // all TUIO events are converted and passed on to the TouchManager
+  private TuioInput tuioInput;
   private TouchManager touchManager;
   private Node sceneNode;
-  private RectNode containerNode, zoomableNode;
+  private RectNode containerNode;
+  private ImageNode zoomableNode;
   private Draggable draggable;
   private Constrain constrain;
   private PinchZoom pinchZoom;
@@ -36,7 +42,8 @@ public class App extends PApplet {
   }
 
   public void settings(){
-    size(800, 600, P3D);
+    //size(800, 600, P3D);
+    fullScreen(P3D);
   }
 
   public void setup(){
@@ -52,6 +59,10 @@ public class App extends PApplet {
 
     touchManager = new TouchManager();
     touchManager.setNode(sceneNode);
+
+    tuioInput = new TuioInput();
+    tuioInput.setPapplet(this);
+    tuioInput.setup(touchManager, TUIO_PORT);
 
     populateScene(sceneNode);
   }
@@ -91,20 +102,22 @@ public class App extends PApplet {
     this.containerNode.setPosition(100,100);
     this.containerNode.setSize(600,400);
     this.containerNode.setRectColor(pg.color(100,100,100));
-    this.containerNode.setClipContent(true); // toggle-able with the 'c' key
+    //this.containerNode.setClipContent(true); // toggle-able with the 'c' key
     this.sceneNode.addChild(this.containerNode);
 
     // zoomable
-    this.zoomableNode = new RectNode();
+    this.zoomableNode = new ImageNode();
     this.zoomableNode.setName("zoomable");
     this.zoomableNode.setPosition(100,100);
-    this.zoomableNode.setSize(200,133);
-    this.zoomableNode.setRectColor(pg.color(200,150,150));
+    this.zoomableNode.setImage(papplet.loadImage("alpacas.jpg"));
+    this.zoomableNode.setAutoResizeToImage(true);
     this.containerNode.addChild(this.zoomableNode);
 
     this.draggable = Draggable.enableFor(this.zoomableNode);
-    this.constrain = Constrain.enableFor(this.zoomableNode);
-    this.constrain.setFillParent(true);
+    //this.constrain = Constrain.enableFor(this.zoomableNode);
+    //this.constrain.setFillParent(true);
+    this.pinchZoom = PinchZoom.enableFor(this.zoomableNode);
+    this.pinchZoom.setRestore(false);
   }
 
   public void mousePressed(){
@@ -123,12 +136,43 @@ public class App extends PApplet {
     switch(key){
       case 'd': {
         bDrawDebug = !bDrawDebug;
+        System.out.println("draw debug: "+Boolean.toString(bDrawDebug));
         return;
       }
 
       case 'c':{
         this.containerNode.setClipContent(!containerNode.isClippingContent());
+        System.out.println("clipping: "+Boolean.toString(containerNode.isClippingContent()));
+        return;
       }
+
+      case 'r': {
+        this.pinchZoom.setRestore(!this.pinchZoom.getRestore());
+        System.out.println("restore: "+Boolean.toString(this.pinchZoom.getRestore()));
+        return;
+      }
+
+      case 'g': {
+        if(this.draggable.isEnabled()) this.draggable.disable(); else this.draggable.enable();
+        System.out.println("draggable: "+Boolean.toString(this.draggable.isEnabled()));
+        return;
+      }
+
+      case 'p': {
+        if(this.pinchZoom.isEnabled()) this.pinchZoom.disable(); else this.pinchZoom.enable();
+        System.out.println("pinchzoom: "+Boolean.toString(this.pinchZoom.isEnabled()));
+        return;
+      }
+    }
+    switch (keyCode){
+      case UP:
+        this.pinchZoom.setSmoothing(this.pinchZoom.getSmoothing()+0.5f);
+        System.out.println("smoothing: "+Float.toString(this.pinchZoom.getSmoothing()));
+        return;
+      case DOWN:
+        this.pinchZoom.setSmoothing(this.pinchZoom.getSmoothing()-0.5f);
+        System.out.println("smoothing: "+Float.toString(this.pinchZoom.getSmoothing()));
+        return;
     }
   }
 }
