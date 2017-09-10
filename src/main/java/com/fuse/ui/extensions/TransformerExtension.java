@@ -18,12 +18,10 @@ public class TransformerExtension extends ExtensionBase {
   // smoothing
   private PVector targetPosition, targetRotation, targetScale;
   private float smoothValue = 7.0f;
-  // limits
-  private Float[] minScale = {null, null, null}; // x,y,z axis
-  private Float[] maxScale = {null, null, null}; // x,y,z axis
   // time-based transformation expiration
-  private Float maxTransformationTime;
+  private Float maxTransformationTime = 3.0f;
   private float positionTimer;
+  private float scaleTimer;
 
   // endless recursion detection
   private static int maxTransformationsPerUpdate = 9;
@@ -50,7 +48,7 @@ public class TransformerExtension extends ExtensionBase {
         targetPosition = null;
       } else {
         PVector vec = targetPosition.get();
-        logger.info("TransformExtension update pos smoothing to: "+vec.toString());
+        // logger.info("TransformExtension update pos smoothing to: "+vec.toString());
         // delta
         vec.sub(this.node.getPosition());
         // smoothed delta
@@ -63,7 +61,7 @@ public class TransformerExtension extends ExtensionBase {
         } else {
           // apply delta to current node value
           vec.add(this.node.getPosition());
-          logger.info("TransformExtension applying smoothed pos: "+vec.toString());
+          //logger.info("TransformExtension applying smoothed pos: "+vec.toString());
           // apply update to node
           this.node.setPosition(vec);
         }
@@ -96,7 +94,11 @@ public class TransformerExtension extends ExtensionBase {
     }
 
     if(targetScale != null){
-      if(smoothValue <= 1.0f){
+      this.scaleTimer += dt;
+      if( this.maxTransformationTime != null && this.scaleTimer > this.maxTransformationTime){
+        logger.fine("scale transformation expired");
+        this.targetScale = null;
+      } else if(smoothValue <= 1.0f){
         // smoothing disabled, apply directly
         this.node.setScale(targetScale);
         targetScale = null;
@@ -165,6 +167,7 @@ public class TransformerExtension extends ExtensionBase {
   protected void transformScale(PVector vec){
     if(this.isSmoothing()){
       this.targetScale = vec.get();
+      scaleTimer = 0.0f;
       return; // let the update method take it from here
     }
 
@@ -202,18 +205,6 @@ public class TransformerExtension extends ExtensionBase {
 
   public void disableSmoothing(){
     setSmoothValue(0.0f);
-  }
-
-  public void setMinScale(float value){
-    minScale[0] = value;
-    minScale[1] = value;
-    minScale[2] = value;
-  }
-
-  public void setMaxScale(float value){
-    maxScale[0] = value;
-    maxScale[1] = value;
-    maxScale[2] = value;
   }
 
   public void setMaxTransformationTime(Float time){

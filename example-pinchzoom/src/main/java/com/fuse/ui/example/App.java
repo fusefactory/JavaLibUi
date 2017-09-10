@@ -114,8 +114,14 @@ public class App extends PApplet {
     this.containerNode.addChild(this.zoomableNode);
 
     this.draggable = Draggable.enableFor(this.zoomableNode);
+
     this.constrain = Constrain.enableFor(this.zoomableNode);
+    this.constrain.setMinX(-100.0f); //.setFillParent(true);
     this.constrain.setMaxX(0.0f); //.setFillParent(true);
+    this.constrain.setMinY(-100.0f); //.setFillParent(true);
+    this.constrain.setMaxY(0.0f); //.setFillParent(true);
+    this.constrain.setMaxScale(2.5f);
+    this.constrain.setMinScale(0.5f);
 
     this.pinchZoom = PinchZoom.enableFor(this.zoomableNode);
     this.pinchZoom.disable();

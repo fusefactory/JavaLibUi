@@ -8,8 +8,10 @@ import com.fuse.ui.TouchEvent;
 
 public class Constrain extends TransformerExtension {
   // constrain parameter attributes
-  private Float[] axisMinValues = {null, null, null};
-  private Float[] axisMaxValues = {null, null, null};
+  private Float[] axisMinValues = {null, null, null}; // position, TODO: rename
+  private Float[] axisMaxValues = {null, null, null}; // position, TODO: rename
+  private Float[] minScale = {null, null, null}; // x,y,z axisMaxValues
+  private Float[] maxScale = {null, null, null}; // x,y,z axisMaxValues
   private boolean bFillParent = false;
   private boolean bLock = false;
 
@@ -17,6 +19,7 @@ public class Constrain extends TransformerExtension {
     super();
     super.setMaxTransformationTime(10.0f); /// by default Constrain extension is very persistant
   }
+
   @Override public void destroy(){
     super.destroy();
   }
@@ -38,7 +41,6 @@ public class Constrain extends TransformerExtension {
     super.update(dt);
     bLock = false;
   }
-
 
   @Override protected void transformPosition(PVector vec){
     bLock = true;
@@ -92,17 +94,35 @@ public class Constrain extends TransformerExtension {
     return result;
   }
 
+  private PVector getConstrainedScale(){
+    PVector result = node.getScale().get();
+
+    if(minScale[0] != null && minScale[0] > result.x) result.x = minScale[0];
+    if(minScale[1] != null && minScale[1] > result.y) result.y = minScale[1];
+    if(minScale[2] != null && minScale[2] > result.z) result.z = minScale[2];
+
+    if(maxScale[0] != null && maxScale[0] < result.x) result.x = maxScale[0];
+    if(maxScale[1] != null && maxScale[1] < result.y) result.y = maxScale[1];
+    if(maxScale[2] != null && maxScale[2] < result.z) result.z = maxScale[2];
+
+    return result;
+  }
+
   private void onNodeChange(){
     if(bLock)
       return;
 
-    PVector pos = this.getConstrainedPosition();
-    logger.info("Constrained pos:"+pos.toString()+", cur pos: "+node.getPosition());
-    if(pos.dist(node.getPosition()) < 0.1f) // negligable
-      return;
+    PVector vec = this.getConstrainedScale();
+    if(vec.dist(node.getScale()) > 0.01f){ // negligable
+      super.transformScale(vec);
+    }
 
-    logger.info("constrain transforming to: "+pos.toString());
-    super.transformPosition(pos);
+    vec = this.getConstrainedPosition();
+    // logger.info("Constrained pos:"+pos.toString()+", cur pos: "+node.getPosition());
+    if(vec.dist(node.getPosition()) > 0.1f){ // negligable
+      // logger.info("constrain transforming to: "+pos.toString());
+      super.transformPosition(vec);
+    }
   }
 
   public void setFixX(){ setFixX(true); }
@@ -145,6 +165,18 @@ public class Constrain extends TransformerExtension {
   public void setMaxX(Float max){ axisMaxValues[0] = max; if(max != null && node.getPosition().x > max) onNodeChange(); }
   public void setMaxY(Float max){ axisMaxValues[1] = max; if(max != null && node.getPosition().y > max) onNodeChange(); }
   public void setMaxZ(Float max){ axisMaxValues[2] = max; if(max != null && node.getPosition().z > max) onNodeChange(); }
+
+  public void setMinScale(Float value){
+    this.minScale[0] = value;
+    this.minScale[1] = value;
+    this.minScale[2] = value;
+  }
+
+  public void setMaxScale(Float value){
+    this.maxScale[0] = value;
+    this.maxScale[1] = value;
+    this.maxScale[2] = value;
+  }
 
   public Float getPercentageX(){
     if(axisMinValues[0] == null || axisMaxValues[0] == null)
