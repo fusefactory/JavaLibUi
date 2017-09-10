@@ -269,11 +269,12 @@ class PinchMath {
   private Float getGlobalStartDeltaCache = null;
 
   public float getGlobalCurrentDelta(){
-    if(getGlobalCurrentDeltaCache == null){
-      getGlobalCurrentDeltaCache = events[0].position.dist(events[1].position);
-    }
+    if(getGlobalCurrentDeltaCache != null)
+      return getGlobalCurrentDeltaCache;
 
-    return getGlobalCurrentDeltaCache;
+    float result = events[0].position.dist(events[1].position);
+    getGlobalCurrentDeltaCache = result;
+    return result;
   }
 
   private Float getGlobalCurrentDeltaCache = null;

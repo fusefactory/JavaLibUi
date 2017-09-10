@@ -17,6 +17,7 @@ public class Constrain extends TransformerExtension {
 
   public Constrain(){
     super();
+    super.setOnlyWhenNotTouched(true);
     super.setMaxTransformationTime(10.0f); /// by default Constrain extension is very persistant
   }
 
@@ -28,34 +29,38 @@ public class Constrain extends TransformerExtension {
     super.enable();
     node.positionChangeEvent.whenTriggered(() -> { this.onNodeChange(); }, this);
     node.sizeChangeEvent.whenTriggered(() -> { this.onNodeChange(); }, this);
+    node.touchMoveEvent.whenTriggered(()->{ this.onNodeChange(); }, this);
+    node.touchUpEvent.whenTriggered(()->{ this.onNodeChange(); }, this);
   }
 
   @Override public void disable(){
     super.disable();
     node.positionChangeEvent.stopWhenTriggeredCallbacks(this);
     node.sizeChangeEvent.stopWhenTriggeredCallbacks(this);
+    node.touchMoveEvent.stopWhenTriggeredCallbacks(this);
+    node.touchUpEvent.stopWhenTriggeredCallbacks(this);
   }
 
   @Override public void update(float dt){
-    bLock = true;
+    //bLock = true;
     super.update(dt);
     bLock = false;
   }
 
   @Override protected void transformPosition(PVector vec){
-    bLock = true;
+    //bLock = true;
     super.transformPosition(vec);
     bLock = false;
   }
 
   @Override protected void transformRotation(PVector vec){
-    bLock = true;
+    //bLock = true;
     super.transformRotation(vec);
     bLock = false;
   }
 
   @Override protected void transformScale(PVector vec){
-    bLock = true;
+    //bLock = true;
     super.transformScale(vec);
     bLock = false;
   }

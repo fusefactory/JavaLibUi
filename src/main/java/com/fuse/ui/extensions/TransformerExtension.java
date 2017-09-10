@@ -25,6 +25,9 @@ public class TransformerExtension extends ExtensionBase {
   // limits
   private Float[] minScale = {null, null, null}; // x,y,z axis
   private Float[] maxScale = {null, null, null}; // x,y,z axis
+  private boolean bFillParent = false; // only if bigger than parent
+  // touch-related
+  private boolean bOnlyWhenNotTouched = false;
 
   // endless recursion detection
   private static int maxTransformationsPerUpdate = 9;
@@ -39,6 +42,9 @@ public class TransformerExtension extends ExtensionBase {
 
   @Override public void update(float dt){
     transformationsThisUpdate = 0; // reset endless recursion detection counter
+
+    if(bOnlyWhenNotTouched && this.node.isTouched())
+      return;
 
     if(targetPosition != null){
       this.positionTimer += dt;
@@ -126,7 +132,31 @@ public class TransformerExtension extends ExtensionBase {
     }
   }
 
+  protected PVector limitedPosition(PVector vec){
+    PVector result = vec.get();
+    Node parentNode = this.node.getParent();
+
+    if(bFillParent && parentNode != null){
+      PVector sizeScaled = this.node.getSizeScaled();
+
+      if(sizeScaled.x > parentNode.getSize().x){ // can only fill if bigger
+        result.x = Math.min(0.0f, Math.max(-sizeScaled.x, result.x));
+      }
+
+      if(sizeScaled.y > parentNode.getSize().y){
+        result.y = Math.min(0.0f, Math.max(-sizeScaled.y, result.y));
+      }
+    }
+
+    return result;
+  }
+
   protected void transformPosition(PVector vec){
+    if(bOnlyWhenNotTouched && this.node.isTouched())
+      return;
+
+    vec = this.limitedPosition(vec);
+
     if(this.isSmoothing()){
       this.targetPosition = vec.get();
       this.positionTimer = 0.0f;
@@ -151,6 +181,9 @@ public class TransformerExtension extends ExtensionBase {
   }
 
   protected void transformRotation(PVector vec){
+    if(bOnlyWhenNotTouched && this.node.isTouched())
+      return;
+
     if(this.isSmoothing()){
       this.targetRotation = vec.get();
       return; // let the update method take it from here
@@ -182,6 +215,9 @@ public class TransformerExtension extends ExtensionBase {
   }
 
   protected void transformScale(PVector vec){
+    if(bOnlyWhenNotTouched && this.node.isTouched())
+      return;
+
     vec = this.limitedScale(vec);
 
     if(this.isSmoothing()){
@@ -244,5 +280,21 @@ public class TransformerExtension extends ExtensionBase {
     this.maxScale[0] = value;
     this.maxScale[1] = value;
     this.maxScale[2] = value;
+  }
+
+  public void setFillParent(boolean enable){
+    bFillParent = enable;
+  }
+
+  public boolean getFillParent(){
+    return bFillParent;
+  }
+
+  public void setOnlyWhenNotTouched(boolean enable){
+    bOnlyWhenNotTouched = enable;
+  }
+
+  public boolean getOnlyWhenNotTouched(){
+    return bOnlyWhenNotTouched;
   }
 }

@@ -21,8 +21,10 @@ public class Draggable extends TransformerExtension {
   public Event<Draggable> endEvent;
 
   public Draggable(){
+    super();
     startEvent = new Event<>();
     endEvent = new Event<>();
+    this.setSmoothValue(4.0f); // default
   }
 
   @Override public void destroy(){

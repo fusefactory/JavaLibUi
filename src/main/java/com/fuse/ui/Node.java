@@ -34,8 +34,6 @@ public class Node extends TouchReceiver {
   private boolean bVisible;
   /** Flag that specifies if the node should receive touch events */
   private boolean bInteractive;
-  /** Flag that specifies if the node currently being touched */
-  private boolean bTouched;
   /** Position of the node (pixel based); only the 2D (x and y) attributes are consideren in the for handling touch events */
   private PVector position;
   /** Size of the node (pixel based); only the 2D (x and y) attributes are consideren in the for handling touch events */
@@ -79,7 +77,6 @@ public class Node extends TouchReceiver {
     parentNode = null;
     bVisible = true;
     bInteractive = true;
-    bTouched = false;
     position = new PVector();
     size = new PVector();
     rotation = new PVector();
@@ -91,22 +88,6 @@ public class Node extends TouchReceiver {
     newOffspringEvent = new Event<>();
     positionChangeEvent = new Event<>();
     sizeChangeEvent = new Event<>();
-
-    touchDownEvent.addListener((TouchEvent e) -> {
-      bTouched = true;
-    }, this);
-
-    touchUpEvent.addListener((TouchEvent e) -> {
-      bTouched = false;
-    }, this);
-
-    touchEnterEvent.addListener((TouchEvent e) -> {
-        bTouched = true;
-    }, this);
-
-    touchExitEvent.addListener((TouchEvent e) -> {
-        bTouched = false;
-    }, this);
   }
 
   /** Default constructor; intializes default value (visible, interactive, empty name, position zero, size zero) */
@@ -163,7 +144,7 @@ public class Node extends TouchReceiver {
   }
 
   public void drawDebug(){
-    int clr = pg.color(255,bTouched?0:255,0);
+    int clr = pg.color(255,this.isTouched()?0:255,0);
     pg.noFill();
     pg.stroke(clr);
     pg.strokeWeight(1.0f);
@@ -258,6 +239,14 @@ public class Node extends TouchReceiver {
     return size.get();
   }
 
+  public PVector getSizeScaled(){
+    PVector result = size.get();
+    result.x = result.x * scale.x;
+    result.y = result.y * scale.y;
+    result.z = result.z * scale.z;
+    return result;
+  }
+
   public void setWidth(float newWidth){
     size.x = newWidth;
   }
@@ -277,6 +266,10 @@ public class Node extends TouchReceiver {
 
   public PVector getScale(){
     return scale.get();
+  }
+
+  public void setScale(float newScale){
+    setScale(new PVector(newScale, newScale, newScale));
   }
 
   public void setScale(PVector newScale){
@@ -745,10 +738,6 @@ public class Node extends TouchReceiver {
     List<Node> nodes = getChildrenWithName(name, maxLevel);
     for(Node n : nodes)
       func.accept(n);
-  }
-
-  public boolean isTouched(){
-    return bTouched;
   }
 
   /**

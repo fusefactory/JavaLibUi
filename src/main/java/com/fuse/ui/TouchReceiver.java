@@ -139,4 +139,8 @@ public class TouchReceiver {
 
     return result;
   }
+
+  public boolean isTouched(){
+    return !(activeTouchEvents == null || activeTouchEvents.isEmpty());
+  }
 }

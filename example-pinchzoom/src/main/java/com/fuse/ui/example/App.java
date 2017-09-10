@@ -114,18 +114,28 @@ public class App extends PApplet {
     this.containerNode.addChild(this.zoomableNode);
 
     this.draggable = Draggable.enableFor(this.zoomableNode);
+    this.draggable.disable();
 
     this.constrain = Constrain.enableFor(this.zoomableNode);
-    this.constrain.setMinX(-100.0f); //.setFillParent(true);
+    /*this.constrain.setMinX(-100.0f); //.setFillParent(true);
     this.constrain.setMaxX(0.0f); //.setFillParent(true);
     this.constrain.setMinY(-100.0f); //.setFillParent(true);
     this.constrain.setMaxY(0.0f); //.setFillParent(true);
+    this.constrain.disable();*/
+    this.constrain.setMaxScale(2.5f);
+    this.constrain.setMinScale(0.5f);
 
+    /*
+      PinchZoom only works when there are two active touches on a node
+      min and max zoom/position are applied after release
+    */
     this.pinchZoom = PinchZoom.enableFor(this.zoomableNode);
     // this.pinchZoom.disable();
-    this.pinchZoom.setRestore(true);
-    this.pinchZoom.setMaxScale(2.5f);
-    this.pinchZoom.setMinScale(0.5f);
+    //this.pinchZoom.setRestore(true);
+    //this.pinchZoom.setMaxScale(2.5f);
+    //this.pinchZoom.setMinScale(0.5f);
+    //this.pinchZoom.setFillParent(false);
+
   }
 
   public void mousePressed(){
@@ -155,8 +165,10 @@ public class App extends PApplet {
       }
 
       case 'r': {
-        this.pinchZoom.setRestore(!this.pinchZoom.getRestore());
-        System.out.println("restore: "+Boolean.toString(this.pinchZoom.getRestore()));
+        //this.pinchZoom.setRestore(!this.pinchZoom.getRestore());
+        //System.out.println("restore: "+Boolean.toString(this.pinchZoom.getRestore()));
+        zoomableNode.setPosition(100,100);
+        zoomableNode.setScale(1.0f);
         return;
       }
 
