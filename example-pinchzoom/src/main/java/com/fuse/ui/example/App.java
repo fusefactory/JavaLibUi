@@ -124,6 +124,8 @@ public class App extends PApplet {
     this.constrain.disable();*/
     this.constrain.setMaxScale(2.5f);
     this.constrain.setMinScale(0.5f);
+    this.constrain.setFillParent(true);
+    this.constrain.setCenterWhenFitting(true);
 
     /*
       PinchZoom only works when there are two active touches on a node
@@ -167,8 +169,8 @@ public class App extends PApplet {
       case 'r': {
         //this.pinchZoom.setRestore(!this.pinchZoom.getRestore());
         //System.out.println("restore: "+Boolean.toString(this.pinchZoom.getRestore()));
-        zoomableNode.setPosition(100,100);
         zoomableNode.setScale(1.0f);
+        zoomableNode.setPosition(0,0);
         return;
       }
 
