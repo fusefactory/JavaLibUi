@@ -66,13 +66,16 @@ public class TouchReceiver {
         }
 
         case TOUCH_ENTER: {
-          addActiveTouchEvent(event);
+          if(this != event.node) // for original touch target enter/exit doesn't affect the touch activeness
+            addActiveTouchEvent(event);
+
           touchEnterEvent.trigger(event);
           break;
         }
 
         case TOUCH_EXIT: {
-          touchExitEvent.trigger(event);
+          if(this != event.node) // for original touch target enter/exit doesn't affect the touch activeness
+            touchExitEvent.trigger(event);
           removeActiveTouchEvent(event);
           break;
         }

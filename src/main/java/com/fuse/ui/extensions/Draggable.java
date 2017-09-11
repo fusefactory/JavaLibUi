@@ -36,44 +36,28 @@ public class Draggable extends TransformerExtension {
   @Override public void enable(){
     super.enable();
 
-    node.touchMoveEvent.addListener((TouchEvent event) -> {
-      if(originalNodePosition == null || !bDragging){
-        dragEvent = event;
+    node.touchDownEvent.addListener((TouchEvent event) -> {
+      if(bDragging)
+        return;
 
-        Node ourNode = this.getNode();
+      Node ourNode = this.getNode();
 
-        if(event.node != ourNode)
-          return; // touch didn't start on our node
+      if(event.node != ourNode)
+        return; // touch didn't start on our node
 
-        originalNodePosition = ourNode.getPosition();
-        originalNodePositionGlobal = ourNode.getGlobalPosition();
-
-        bDragging = true;
-
-        // TODO; min offset before officialy start dragging?
-        startEvent.trigger(this);
-      }
-
-      if(event == dragEvent && this.getNode().getActiveTouchEvents().size() == 1){
-        // we don't apply this.toLocal(event) because dragging is based on GLOBAL offset
-        apply(event.offset());
-      }
+      originalNodePosition = ourNode.getPosition();
+      originalNodePositionGlobal = ourNode.getGlobalPosition();
+      dragEvent = event;
+      bDragging = true;
+      startEvent.trigger(this);
     }, this);
 
     node.touchUpEvent.addListener((TouchEvent event) -> {
-      if(!bDragging || event != dragEvent)
-        return;
-
-      if(bRestore && this.originalNodePosition != null){
-        this.transformPosition(this.originalNodePosition);
-      } else {
-        // we don't apply this.toLocal(event) because dragging is based on GLOBAL offset
-        apply(event.offset());
+      if(bDragging && dragEvent == event){
+        bDragging = false;
+        dragEvent = null;
+        endEvent.trigger(this);
       }
-
-      bDragging = false;
-      endEvent.trigger(this);
-      // originalNodePosition = null;
     }, this);
   }
 
@@ -84,6 +68,22 @@ public class Draggable extends TransformerExtension {
       node.touchMoveEvent.removeListeners(this);
       node.touchUpEvent.removeListeners(this);
     }
+
+    if(bDragging){
+      bDragging = false;
+      dragEvent = null;
+      endEvent.trigger(this);
+    }
+  }
+
+  @Override public void update(float dt){
+    if(bDragging){
+      if(this.node.getActiveTouchEvents().size() == 1){
+        apply(this.dragEvent.offset());
+      }
+    }
+
+    super.update(dt);
   }
 
   @Override public void drawDebug(){
