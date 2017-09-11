@@ -30,7 +30,7 @@ public class TouchEvent {
   /** The time in millis */
   public Long time;
   public Long startTime;
-  public Long lastChangeTime;
+  //public Long lastChangeTime;
   /** The velocity of the touch movement */
   public PVector velocity;
   public PVector velocitySmoothed;

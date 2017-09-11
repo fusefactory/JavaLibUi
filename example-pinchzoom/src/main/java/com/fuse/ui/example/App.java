@@ -43,7 +43,7 @@ public class App extends PApplet {
 
   public void settings(){
     //size(800, 600, P3D);
-    fullScreen(P3D);
+    fullScreen(P3D, 2);
   }
 
   public void setup(){
