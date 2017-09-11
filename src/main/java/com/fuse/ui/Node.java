@@ -199,7 +199,11 @@ public class Node extends TouchReceiver {
   }
 
   public PVector getGlobalPosition(){
-    return toGlobal(new PVector(0.0f, 0.0f, 0.0f));
+	if(this.parentNode != null) {
+		return this.parentNode.toGlobal(this.position); // more 'accurate'
+    }
+
+	return toGlobal(new PVector(0.0f, 0.0f, 0.0f));
   }
 
   /** @return A PVector which is a translation of the Node's size PVector from local space into screen-space */
@@ -366,7 +370,7 @@ public class Node extends TouchReceiver {
     // apply inverted matrix to given position
     PVector globalized = new PVector();
     mat.mult(pos, globalized);
-
+    System.out.println("toGlobal: "+pos.toString()+" to "+globalized.toString());
     // return localised position
     return globalized;
   }

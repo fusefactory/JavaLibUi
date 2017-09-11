@@ -178,7 +178,13 @@ public class TransformerExtension extends ExtensionBase {
 
   protected void transformPositionGlobal(PVector vec){
     Node parentNode = this.node.getParent();
-    PVector localized = (parentNode == null) ? vec.get() : parentNode.toLocal(vec);
+    PVector localized;
+    if(parentNode == null) {
+    	localized = vec.get();
+    } else {
+    	localized = parentNode.toLocal(vec);
+    }
+    // logger.info("transform ext: global: "+vec.toString()+" to "+localized.toString());
     this.transformPosition(localized);
   }
 
