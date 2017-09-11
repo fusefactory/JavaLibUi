@@ -1,4 +1,4 @@
-package com.fuse.utils.tuio;
+package com.fuse.ui.example.utils.tuio;
 
 import java.util.ArrayList;
 import java.util.HashMap;

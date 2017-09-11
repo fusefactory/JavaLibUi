@@ -4,7 +4,7 @@ import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PVector;
 
-import com.fuse.utils.TuioInput;
+import com.fuse.ui.example.utils.TuioInput;
 import com.fuse.ui.TouchManager;
 import com.fuse.ui.Node;
 import com.fuse.ui.RectNode;

@@ -1,4 +1,4 @@
-package com.fuse.utils;
+package com.fuse.ui.example.utils;
 
 import java.util.logging.*;
 
@@ -6,7 +6,7 @@ import processing.core.PApplet;
 import processing.core.PVector;
 import com.fuse.ui.TouchEvent;
 import com.fuse.ui.TouchManager;
-import com.fuse.utils.tuio.*;
+import com.fuse.ui.example.utils.tuio.*;
 
 public class TuioInput implements TuioListener {
 
