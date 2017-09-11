@@ -79,11 +79,11 @@ public class Constrain extends TransformerExtension {
         PVector sizeScaled = node.getSizeScaled();
 
         if(sizeScaled.x > parentNode.getSize().x){ // can only fill if bigger
-          result.x = Math.min(0.0f, Math.max(-sizeScaled.x, result.x));
+          result.x = Math.min(0.0f, Math.max((parentNode.getSize().x-sizeScaled.x)*this.node.getScale().x, result.x));
         }
 
         if(sizeScaled.y > parentNode.getSize().y){
-          result.y = Math.min(0.0f, Math.max(-sizeScaled.y, result.y));
+          result.y = Math.min(0.0f, Math.max((parentNode.getSize().y-sizeScaled.y)*this.node.getScale().y, result.y));
         }
       }
     }

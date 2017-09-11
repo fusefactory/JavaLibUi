@@ -18,7 +18,7 @@ public class App extends PApplet {
   private PApplet papplet;
   private PGraphics pg;
   private float timeBetweenFrames;
-  private boolean bDrawDebug;
+  private boolean bDrawDebug = true;
 
   // input for processing Tuio (OSC-based touch protocol) events;
   // all TUIO events are converted and passed on to the TouchManager
@@ -49,7 +49,6 @@ public class App extends PApplet {
   public void setup(){
     papplet.frameRate(30.0f);
     timeBetweenFrames = 1.0f / papplet.frameRate;
-    bDrawDebug = false;
 
     pg = papplet.createGraphics(papplet.width, papplet.height, P3D);
     Node.setPGraphics(pg);

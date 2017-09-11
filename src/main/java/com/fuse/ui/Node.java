@@ -270,7 +270,7 @@ public class Node extends TouchReceiver {
   }
 
   public void setScale(float newScale){
-    setScale(new PVector(newScale, newScale, newScale));
+    setScale(new PVector(newScale, newScale, 1.0f));
   }
 
   public void setScale(PVector newScale){
