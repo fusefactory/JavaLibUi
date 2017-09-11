@@ -66,7 +66,7 @@ public class TransformerExtension extends ExtensionBase {
         if(vec.mag() < donePositionDeltaMag){
           // finalize
           this.node.setPosition(targetPosition);
-          logger.info("smoothed position DONE");
+          //logger.info("smoothed position DONE");
           targetPosition = null;
         } else {
           // apply delta to current node value
@@ -74,7 +74,7 @@ public class TransformerExtension extends ExtensionBase {
           //logger.info("TransformExtension applying smoothed pos: "+vec.toString());
           // apply update to node
           this.node.setPosition(vec);
-          logger.info("smoothed position:"+vec.toString());
+          //logger.info("smoothed position:"+vec.toString());
         }
       }
     }

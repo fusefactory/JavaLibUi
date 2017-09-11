@@ -49,6 +49,7 @@ public class Draggable extends TransformerExtension {
       originalNodePositionGlobal = ourNode.getGlobalPosition();
       dragEvent = event;
       bDragging = true;
+      //logger.info("START DRAGGING");
       startEvent.trigger(this);
     }, this);
 
@@ -91,11 +92,18 @@ public class Draggable extends TransformerExtension {
     pg.textSize(12);
     pg.textAlign(PApplet.LEFT);
     pg.noStroke();
+    pg.colorMode(pg.RGB, 255);
     pg.fill(pg.color(0,0,255));
-    if(originalNodePosition != null && originalNodePositionGlobal != null)
+    if(originalNodePosition != null && originalNodePositionGlobal != null){
       pg.text("Original pos (local/global): "+originalNodePosition.toString()+"/"+originalNodePositionGlobal.toString(),
         0, 20);
+    }
 
+    if(originalNodePositionGlobal != null){
+      pg.ellipseMode(pg.CENTER);
+      PVector pos = this.node.toLocal(originalNodePositionGlobal);
+      pg.ellipse(pos.x, pos.y, 20, 20);
+    }
   }
 
   public void apply(PVector globalDragOffset){
