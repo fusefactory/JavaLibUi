@@ -9,6 +9,14 @@ import java.util.List;
 import java.util.ArrayList;
 import processing.core.*;
 
+import com.fuse.ui.extensions.ExtensionBase;
+import com.fuse.ui.extensions.Constrain;
+import com.fuse.ui.extensions.Draggable;
+import com.fuse.ui.extensions.PinchZoom;
+import com.fuse.ui.extensions.SmoothScroll;
+import com.fuse.ui.extensions.Swiper;
+import com.fuse.ui.extensions.TouchEventForwarder;
+
 public class NodeTest {
 
     @Test public void setSize(){
@@ -480,7 +488,8 @@ public class NodeTest {
         Node n = new Node();
         n.setSize(10, 10);
         assertEquals(n.getSize(), new PVector(10,10,0));
-        n.getSize().add(new PVector(10, 0, 0));
+        PVector tmp = n.getSize();
+        tmp.add(new PVector(10, 0, 0));
         assertEquals(n.getSize(), new PVector(10,10,0));
     }
 
@@ -522,7 +531,7 @@ public class NodeTest {
         assertEquals(child.toLocal(new PVector(100.0f, 100.0f, 0.0f)), new PVector(95.0f, 80.0f, 0.0f));
 
         n.setPosition(10, 10);
-        assertEquals(n.toGlobal(new PVector(0f, 0f, 0f)), new PVector(5,20,0));
+        assertEquals(n.toGlobal(new PVector(0f, 0f, 0f)), new PVector(10,10,0));
     }
 
     @Test public void enable(){
@@ -576,5 +585,105 @@ public class NodeTest {
 
 
 
+    }
+
+    @Test public void setRotation(){
+        Node n = new Node();
+        PVector vec = new PVector();
+        float radFactor = 1.0f / 180.0f * (float)Math.PI;
+
+        vec.z = 180.0f * radFactor;
+        n.setRotation(vec);
+        //assertEquals(n.getRotation().z, (float)Math.PI, 0.00001f);
+        assertEquals(n.toGlobal(new PVector(10,30,0)).x, -10.0f, 0.0001f);
+        assertEquals(n.toGlobal(new PVector(10,30,0)).y, -30.0f, 0.0001f);
+
+        vec.z = 45.0f * radFactor;
+        n.setRotation(vec);
+        assertEquals(n.getRotation(), vec);
+        // assertEquals(n.toGlobal(new PVector(10,30,0)).x, -10.0f, 0.0001f);
+        // assertEquals(n.toGlobal(new PVector(10,30,0)).y, 10.0f, 0.0001f);
+
+        vec.z = 0.0f * radFactor;
+        n.setRotation(vec);
+        assertEquals(n.getRotation(), vec);
+        assertEquals(n.toGlobal(new PVector(10,10,0)).x, 10.0f, 0.0001f);
+        assertEquals(n.toGlobal(new PVector(10,10,0)).y, 10.0f, 0.0001f);
+    }
+
+    @Test public void destroy(){
+        Node n = new Node();
+        n.newParentEvent.addListener((Node nod) -> {});
+        n.newChildEvent.addListener((Node nod) -> {});
+        n.newOffspringEvent.addListener((Node nod) -> {});
+        n.positionChangeEvent.addListener((Node nod) -> {});
+        n.sizeChangeEvent.addListener((Node nod) -> {});
+
+        assertEquals(n.newParentEvent.size(), 1);
+        assertEquals(n.newChildEvent.size(), 1);
+        assertEquals(n.newOffspringEvent.size(), 1);
+        assertEquals(n.positionChangeEvent.size(), 1);
+        assertEquals(n.sizeChangeEvent.size(), 1);
+
+        // with child and grandchild
+        Node child = new Node();
+        child.sizeChangeEvent.addListener((Node nod) -> {});
+        assertEquals(child.sizeChangeEvent.size(), 1);
+
+        n.addChild(child);
+        assertEquals(n.getChildNodes().size(), 1);
+
+        Node grandchild = new Node();
+        grandchild.sizeChangeEvent.addListener((Node nod) -> {});
+        child.addChild(grandchild);
+
+        assertEquals(grandchild.sizeChangeEvent.size(), 1);
+        assertEquals(child.getChildNodes().size(), 1);
+
+        ExtensionBase ext = new ExtensionBase();
+
+        n.use(new ExtensionBase());
+        Draggable draggable = Draggable.enableFor(n);
+        draggable.startEvent.addListener((Draggable d) -> {});
+        assertEquals(draggable.startEvent.size(), 1);
+        Constrain constrain = Constrain.enableFor(n, true);
+
+        SmoothScroll smoothScroll = SmoothScroll.enableFor(n, child);
+        Swiper swiper = Swiper.enableFor(n);
+        swiper.swipeEvent.addListener((Swiper s) -> {});
+        assertEquals(swiper.swipeEvent.size(), 1);
+        PinchZoom pinchZoom = PinchZoom.enableFor(n);
+        TouchEventForwarder touchEventForwarder = TouchEventForwarder.enableFromTo(child, n);
+        assertEquals(n.getExtensions().size(), 7);
+
+        n.destroy();
+
+        assertEquals(n.newParentEvent.size(), 0);
+        assertEquals(n.newChildEvent.size(), 0);
+        assertEquals(n.newOffspringEvent.size(), 0);
+        assertEquals(n.positionChangeEvent.size(), 0);
+        assertEquals(n.sizeChangeEvent.size(), 0);
+
+        assertEquals(n.getChildNodes().size(), 0);
+
+        assertEquals(child.sizeChangeEvent.size(), 0);
+        assertEquals(child.getChildNodes().size(), 0);
+
+        assertEquals(grandchild.sizeChangeEvent.size(), 0);
+
+        assertEquals(n.getExtensions().size(), 0);
+        assertEquals(draggable.startEvent.size(), 0);
+        assertEquals(swiper.swipeEvent.size(), 0);
+    }
+
+    @Test public void translateAfterRotateAndScale(){
+      Node n = new Node();
+      assertEquals(n.getPosition(), new PVector(0,0,0));
+      n.setScale(2.0f); // x- and y-axis by default
+      n.setRotation(new PVector(0,0, (float)Math.PI)); // 180 degrees
+      n.setPosition(100,100);
+      assertEquals(n.toGlobal(new PVector(0,0,0)), new PVector(100, 100, 0));
+      assertEquals(n.toGlobal(new PVector(50,50,0)).x, 0.0f, 0.00001f);
+      assertEquals(n.toGlobal(new PVector(50,50,0)).y, 0.0f, 0.00001f);
     }
 }

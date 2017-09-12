@@ -74,6 +74,7 @@ public class TouchManagerTest {
     assertEquals(touchEvents.size(), 1);
     assertEquals(touchEvents.get(0).eventType, TouchEvent.EventType.TOUCH_DOWN);
     assertEquals(touchEvents.get(0).position, new PVector(0,0,0));
+    // assertEquals(touchEvents.get(0).velocity, null);
   }
 
   @Test public void touchUpEvent()
@@ -104,6 +105,7 @@ public class TouchManagerTest {
     assertEquals(touchEvents.size(), 1);
     assertEquals(touchEvents.get(0).eventType, TouchEvent.EventType.TOUCH_UP);
     assertEquals(touchEvents.get(0).position, new PVector(2,0,0));
+    // assertEquals(touchEvents.get(0).velocity, new PVector(1000000, 0, 0)); // these touch events weren't performed in human speed but in computer speed, 9999 is the limit
   }
 
   @Test public void touchMoveEvent()
@@ -133,6 +135,7 @@ public class TouchManagerTest {
     assertEquals(touchEvents.size(), 1);
     assertEquals(touchEvents.get(0).eventType, TouchEvent.EventType.TOUCH_MOVE);
     assertEquals(touchEvents.get(0).position, new PVector(1,0,0));
+    // assertEquals(touchEvents.get(0).velocity, new PVector(1000000, 0, 0)); // these touch events weren't performed in human speed but in computer speed, 9999 is the limit
   }
 
   @Test public void NodeTouchEvent()
@@ -289,7 +292,7 @@ public class TouchManagerTest {
 
     // change max interval
     strings.clear();
-    man.setClickMaxInterval(0.05f);
+    man.setClickMaxInterval(50l);
     man.touchDown(0, new PVector(10f, 10f, 0f));
     man.update(0.2f); // move 0.2 seconds into the future
     man.touchUp(0, new PVector(10f, 10f, 0f));
@@ -388,32 +391,5 @@ public class TouchManagerTest {
     clipper.setClipContent(false);
     man.touchDown(0, new PVector(350, 150));
     assertEquals(subject.touchDownEvent.getHistory().size(), 3); // touch event triggered
-
-  }
-
-  @Test public void setMirrorNodeEventsEnabled(){
-    Node n = new Node();
-    n.setSize(100, 100);
-    n.touchMoveEvent.enableHistory();
-
-    TouchManager man = new TouchManager(n);
-    man.touchDown(0, new PVector(9, 9, 0));
-    man.touchMove(0, new PVector(8, 8, 0));
-
-    assertEquals(n.touchMoveEvent.getHistory().size(), 1);
-    assertEquals(n.touchMoveEvent.getHistory().get(0).touchId, 0);
-
-    man.setMirrorNodeEventsEnabled(true);
-    man.touchDown(1, new PVector(9, 9, 0)); // needed for the move events to be "accepted"
-    man.touchMove(1, new PVector(9, 9, 0));
-    man.touchMove(1, new PVector(7, 7, 0));
-
-    assertEquals(n.touchMoveEvent.getHistory().size(), 5); // 4 new events triggered, not 2 new
-    assertEquals(n.touchMoveEvent.getHistory().get(1).touchId, 1);
-    assertEquals(n.touchMoveEvent.getHistory().get(2).touchId, 2);
-    assertEquals(n.touchMoveEvent.getHistory().get(3).touchId, 1);
-    assertEquals(n.touchMoveEvent.getHistory().get(3).position, new PVector(7, 7, 0));
-    assertEquals(n.touchMoveEvent.getHistory().get(4).touchId, 2);
-    assertEquals(n.touchMoveEvent.getHistory().get(4).position, new PVector(21, 21, 0));
   }
 }

@@ -31,16 +31,5 @@ public class PinchZoomTest {
         assertFalse(pz.isActive());
         gen.go();
         assertTrue(pz.isActive());
-
-        assertEquals(pz.getGlobalStartDelta(), new PVector(10,10,0));
-        // assertEquals(pz.getGlobalCurrentDelta(), new PVector(30,30,0));
-        assertEquals(pz.getGlobalPinchScale(), new PVector(3.0f, 3.0f, 1.0f));
-
-        //assertEquals(pz.getGlobalStartCenter(), new PVector(50,50,0));
-        // assertEquals(pz.getGlobalCurrentCenter(), new PVector(50,50,0));
-
-        assertEquals(pz.getGlobalPinchTranslate(), new PVector(-10.0f*3.0f,-10.0f*3.0f,0));
-
-        // assertEquals(n.getPosition(), new PVector(-10, -10, 0));
     }
 }

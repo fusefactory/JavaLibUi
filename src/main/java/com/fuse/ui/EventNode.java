@@ -36,6 +36,7 @@ public class EventNode extends Node {
   }
 
   @Override public void update(float dt){
+    super.update(dt);
     updateEvent.trigger(dt);
   }
 }

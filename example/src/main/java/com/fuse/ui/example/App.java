@@ -12,6 +12,8 @@ import com.fuse.ui.TextNode;
 import com.fuse.ui.extensions.Draggable;
 import com.fuse.ui.extensions.Swiper;
 import com.fuse.ui.extensions.PinchZoom;
+import com.fuse.ui.extensions.SmoothScroll;
+import com.fuse.ui.extensions.Constrain;
 
 public class App extends PApplet {
   Logger logger;
@@ -105,6 +107,42 @@ public class App extends PApplet {
       // disable textnode, otherwise it will take all touchevents,
       // because it covers its entire parent node
       tx.setInteractive(false);
+    }
+
+    { // SmoothScroll extension demo
+      RectNode n = new RectNode();
+      n.setPosition(50, 250);
+      n.setSize(700,300);
+      n.setRectColor(pg.color(80,80,80));
+      n.setClipContent(true);
+      sceneNode.addChild(n);
+
+      Node scrollableNode = new Node();
+      scrollableNode.setInteractive(false);
+      n.addChild(scrollableNode);
+
+
+
+      for(int i=-20; i<=20; i++){
+        RectNode black = new RectNode();
+        float height = 10.0f + (float)Math.cos(0.1f * (float)i) * 100.0f;
+        black.setPosition(i*700+10, 150.0f-height*0.5f);
+        black.setSize(680, height);
+        black.setRectColor(pg.color(0));
+        black.setInteractive(false);
+        scrollableNode.addChild(black);
+      }
+
+      // configure smooth scroll
+      SmoothScroll ext = SmoothScroll.enableFor(n, scrollableNode);
+      ext.setSnapEnabled(true);
+      ext.setMinOffset(-20.0f*700.0f, 0.0f);
+      ext.setMaxOffset(20.0f*700.0f, 0.0f);
+      ext.setSnapFactor(0.95f);
+
+      // smooth scroll lets the user scroll in two dimensions, so we add a constrain to fix the vertical dimension,
+      // allowing only horizontal scrolling
+      Constrain.enableFor(scrollableNode).setFixY();
     }
   }
 
