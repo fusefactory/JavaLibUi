@@ -3,9 +3,8 @@ package com.fuse.ui.extensions;
 import processing.core.PVector;
 import processing.core.PGraphics;
 
-import com.fuse.utils.Event;
 import com.fuse.ui.Node;
-import com.fuse.ui.TouchEvent;
+
 
 /**
  * The TransformationExtension bass class provides the smoothing logic
@@ -13,12 +12,14 @@ import com.fuse.ui.TouchEvent;
  * op the Node's position, scale and rotation attributes.
  */
 public class TransformerExtension extends ExtensionBase {
-  private static float doneScaleDeltaMag = 0.1f;
+  private static float doneScaleDeltaMag = 0.01f;
   private static float donePositionDeltaMag = 0.1f;
   private static float doneRotationDeltaMag = 0.1f;
   // smoothing
   private PVector targetPosition, targetRotation, targetScale;
   private float smoothValue = 7.0f;
+  private Float smoothValueScale = null;
+
   // time-based transformation expiration
   private Float maxTransformationTime = 3.0f;
   private float positionTimer;
@@ -50,7 +51,7 @@ public class TransformerExtension extends ExtensionBase {
     if(targetPosition != null){
       this.positionTimer += dt;
       if( this.maxTransformationTime != null && this.positionTimer > this.maxTransformationTime){
-        logger.fine("position transformation expired");
+        logger.fine("position transformation EXPIRED");
         this.targetPosition = null;
       } else if(smoothValue <= 1.0f){
         // smoothing disabled, apply directly
@@ -106,25 +107,28 @@ public class TransformerExtension extends ExtensionBase {
     }
 
     if(targetScale != null){
+      float smoother = this.getSmoothValueForScaling();
+
       this.scaleTimer += dt;
       if( this.maxTransformationTime != null && this.scaleTimer > this.maxTransformationTime){
         logger.fine("scale transformation expired");
         this.targetScale = null;
-      } else if(smoothValue <= 1.0f){
+      } else if(smoother <= 1.0f){
         // smoothing disabled, apply directly
         this.node.setScale(targetScale);
-        targetScale = null;
+        this.targetScale = null;
       } else {
         PVector vec = targetScale.get();
         // delta
         vec.sub(this.node.getScale());
         // smoothed delta
-        vec.mult(1.0f / this.smoothValue);
+        vec.mult(1.0f / smoother);
 
         if(vec.mag() < doneScaleDeltaMag){
           // finalize
           this.node.setScale(targetScale);
           targetScale = null;
+          // logger.fine("scale transformation FINISHED");
         } else {
           // apply delta to current node value
           vec.add(this.node.getScale());
@@ -241,7 +245,7 @@ public class TransformerExtension extends ExtensionBase {
 
     vec = this.limitedScale(vec);
 
-    if(this.isSmoothing()){
+    if(this.isSMoothingScale()){
       this.targetScale = vec.get();
       scaleTimer = 0.0f;
       return; // let the update method take it from here
@@ -258,11 +262,19 @@ public class TransformerExtension extends ExtensionBase {
     this.transformationsThisUpdate++;
   }
 
+  protected float getSmoothValueForScaling(){
+    return this.smoothValueScale == null ? this.smoothValue : this.smoothValueScale;
+  }
+
   // state reader methods // // // // //
 
   /** @return boolean indicating if this extension is applying smoothing to all transformations */
   public boolean isSmoothing(){
     return smoothValue > 1.0f;
+  }
+
+  public boolean isSMoothingScale(){
+    return this.getSmoothValueForScaling() > 1.0f;
   }
 
   private boolean endlessRecursionDetected(){
@@ -277,6 +289,14 @@ public class TransformerExtension extends ExtensionBase {
 
   public void setSmoothValue(float val){
     this.smoothValue = val; // <= 1.0f mean disable smoothing
+  }
+
+  public Float getSmoothValueScale(){
+    return smoothValueScale;
+  }
+
+  public void setSmoothValueScale(Float val){
+    this.smoothValueScale = val; // <= 1.0f mean disable smoothing
   }
 
   public void disableSmoothing(){
