@@ -142,7 +142,7 @@ public class TransformerExtension extends ExtensionBase {
   @Override public void drawDebug(){
     PGraphics pg = Node.getPGraphics();
     pg.colorMode(pg.RGB, 255);
-    pg.stroke(pg.color(255,100,255,200));
+    pg.stroke(pg.color(255,100,255,100));
     pg.strokeWeight(2.0f);
 
     if(this.targetPosition != null){

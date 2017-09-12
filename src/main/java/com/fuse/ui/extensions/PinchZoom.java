@@ -90,17 +90,22 @@ public class PinchZoom extends TransformerExtension {
   private void updatePinching(){
     this.math.update();
 
+    // SCALING
     PVector scale = this.originalScale.get();
     float pinchScale = this.math.getPinchScale();
     scale.mult(pinchScale);
+
+    // TRANSLATE
     // current "dragged" position of the pinch-center
     PVector p = math.getParentSpaceCurrentPinchCenter();
     // offset of pinch-center to origin of pinched-node
     PVector offset = math.getLocalStartPinchCenter();
     // scale offset; have to multiply by pinchScale, because
     // the pinchscale is not yet applied to the node (because of smoothing)
-    p.x = p.x - offset.x * pinchScale;
-    p.y = p.y - offset.y * pinchScale;
+    //offset.mult(pinchScale); // update offset for new pinchScale
+    //p.sub(offset); // pinch-center-to-scaled-node-origin
+    p.x = p.x - offset.x * scale.x;
+    p.y = p.y - offset.y * scale.y;
 
     super.transformScale(scale);
     super.transformPosition(p);
@@ -179,6 +184,8 @@ public class PinchZoom extends TransformerExtension {
 
   @Override
   public void drawDebug(){
+	super.drawDebug();
+
     PinchMath math = this.math; // copy reference to local scope; had some issues of "this.math" becoming null DURING this draw method
     if(math == null) return;
 
