@@ -34,17 +34,23 @@ public class DraggableTest {
     assertEquals(n.getPosition(), new PVector(10,10,0));
 
     // add draggable extension to Node
-    n.use(new Draggable());
+    Draggable d = new Draggable();
+    n.use(d);
+    d.disableSmoothing();
 
     // try same interaction, verify node moves
     tm.touchDown(0, new PVector(20,20,0));
+    d.update(0.0f); // no smoothing, so amount delta-time value doesn't matter
     assertEquals(n.getPosition(), new PVector(10,10,0));
     tm.touchMove(0, new PVector(30,30,0));
+    d.update(0.0f); // no smoothing, so amount delta-time value doesn't matter
     assertEquals(n.getPosition(), new PVector(20,20,0));
     tm.touchMove(0, new PVector(50,50,0));
+    d.update(0.0f); // no smoothing, so amount delta-time value doesn't matter
     assertEquals(n.getPosition(), new PVector(40,40,0));
     tm.touchUp(0, new PVector(55,55,0));
-    assertEquals(n.getPosition(), new PVector(45,45,0));
+    d.update(0.0f); // no smoothing, so amount delta-time value doesn't matter
+    assertEquals(n.getPosition(), new PVector(40,40,0)); // touch up is ignored
   }
 
   @Test public void enable_disable(){
@@ -58,17 +64,22 @@ public class DraggableTest {
     // create touch manager that acts on this scene
     TouchManager tm = new TouchManager(scene);
     // enable draggable on node
-    assertEquals(Draggable.enableFor(n).getClass(), Draggable.class);
+    Draggable d = Draggable.enableFor(n);
+    d.disableSmoothing();
 
     // try interaction, verify node moves
     tm.touchDown(0, new PVector(20,20,0));
+    d.update(0.0f); // no smoothing, so amount delta-time value doesn't matter
     assertEquals(n.getPosition(), new PVector(10,10,0));
     tm.touchMove(0, new PVector(30,30,0));
+    d.update(0.0f); // no smoothing, so amount delta-time value doesn't matter
     assertEquals(n.getPosition(), new PVector(20,20,0));
     tm.touchMove(0, new PVector(50,50,0));
+    d.update(0.0f); // no smoothing, so amount delta-time value doesn't matter
     assertEquals(n.getPosition(), new PVector(40,40,0));
     tm.touchUp(0, new PVector(55,55,0));
-    assertEquals(n.getPosition(), new PVector(45,45,0));
+    d.update(0.0f); // no smoothing, so amount delta-time value doesn't matter
+    assertEquals(n.getPosition(), new PVector(40,40,0));
 
     // disable draggable on node and reset to original position
     Draggable.disableFor(n);
@@ -76,12 +87,16 @@ public class DraggableTest {
 
     // try same interaction,verify node doesn't move
     tm.touchDown(0, new PVector(20,20,0));
+    d.update(0.0f); // no smoothing, so amount delta-time value doesn't matter
     assertEquals(n.getPosition(), new PVector(10,10,0));
     tm.touchMove(0, new PVector(30,30,0));
+    d.update(0.0f); // no smoothing, so amount delta-time value doesn't matter
     assertEquals(n.getPosition(), new PVector(10,10,0));
     tm.touchMove(0, new PVector(50,50,0));
+    d.update(0.0f); // no smoothing, so amount delta-time value doesn't matter
     assertEquals(n.getPosition(), new PVector(10,10,0));
     tm.touchUp(0, new PVector(55,55,0));
+    d.update(0.0f); // no smoothing, so amount delta-time value doesn't matter
     assertEquals(n.getPosition(), new PVector(10,10,0));
   }
 
@@ -101,10 +116,13 @@ public class DraggableTest {
 
     assertEquals(d.getOffset(), new PVector(0.0f, 0.0f, 0.0f));
     tm.touchDown(0, new PVector(20,20,0));
+    d.update(0.0f); // no smoothing, so amount delta-time value doesn't matter
     assertEquals(d.getOffset(), new PVector(0.0f, 0.0f, 0.0f));
     tm.touchMove(0, new PVector(30,30,0));
+    d.update(0.0f); // no smoothing, so amount delta-time value doesn't matter
     assertEquals(d.getOffset(), new PVector(10.0f, 10.0f, 0.0f));
     tm.touchMove(0, new PVector(15,25,0));
+    d.update(0.0f); // no smoothing, so amount delta-time value doesn't matter
     assertEquals(d.getOffset(), new PVector(-5.0f, 5.0f, 0.0f));
   }
 
@@ -120,7 +138,6 @@ public class DraggableTest {
     TouchManager tm = new TouchManager(scene);
     // enable draggable on node
     Draggable d = Draggable.enableFor(n);
-
     d.startEvent.enableHistory();
     d.endEvent.enableHistory();
 
@@ -128,7 +145,7 @@ public class DraggableTest {
     assertEquals(d.endEvent.getHistory().size(), 0);
 
     tm.touchDown(0, new PVector(20,20,0));
-    assertEquals(d.startEvent.getHistory().size(), 0);
+    assertEquals(d.startEvent.getHistory().size(), 1);
     assertEquals(d.endEvent.getHistory().size(), 0);
     tm.touchMove(0, new PVector(30,30,0));
     assertEquals(d.startEvent.getHistory().size(), 1);
@@ -173,12 +190,12 @@ public class DraggableTest {
     subject.setSize(100, 100); // default position: 0,0
     rotator.addChild(subject);
 
-    Draggable.enableFor(subject);
+    Draggable.enableFor(subject).disableSmoothing();
     // drag from global position -5,5  200 pixels DOWN (start at -5 because the rotator rotated around 0,0, putting it outside the scree :/)
     // with 5 -eqaully spaced- touchMove events in between touchDown and touchUp
-    TouchGenerator.on(scene).from(-5, 5).move(0, 200).moves(5).go();
+    TouchGenerator.on(scene).from(-5, 5).move(0, 200).moves(5).updateSceneAfterEveryTouch(0.0f).go();
 
     // in local coordinates the node got dragged 200 pixel RIGHT
-    assertEquals(subject.getPosition().dist(new PVector(200, 0, 0)), 0.0000000001f, 0.00001f);
+    assertEquals(subject.getPosition(), new PVector(200, 0, 0));
   }
 }

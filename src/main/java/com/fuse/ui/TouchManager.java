@@ -309,6 +309,10 @@ public class TouchManager extends TouchReceiver {
     this.receiveTouchEvent(event);
   }
 
+  public Node getNode(){
+    return this.node;
+  }
+
   public void setNode(Node newNode){
     this.node = newNode;
   }
