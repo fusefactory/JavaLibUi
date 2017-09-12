@@ -125,6 +125,7 @@ public class App extends PApplet {
     this.constrain.setMinScale(0.5f);
     this.constrain.setFillParent(true);
     this.constrain.setCenterWhenFitting(true);
+    this.constrain.setStopOnTouch(true);
 
     /*
       PinchZoom only works when there are two active touches on a node

@@ -30,6 +30,7 @@ public class TransformerExtension extends ExtensionBase {
   private boolean bFillParent = false; // only if bigger than parent
   // touch-related
   private boolean bOnlyWhenNotTouched = false;
+  private boolean bStopOnTouch = false;
 
   // endless recursion detection
   private static int maxTransformationsPerUpdate = 9;
@@ -45,8 +46,15 @@ public class TransformerExtension extends ExtensionBase {
   @Override public void update(float dt){
     transformationsThisUpdate = 0; // reset endless recursion detection counter
 
-    if(bOnlyWhenNotTouched && this.node.isTouched())
-      return;
+    if(this.node.isTouched()){
+      if(this.bStopOnTouch){
+        this.stopActiveTransformations();
+        return;
+      }
+
+      if(bOnlyWhenNotTouched)
+        return;
+    }
 
     if(targetPosition != null){
       this.positionTimer += dt;
@@ -149,6 +157,12 @@ public class TransformerExtension extends ExtensionBase {
       PVector vec = this.node.parentToLocalSpace(targetPosition);
       pg.line(0.0f, 0.0f, vec.x, vec.y);
     }
+  }
+
+  public void stopActiveTransformations(){
+    targetPosition = null;
+    targetRotation = null;
+    targetScale = null;
   }
 
   protected PVector limitedPosition(PVector vec){
@@ -337,5 +351,13 @@ public class TransformerExtension extends ExtensionBase {
 
   public boolean getOnlyWhenNotTouched(){
     return bOnlyWhenNotTouched;
+  }
+
+  public void setStopOnTouch(boolean enable){
+    bStopOnTouch = enable;
+  }
+
+  public boolean getStopOnTouch(){
+    return bStopOnTouch;
   }
 }

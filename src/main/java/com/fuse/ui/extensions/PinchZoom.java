@@ -81,8 +81,11 @@ public class PinchZoom extends TransformerExtension {
   private void stopPinching(){
     this.endPinchEvent.trigger(this.node);
 
-    if(this.bRestore)
+    if(this.bRestore){
       this.restore();
+    } else {
+      super.stopActiveTransformations();
+    }
 
     this.math = null;
   }

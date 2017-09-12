@@ -98,6 +98,7 @@ public class Draggable extends TransformerExtension {
 	  if(bDragging || dragEvent != null) {
 		  bDragging = false;
 		  dragEvent = null;
+      super.stopActiveTransformations();
 		  endEvent.trigger(this);
 	  }
   }
