@@ -517,9 +517,8 @@ public class Node extends TouchReceiver {
         PVector scrPos = clipNode.getGlobalPosition();
         // TODO this size conversion from local to global space, only really works
         // if the node is rotated to multiples of 90 degrees (or not rotated at all of course).
-        PVector size = clipNode.getGlobalBottomRight();
-        size.sub(scrPos);
-        pg.clip(scrPos.x, scrPos.y, scrPos.x+size.x, scrPos.y+size.y);
+        PVector bottomRight = clipNode.getGlobalBottomRight();
+        pg.clip(scrPos.x, scrPos.y, bottomRight.x-scrPos.x, bottomRight.y-scrPos.y);
       }
 
       pg.pushMatrix();
