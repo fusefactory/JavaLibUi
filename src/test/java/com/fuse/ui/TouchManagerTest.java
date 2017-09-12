@@ -2,6 +2,7 @@ package com.fuse.ui;
 
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
+import org.junit.Ignore;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -317,6 +318,54 @@ public class TouchManagerTest {
     man.touchUp(0, new PVector(14f, 10f, 0f));
     assertEquals(strings.size(), 1);
     assertEquals(strings.get(0), "#0 CLICK on <NO NODE> at position: 14.0, 10.0");
+  }
+
+  @Ignore @Test public void doubleClick(){
+    System.out.println("DOUBLECLICK TEST");
+    TouchManager man = new TouchManager();
+    Node scene= new Node();
+    scene.setSize(100,100);
+    Node target = new Node();
+    target.setSize(100,100);
+    scene.addChild(target);
+    man.setNode(scene);
+
+    man.touchClickEvent.enableHistory();
+    man.touchDoubleClickEvent.enableHistory();
+
+    man.update(0); // call update with delta-time value to enable "controlledTime" (TODO: explicit enable/disable of controlled time)
+    assertEquals(man.touchClickEvent.getHistory().size(), 0);
+    assertEquals(man.touchDoubleClickEvent.getHistory().size(), 0);
+
+    // click
+    man.touchDown(0, new PVector(10f, 10f, 0f));
+    man.update(0.2f); // move 0.2 seconds into the future
+    man.touchUp(0, new PVector(10f, 10f, 0f));
+    // check triggered events
+    assertEquals(man.touchClickEvent.getHistory().size(), 1);
+    assertEquals(man.touchDoubleClickEvent.getHistory().size(), 0);
+
+    man.update(0.2f); // move 0.2 seconds into the future
+
+    // click again
+    man.touchDown(0, new PVector(10f, 10f, 0f));
+    man.update(0.2f); // move 0.2 seconds into the future
+    man.touchUp(0, new PVector(10f, 10f, 0f));
+    // check triggered events
+    assertEquals(man.touchClickEvent.getHistory().size(), 2);
+    assertEquals(man.touchDoubleClickEvent.getHistory().size(), 1);
+
+    // click
+    man.touchDown(0, new PVector(10f, 10f, 0f));
+    man.update(0.2f); // move 0.2 seconds into the future
+    man.touchUp(0, new PVector(10f, 10f, 0f));
+    man.update(1.0f); // too slow for double click
+    man.touchDown(0, new PVector(10f, 10f, 0f));
+    man.update(0.2f); // move 0.2 seconds into the future
+    man.touchUp(0, new PVector(10f, 10f, 0f));
+    assertEquals(man.touchClickEvent.getHistory().size(), 4);
+    assertEquals(man.touchDoubleClickEvent.getHistory().size(), 1);
+System.out.println("DOUBLECLICK TEST END");
   }
 
   @Test public void not_interactive_node(){

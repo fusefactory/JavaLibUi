@@ -58,6 +58,7 @@ public class App extends PApplet {
 
     touchManager = new TouchManager();
     touchManager.setNode(sceneNode);
+    touchManager.setDispatchOnUpdate(true);
 
     tuioInput = new TuioInput();
     tuioInput.setPapplet(this);
@@ -67,6 +68,7 @@ public class App extends PApplet {
   }
 
   private void update(float dt){
+    touchManager.update(dt);
     // run update on all UI nodes
     sceneNode.updateSubtree(dt);
   }

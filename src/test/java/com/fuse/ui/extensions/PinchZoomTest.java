@@ -28,8 +28,8 @@ public class PinchZoomTest {
 
         assertEquals(gen.getTouchEvents().size(), 12); // 2down, 10 move, 0 up
 
-        assertFalse(pz.isActive());
+        assertFalse(pz.isPinching());
         gen.go();
-        assertTrue(pz.isActive());
+        assertTrue(pz.isPinching());
     }
 }

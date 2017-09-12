@@ -5,7 +5,11 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
+import java.util.Iterator;
+
 import java.util.logging.*;
+
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 import processing.core.PGraphics;
 import processing.core.PVector;
@@ -14,12 +18,14 @@ public class TouchManager extends TouchReceiver {
   private Logger logger;
   private Node node;
   private boolean dispatchOnUpdate = false;
-  private boolean controlledTime = false;
   private long time = 0;
+  private Long previousFrameMillis = null;
   /// the maximum amount of time (in seconds) between a touch-down and a touch-up for it to be considered a click
   private long clickMaxInterval = 200l;
-  /// the maximum distance (in pixels) between the position of touch-down and the position of touch-up for it to be considered a click
   private float clickMaxDistance = 15.0f;
+  //private long doubleClickMaxInterval = 600l;
+  // private long doubleClickMinDelay = 500l;
+  /// the maximum distance (in pixels) between the position of touch-down and the position of touch-up for it to be considered a click
 
   // velocity smoothing logic based on ofxInterface OpenFrameworks addon implementation
   // see: https://github.com/galsasson/ofxInterface/blob/master/src/TouchManager.cpp
@@ -28,11 +34,14 @@ public class TouchManager extends TouchReceiver {
 
   private List<TouchEvent> touchEventQueue;
   private Map<Integer, TouchEvent> activeTouchEvents;
+  private final static int MAX_CLICK_HISTORY_SIZE = 10; // no need to remember more; only remembering for double-click events, but have to consider multiple simultanous users
+  private ConcurrentLinkedDeque<TouchEvent> clickHistory;
 
   private void _init(){
     logger = Logger.getLogger(TouchManager.class.getName());
     touchEventQueue = new ArrayList<TouchEvent>();
     activeTouchEvents = new HashMap<Integer, TouchEvent>();
+    //clickHistory = new ConcurrentLinkedDeque<>();
   }
 
   public TouchManager(){
@@ -45,6 +54,16 @@ public class TouchManager extends TouchReceiver {
   }
 
   public void update(){
+    if(previousFrameMillis == null)
+    previousFrameMillis = System.currentTimeMillis();
+    Long newMillis = System.currentTimeMillis();
+    this.update((float)((newMillis - previousFrameMillis)/1000.0f));
+    previousFrameMillis = newMillis;
+  }
+
+  public void update(float dt){
+    time += dt * 1000.0f;
+
     for(TouchEvent evt : activeTouchEvents.values()){
       evt.velocitySmoothed.mult(velocityDump);
     }
@@ -60,12 +79,6 @@ public class TouchManager extends TouchReceiver {
     }
 
     //finalizeIdleTouchEvents();
-  }
-
-  public void update(float dt){
-    controlledTime = true;
-    time += (int)(dt * 1000.0f);
-    update();
   }
 
   /**
@@ -263,10 +276,48 @@ public class TouchManager extends TouchReceiver {
           Long dur = event.getDuration();
 
           if(dur != null && dur <= clickMaxInterval && event.distance() <= clickMaxDistance){
+            /*
+        	  // find previous click and double click times
+        	  Long previousClickTime = null;
+        	  Long previousDoubleClickTime = null;
+
+            Iterator<TouchEvent> iter = this.clickHistory.iterator();
+            while(iter.hasNext()) {
+              TouchEvent previous = iter.next();
+
+              //logger.info("prev click ti: "+Long.toString(previous.time));
+              if(previous.node == event.node && previous.mostRecentNode == event.mostRecentNode) {
+            	  if(previous.eventType == TouchEvent.EventType.TOUCH_CLICK) {
+            		  if(previousClickTime == null || previousClickTime < previous.time) {
+            			  previousClickTime = previous.time;
+            		  }
+            	  } else if(previous.eventType == TouchEvent.EventType.TOUCH_DOUBLECLICK) {
+            		  if(previousDoubleClickTime == null || previousDoubleClickTime < previous.time) {
+            			  previousDoubleClickTime = previous.time;
+            		  }
+            	  }
+              }
+            }
+
+            System.out.println("prev click:" + Long.toString(previousClickTime == null ? 0 : previousClickTime));
+            // process and trigger possible DOUBLE_CLICK first
+            if((previousDoubleClickTime == null || previousDoubleClickTime < (event.time - this.doubleClickMinDelay))
+            		&& previousClickTime != null
+            		&& (event.time - previousClickTime) < this.doubleClickMaxInterval) {
+            	// logger.info("doubledur: "+Long.toString((event.time - previousClickTime)));
+            	event.eventType = TouchEvent.EventType.TOUCH_DOUBLECLICK;
+
+            	if(event.node != null) {
+            	  event.node.receiveTouchEvent(event);
+            	}
+              this.receiveTouchEvent(event);
+
+            	// record double click event in click history
+            	this.clickHistory.add(event.copy());
+            }*/
             //TouchEvent tmpEvent = event.copy();
             //tmpEvent.eventType = TouchEvent.EventType.TOUCH_CLICK;
             event.eventType = TouchEvent.EventType.TOUCH_CLICK;
-
             // logger.warning("CLICK: dist=" + Float.toString(PVector.dist(tlog.touchEvent.position, event.position)));
             // logger.warning("pos1=" + tlog.touchEvent.position.toString());
             // logger.warning("pos2=" + event.position.toString());
@@ -282,6 +333,11 @@ public class TouchManager extends TouchReceiver {
             if(event.mostRecentNode != null && event.mostRecentNode != event.node){
               event.mostRecentNode.receiveTouchEvent(event);
             }
+
+         	/*this.clickHistory.add(event.copy());
+            while(this.clickHistory.size() > MAX_CLICK_HISTORY_SIZE) {
+              this.clickHistory.poll();
+            }*/
 
             event.eventType = TouchEvent.EventType.TOUCH_UP; // restore
           }
@@ -367,9 +423,21 @@ public class TouchManager extends TouchReceiver {
     dispatchOnUpdate = newVal;
   }
 
+  public long getClickMaxInterval() {
+	  return clickMaxInterval;
+  }
+
   public void setClickMaxInterval(long interval){
     clickMaxInterval = interval;
   }
+
+  // public long getDoubleClickMaxInterval() {
+	//   return doubleClickMaxInterval;
+  // }
+  //
+  // public void setDoubleClickMaxInterval(long interval){
+	// this.doubleClickMaxInterval = interval;
+  // }
 
   public void setClickMaxDistance(float distance){
     clickMaxDistance = distance;
@@ -412,9 +480,7 @@ public class TouchManager extends TouchReceiver {
   }
 
   private long getTime(){
-    if(controlledTime)
       return this.time;
-    return System.currentTimeMillis();
   }
 
   // TouchManager doesn't keep active touch events (like this)
@@ -447,5 +513,4 @@ public class TouchManager extends TouchReceiver {
       }
     }
   }*/
-
 }
