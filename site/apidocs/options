@@ -1,0 +1,24 @@
+-classpath
+'C:/Users/m_t_k.SERVER/.m2/repository/org/processing/core/2.2.1/core-2.2.1.jar;C:/Users/m_t_k.SERVER/.m2/repository/com/github/fusefactory/JavaLibEvent/1.1.7/JavaLibEvent-1.1.7.jar'
+-encoding
+'UTF-8'
+-protected
+-sourcepath
+'C:/Users/m_t_k.SERVER/code/InteractiveTable/lib/archiviodigitale/modules/JavaLibUi/src/main/java;C:/Users/m_t_k.SERVER/code/InteractiveTable/lib/archiviodigitale/modules/JavaLibUi/target/generated-sources/annotations'
+-author
+-bottom
+'Copyright &#169; 2017. All rights reserved.'
+-charset
+'UTF-8'
+-d
+'C:/Users/m_t_k.SERVER/code/InteractiveTable/lib/archiviodigitale/modules/JavaLibUi/target/site/apidocs'
+-docencoding
+'UTF-8'
+-doctitle
+'Fuse UI package 1.0.4 API'
+-linkoffline
+'http://docs.oracle.com/javase/8/docs/api' 'C:/Users/m_t_k.SERVER/code/InteractiveTable/lib/archiviodigitale/modules/JavaLibUi/target/javadoc-bundle-options'
+-use
+-version
+-windowtitle
+'Fuse UI package 1.0.4 API'
