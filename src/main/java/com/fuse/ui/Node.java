@@ -234,8 +234,8 @@ public class Node extends TouchReceiver {
   public void setPosition(float x, float y, float z){
     boolean change = position.x != x || position.y != y || position.z != z;
     if(change){
-      localTransformMatrix.translate(x - position.x, y - position.y, z - position.z);
       position.set(x,y,z);
+      updateLocalTransformMatrix();
       positionChangeEvent.trigger(this);
     }
   }
