@@ -133,10 +133,9 @@ public class Node extends TouchReceiver {
       List<ExtensionBase> tmpExtensions = new ArrayList<>();
       tmpExtensions.addAll(extensions);
 
-      for(ExtensionBase ext : tmpExtensions){
+      for(ExtensionBase ext : tmpExtensions)
         if(ext.isEnabled())
           ext.update(dt);
-      }
     }
   }
 
@@ -155,11 +154,10 @@ public class Node extends TouchReceiver {
     pg.fill(clr);
     pg.text(getName(), 0.0f, 15.0f);
 
-    if(extensions!=null){
-      for(ExtensionBase ext : extensions){
-        ext.drawDebug();
-      }
-    }
+    if(extensions!=null)
+      for(ExtensionBase ext : extensions)
+        if(ext.isEnabled())
+          ext.drawDebug();
   }
 
   public boolean isVisible(){
@@ -381,6 +379,24 @@ public class Node extends TouchReceiver {
     newEvent.position = toLocal(event.position);
     newEvent.startPosition = toLocal(event.startPosition);
     return newEvent;
+  }
+
+  public PVector parentToLocalSpace(PVector vec){
+    // get and copy our global transformation matrix
+    PMatrix3D mat = this.localTransformMatrix.get();
+
+    // try to invert the matrix
+    if(!mat.invert()){
+      // System.out.println("could not invert Model's globalTransformMatrix");
+      return vec;
+    }
+
+    // apply inverted matrix to given position
+    PVector localized = new PVector();
+    mat.mult(vec, localized);
+
+    // return localised position
+    return localized;
   }
 
   public void addChild(Node newChildNode){

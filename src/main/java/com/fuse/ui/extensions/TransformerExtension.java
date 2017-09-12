@@ -1,6 +1,7 @@
 package com.fuse.ui.extensions;
 
 import processing.core.PVector;
+import processing.core.PGraphics;
 
 import com.fuse.utils.Event;
 import com.fuse.ui.Node;
@@ -131,6 +132,18 @@ public class TransformerExtension extends ExtensionBase {
           this.node.setScale(vec);
         }
       }
+    }
+  }
+
+  @Override public void drawDebug(){
+    PGraphics pg = Node.getPGraphics();
+    pg.colorMode(pg.RGB, 255);
+    pg.stroke(pg.color(255,100,255,200));
+    pg.strokeWeight(2.0f);
+
+    if(this.targetPosition != null){
+      PVector vec = this.node.parentToLocalSpace(targetPosition);
+      pg.line(0.0f, 0.0f, vec.x, vec.y);
     }
   }
 

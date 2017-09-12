@@ -103,6 +103,8 @@ public class Draggable extends TransformerExtension {
   }
 
   @Override public void drawDebug(){
+    super.drawDebug();
+
     PGraphics pg = Node.getPGraphics();
     pg.textSize(12);
     pg.textAlign(PApplet.LEFT);
