@@ -97,6 +97,7 @@ public class DraggableTest {
     TouchManager tm = new TouchManager(scene);
     // enable draggable on node
     Draggable d = Draggable.enableFor(n);
+    d.disableSmoothing(); // smoothing causes less easy to predict/pre-calculate values
 
     assertEquals(d.getOffset(), new PVector(0.0f, 0.0f, 0.0f));
     tm.touchDown(0, new PVector(20,20,0));

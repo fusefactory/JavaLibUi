@@ -22,21 +22,21 @@ public class Constrain extends TransformerExtension {
     super.setMaxTransformationTime(10.0f); /// by default Constrain extension is very persistant
   }
 
-  /*@Override public void enable(){
+  @Override public void enable(){
     super.enable();
-    node.positionChangeEvent.whenTriggered(() -> { this.onNodeChange(); }, this);
-    node.sizeChangeEvent.whenTriggered(() -> { this.onNodeChange(); }, this);
-    node.touchMoveEvent.whenTriggered(()->{ this.onNodeChange(); }, this);
-    node.touchUpEvent.whenTriggered(()->{ this.onNodeChange(); }, this);
+    node.positionChangeEvent.whenTriggered(() -> { this.applyConstrains(); }, this);
+    node.sizeChangeEvent.whenTriggered(() -> { this.applyConstrains(); }, this);
+    //node.touchMoveEvent.whenTriggered(()->{ this.onNodeChange(); }, this);
+    //node.touchUpEvent.whenTriggered(()->{ this.onNodeChange(); }, this);
   }
 
   @Override public void disable(){
     super.disable();
     node.positionChangeEvent.stopWhenTriggeredCallbacks(this);
     node.sizeChangeEvent.stopWhenTriggeredCallbacks(this);
-    node.touchMoveEvent.stopWhenTriggeredCallbacks(this);
-    node.touchUpEvent.stopWhenTriggeredCallbacks(this);
-  }*/
+    //node.touchMoveEvent.stopWhenTriggeredCallbacks(this);
+    //node.touchUpEvent.stopWhenTriggeredCallbacks(this);
+  }
 
   @Override public void update(float dt){
     applyConstrains();
@@ -135,6 +135,8 @@ public class Constrain extends TransformerExtension {
       // logger.info("constrain transforming to: "+pos.toString());
       super.transformPosition(vec);
     }
+
+    // TODO: rotation constrains
   }
 
   public void setFixX(){ setFixX(true); }

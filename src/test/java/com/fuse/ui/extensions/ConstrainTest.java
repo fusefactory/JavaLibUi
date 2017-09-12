@@ -13,7 +13,7 @@ import com.fuse.ui.Node;
 import com.fuse.ui.TouchManager;
 
 public class ConstrainTest {
-  @Test public void allAxisByDefault(){
+  @Test public void allAxisFixed(){
     // create node
     Node n = new Node();
     // move and verify moved
@@ -24,6 +24,11 @@ public class ConstrainTest {
     assertEquals(n.getPosition(), new PVector(20,20,0));
     // apply constrain (all axis by default) and verify it won't move anymore
     Constrain c = Constrain.enableFor(n, true);
+    c.disableSmoothing();
+    c.setFixX();
+    c.setFixY();
+    c.setFixZ();
+
     n.setPosition(30, 30);
     assertEquals(n.getPosition(), new PVector(20,20,0));
     // disable constrain and verify moving works again
@@ -43,6 +48,7 @@ public class ConstrainTest {
     assertEquals(n.getPosition(), new PVector(20,20,0));
     // apply constrain (no axis by default) and verify it won't move anymore
     Constrain c = Constrain.enableFor(n);
+    c.disableSmoothing();
     n.setPosition(30, 30);
     assertEquals(n.getPosition(), new PVector(30,30,0));
 
@@ -66,6 +72,7 @@ public class ConstrainTest {
     // create node and constrain extension
     Node n = new Node();
     Constrain c = Constrain.enableFor(n, false);
+    c.disableSmoothing();
     // move and verify moved
     n.setPosition(10f, 10f);
     assertEquals(n.getPosition(), new PVector(10,10,0));
@@ -81,17 +88,6 @@ public class ConstrainTest {
     assertEquals(n.getPosition(), new PVector(-1000,-2000,0));
   }
 
-  @Test public void setPercentageX(){
-    Node n = new Node();
-    Constrain c = Constrain.enableFor(n, false);
-    c.setMinX(20f);
-    c.setMaxX(400f);
-    c.setPercentageX(0.0f);
-    assertEquals(n.getPosition(), new PVector(20,0,0));
-    c.setPercentageX(0.9f); // 90%
-    assertEquals(n.getPosition(), new PVector(362,0,0));
-  }
-
   @Test public void setFillParent(){
     Node parent = new Node();
     parent.setSize(100, 100);
@@ -101,7 +97,9 @@ public class ConstrainTest {
     parent.addChild(child);
 
     Constrain c = Constrain.enableFor(child);
+    c.disableSmoothing();
     c.setFillParent(true);
+
 
     // test horizontal restriction
     child.setX(10);
