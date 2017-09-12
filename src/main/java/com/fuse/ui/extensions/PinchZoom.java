@@ -9,17 +9,14 @@ import com.fuse.utils.Event;
 import com.fuse.ui.Node;
 import com.fuse.ui.TouchEvent;
 
-public class PinchZoom extends ExtensionBase {
-
+public class PinchZoom extends TransformerExtension {
   // attributes
   private PinchMath math = null;
   private PVector originalScale, originalPosition;
-  private PVector targetScale, targetPosition;
   // configurables
   private boolean bRestore = false;
-  private boolean bSmoothRestore = true;
-  private float smoothing = 4.0f;
 
+  // events
   public Event<Node> startPinchEvent, endPinchEvent;
 
   public PinchZoom(){
@@ -34,76 +31,12 @@ public class PinchZoom extends ExtensionBase {
     endPinchEvent.destroy();
   }
 
-  @Override
-  public void update(float dt){
-    if(targetScale != null){
-      PVector scale = targetScale.get();
-      // delta
-      scale.sub(this.node.getScale());
-      // smoothed delta
-      scale.mult(1.0f / this.smoothing);
-      // applied delta
-      scale.add(this.node.getScale());
-      // apply
-      this.node.setScale(scale);
-    }
+  @Override public void update(float dt){
+      if(isPinching()){
+        this.updatePinching();
+      }
 
-    if(targetPosition != null){
-      PVector pos = targetPosition.get();
-      // delta
-      pos.sub(this.node.getPosition());
-      // smoothed delta
-      pos.mult(1.0f / this.smoothing);
-      // applied delta
-      pos.add(this.node.getPosition());
-      // apply
-      this.node.setPosition(pos);
-    }
-  }
-
-  private void start(TouchEvent[] events){
-    this.math = new PinchMath(events);
-    // don't grab new values if already initialized. this avoids getting unwanted
-    // original values, for example when user starts pinching again while still restoring
-    if(this.originalScale == null)
-      this.originalScale = this.node.getScale();
-    if(this.originalPosition == null)
-      this.originalPosition = this.node.getPosition();
-    this.startPinchEvent.trigger(this.node);
-  }
-
-  private void stop(){
-    this.endPinchEvent.trigger(this.node);
-
-    if(this.bRestore)
-      this.restore(this.bSmoothRestore);
-
-    if(!bSmoothRestore){
-      this.targetPosition = null;
-      this.targetScale = null;
-    }
-
-    this.math = null;
-  }
-
-  public void restore(boolean smooth){
-    if(this.originalScale != null){
-      if(smooth)
-        this.targetScale = this.originalScale;
-      else
-        this.node.setScale(this.originalScale);
-    }
-
-    if(this.originalPosition != null){
-      if(smooth)
-        this.targetPosition = this.originalPosition;
-      else
-        this.node.setPosition(this.originalPosition);
-    }
-  }
-
-  public boolean isActive(){
-    return this.math != null;
+      super.update(dt);
   }
 
   @Override public void enable(){
@@ -111,54 +44,91 @@ public class PinchZoom extends ExtensionBase {
     super.enable();
 
     this.node.touchDownEvent.addListener((TouchEvent event) -> {
-      if(this.math == null){
+      if(!this.isPinching()){
         TouchEvent[] events = this.getPinchZoomTouchEvents();
 
         if(events != null)
-          this.start(events);
+          this.startPinching(events); // creates a this.math object, with the given events, making this.isPinching() == true
 
         return;
       }
     });
 
     this.node.touchUpEvent.addListener((TouchEvent event) -> {
-      if(this.math != null && this.getPinchZoomTouchEvents() == null){
-        this.stop();
+      if(this.isPinching()){
+        TouchEvent[] events = this.math.getEvents();
+        // one of ours pinch events?
+        if(events[0] == event || events[1] == event)
+          stopPinching(); // remove this.math, making this.isPinching() == true
       }
     });
-
-    this.node.touchMoveEvent.addListener((TouchEvent event) -> {
-      if(this.math != null && this.originalScale != null){
-        this.math.resetActiveCaches();
-        this.touchUpdate();
-      }
-    }, this);
   }
 
   @Override public void disable(){
     super.disable();
     if(this.node == null) return;
-    this.node.touchMoveEvent.removeListeners(this);
+    this.node.touchDownEvent.removeListeners(this);
+    this.node.touchUpEvent.removeListeners(this);
   }
 
-  private void touchUpdate(){
+  private void startPinching(TouchEvent[] events){
+    this.math = new PinchMath(events);
+    this.originalScale = this.node.getScale();
+    this.originalPosition = this.node.getPosition();
+    this.startPinchEvent.trigger(this.node);
+  }
+
+  private void stopPinching(){
+    this.endPinchEvent.trigger(this.node);
+
+    if(this.bRestore){
+      this.restore();
+    } else {
+      super.stopActiveTransformations();
+    }
+
+    this.math = null;
+  }
+
+  private void updatePinching(){
+    this.math.update();
+
+    // SCALING
     PVector scale = this.originalScale.get();
     float pinchScale = this.math.getPinchScale();
     scale.mult(pinchScale);
-    //this.node.setScale(scale);
-    this.targetScale = scale;
 
+    // TRANSLATE
     // current "dragged" position of the pinch-center
     PVector p = math.getParentSpaceCurrentPinchCenter();
     // offset of pinch-center to origin of pinched-node
     PVector offset = math.getLocalStartPinchCenter();
-    // scale offset
-    p.x = p.x - offset.x * pinchScale;
-    p.y = p.y - offset.y * pinchScale;
-    // update position
-    // this.node.setPosition(p);
-    this.targetPosition = p;
+    // scale offset; have to multiply by pinchScale, because
+    // the pinchscale is not yet applied to the node (because of smoothing)
+    //offset.mult(pinchScale); // update offset for new pinchScale
+    //p.sub(offset); // pinch-center-to-scaled-node-origin
+    p.x = p.x - offset.x * scale.x;
+    p.y = p.y - offset.y * scale.y;
+
+    super.transformScale(scale);
+    super.transformPosition(p);
   }
+
+  public void restore(){
+    if(this.originalScale != null){
+      super.transformScale(this.originalScale);
+    }
+
+    if(this.originalPosition != null){
+      super.transformPosition(this.originalPosition);
+    }
+  }
+
+  public boolean isPinching(){
+    return this.math != null;
+  }
+
+  // state reader methods // // // // //
 
   /** returns null when not actively pinch-zooming, otherwise returns an array of exactly two touch-events */
   private TouchEvent[] getPinchZoomTouchEvents(){
@@ -178,6 +148,17 @@ public class PinchZoom extends ExtensionBase {
     return events;
   }
 
+  // configure methods // // // // //
+
+  public boolean getRestore(){
+    return bRestore;
+  }
+
+  public void setRestore(boolean enableRestore){
+    bRestore = enableRestore;
+  }
+
+  // static factory methods // // // // //
 
   public static PinchZoom enableFor(Node n){
     PinchZoom d = getFor(n);
@@ -204,25 +185,12 @@ public class PinchZoom extends ExtensionBase {
     return null;
   }
 
-  public boolean getRestore(){
-    return bRestore;
-  }
-
-  public void setRestore(boolean enableRestore){
-    bRestore = enableRestore;
-  }
-
-  public float getSmoothing(){
-    return smoothing;
-  }
-
-  public void setSmoothing(float smoothing){
-    this.smoothing = smoothing;
-  }
-
   @Override
   public void drawDebug(){
-    if(this.math == null) return;
+	super.drawDebug();
+
+    PinchMath math = this.math; // copy reference to local scope; had some issues of "this.math" becoming null DURING this draw method
+    if(math == null) return;
 
     PGraphics pg = Node.getPGraphics();
     pg.colorMode(pg.RGB, 255);
@@ -230,9 +198,9 @@ public class PinchZoom extends ExtensionBase {
     pg.noStroke();
     pg.ellipseMode(pg.CENTER);
 
-    PVector localPos = node.toLocal(this.math.getEvents()[0].position);
+    PVector localPos = node.toLocal(math.getEvents()[0].position);
     pg.ellipse(localPos.x, localPos.y, 30, 30);
-    localPos = node.toLocal(this.math.getEvents()[1].position);
+    localPos = node.toLocal(math.getEvents()[1].position);
     pg.ellipse(localPos.x, localPos.y, 30, 30);
 
 
@@ -268,7 +236,8 @@ class PinchMath {
     return events;
   }
 
-  public void resetActiveCaches(){
+  /** Really only resets some cache variable, but should still be called every update ;) */
+  public void update(){
     getGlobalCurrentPinchCenterCache = null;
     getGlobalCurrentDeltaCache = null;
   }
@@ -316,11 +285,12 @@ class PinchMath {
   private Float getGlobalStartDeltaCache = null;
 
   public float getGlobalCurrentDelta(){
-    if(getGlobalCurrentDeltaCache == null){
-      getGlobalCurrentDeltaCache = events[0].position.dist(events[1].position);
-    }
+    if(getGlobalCurrentDeltaCache != null)
+      return getGlobalCurrentDeltaCache;
 
-    return getGlobalCurrentDeltaCache;
+    float result = events[0].position.dist(events[1].position);
+    getGlobalCurrentDeltaCache = result;
+    return result;
   }
 
   private Float getGlobalCurrentDeltaCache = null;

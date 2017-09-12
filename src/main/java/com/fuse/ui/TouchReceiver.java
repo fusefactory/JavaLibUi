@@ -8,7 +8,7 @@ import com.fuse.utils.Event;
 /** Base class for both Node and TouchManager; it provides touch events and method for receiving them */
 public class TouchReceiver {
 
-  private final static long IDLE_DURATION = 500l; // seconds after which an event if considered IDLE_DURATION
+  protected final static long IDLE_DURATION = 500l; // seconds after which an event if considered IDLE_DURATION
 
   public Event<TouchEvent>
     touchEvent,
@@ -66,14 +66,20 @@ public class TouchReceiver {
         }
 
         case TOUCH_ENTER: {
-          addActiveTouchEvent(event);
+          if(this != event.node) { // for original touch target enter/exit doesn't affect the touch activeness
+            addActiveTouchEvent(event);
+          }
+          
           touchEnterEvent.trigger(event);
           break;
         }
 
         case TOUCH_EXIT: {
+          if(this != event.node) { // for original touch target enter/exit doesn't affect the touch activeness
+        	  removeActiveTouchEvent(event);
+          }
+
           touchExitEvent.trigger(event);
-          removeActiveTouchEvent(event);
           break;
         }
 
@@ -96,7 +102,7 @@ public class TouchReceiver {
     touchClickEvent.addListener( (TouchEvent evt) -> func.run() );
   }
 
-  private void addActiveTouchEvent(TouchEvent evt){
+  public void addActiveTouchEvent(TouchEvent evt){
     // lazy initialize; a lot of Nodes will never receive events and thus don't need this
     if(activeTouchEvents == null)
       activeTouchEvents = new ArrayList<>();
@@ -110,27 +116,27 @@ public class TouchReceiver {
       activeTouchEvents.add(evt);
     }
 
-    if(evt.time != null)
-      removeActiveTouchEventsBefore(evt.time - IDLE_DURATION);
+    //if(evt.time != null)
+    //  removeActiveTouchEventsBefore(evt.time - IDLE_DURATION);
   }
 
-  private void removeActiveTouchEvent(TouchEvent evt){
+  public void removeActiveTouchEvent(TouchEvent evt){
     if(activeTouchEvents == null)
       return;
 
     activeTouchEvents.remove(evt);
 
-    if(evt.time != null)
-      removeActiveTouchEventsBefore(evt.time - IDLE_DURATION);
+    //if(evt.time != null)
+    //  removeActiveTouchEventsBefore(evt.time - IDLE_DURATION);
   }
 
-  private void removeActiveTouchEventsBefore(long time){
+  /*private void removeActiveTouchEventsBefore(long time){
     for(int i=activeTouchEvents.size()-1; i>=0; i--){
       Long eventTime = activeTouchEvents.get(i).time;
       if(eventTime != null && eventTime < time)
         activeTouchEvents.remove(i);
     }
-  }
+  }*/
 
   public List<TouchEvent> getActiveTouchEvents(){
     List<TouchEvent> result = new ArrayList<>();
@@ -138,5 +144,9 @@ public class TouchReceiver {
       result.addAll(activeTouchEvents); // TODO; make copies of Event instances to not allow modification?
 
     return result;
+  }
+
+  public boolean isTouched(){
+    return !(activeTouchEvents == null || activeTouchEvents.isEmpty());
   }
 }

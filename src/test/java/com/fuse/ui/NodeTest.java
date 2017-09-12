@@ -531,7 +531,7 @@ public class NodeTest {
         assertEquals(child.toLocal(new PVector(100.0f, 100.0f, 0.0f)), new PVector(95.0f, 80.0f, 0.0f));
 
         n.setPosition(10, 10);
-        assertEquals(n.toGlobal(new PVector(0f, 0f, 0f)), new PVector(5,20,0));
+        assertEquals(n.toGlobal(new PVector(0f, 0f, 0f)), new PVector(10,10,0));
     }
 
     @Test public void enable(){
@@ -647,8 +647,7 @@ public class NodeTest {
         draggable.startEvent.addListener((Draggable d) -> {});
         assertEquals(draggable.startEvent.size(), 1);
         Constrain constrain = Constrain.enableFor(n, true);
-        constrain.xPercentageEvent.addListener((Float f) -> {});
-        assertEquals(constrain.xPercentageEvent.size(), 1);
+
         SmoothScroll smoothScroll = SmoothScroll.enableFor(n, child);
         Swiper swiper = Swiper.enableFor(n);
         swiper.swipeEvent.addListener((Swiper s) -> {});
@@ -675,6 +674,16 @@ public class NodeTest {
         assertEquals(n.getExtensions().size(), 0);
         assertEquals(draggable.startEvent.size(), 0);
         assertEquals(swiper.swipeEvent.size(), 0);
-        assertEquals(constrain.xPercentageEvent.size(), 0);
+    }
+
+    @Test public void translateAfterRotateAndScale(){
+      Node n = new Node();
+      assertEquals(n.getPosition(), new PVector(0,0,0));
+      n.setScale(2.0f); // x- and y-axis by default
+      n.setRotation(new PVector(0,0, (float)Math.PI)); // 180 degrees
+      n.setPosition(100,100);
+      assertEquals(n.toGlobal(new PVector(0,0,0)), new PVector(100, 100, 0));
+      assertEquals(n.toGlobal(new PVector(50,50,0)).x, 0.0f, 0.00001f);
+      assertEquals(n.toGlobal(new PVector(50,50,0)).y, 0.0f, 0.00001f);
     }
 }

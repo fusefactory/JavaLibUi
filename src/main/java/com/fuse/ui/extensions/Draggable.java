@@ -1,23 +1,30 @@
 package com.fuse.ui.extensions;
 
 import processing.core.PVector;
+import processing.core.PGraphics;
+import processing.core.PApplet;
 
 import com.fuse.utils.Event;
 import com.fuse.ui.Node;
 import com.fuse.ui.TouchEvent;
 
-public class Draggable extends ExtensionBase {
+public class Draggable extends TransformerExtension {
   private PVector originalNodePosition = null;
   private PVector originalNodePositionGlobal = null;
   private boolean bDragging = false;
   private TouchEvent dragEvent = null;
+  // configurables
+  private boolean bRestore = false;
 
+  // events
   public Event<Draggable> startEvent;
   public Event<Draggable> endEvent;
 
   public Draggable(){
+    super();
     startEvent = new Event<>();
     endEvent = new Event<>();
+    this.setSmoothValue(4.0f); // default
   }
 
   @Override public void destroy(){
@@ -29,37 +36,22 @@ public class Draggable extends ExtensionBase {
   @Override public void enable(){
     super.enable();
 
-    node.touchMoveEvent.addListener((TouchEvent event) -> {
-      if(originalNodePosition == null || !bDragging){
-        dragEvent = event;
+    node.touchDownEvent.addListener((TouchEvent event) -> {
+      if(bDragging)
+        return;
 
-        Node ourNode = this.getNode();
+      Node ourNode = this.getNode();
 
-        if(event.node != ourNode)
-          return; // touch didn't start on our node
+      if(event.node != ourNode)
+        return; // touch didn't start on our node
 
-        originalNodePosition = ourNode.getPosition();
-        originalNodePositionGlobal = ourNode.getGlobalPosition();
-
-        bDragging = true;
-
-        // TODO; min offset before officialy start dragging?
-        startEvent.trigger(this);
-      }
-
-      if(event == dragEvent && this.getNode().getActiveTouchEvents().size() == 1)
-        apply(event.offset());
+      start(event);
     }, this);
 
     node.touchUpEvent.addListener((TouchEvent event) -> {
-      if(!bDragging || event != dragEvent)
-        return;
-
-      apply(event.offset());
-
-      bDragging = false;
-      endEvent.trigger(this);
-      // originalNodePosition = null;
+      if(bDragging && dragEvent == event){
+    	  stop();
+      }
     }, this);
   }
 
@@ -67,19 +59,93 @@ public class Draggable extends ExtensionBase {
     super.disable();
 
     if(node != null){
-      node.touchMoveEvent.removeListeners(this);
+      node.touchDownEvent.removeListeners(this);
       node.touchUpEvent.removeListeners(this);
+    }
+
+    if(bDragging){
+      bDragging = false;
+      dragEvent = null;
+      endEvent.trigger(this);
     }
   }
 
-  public void apply(PVector dragOffset){
-    if(originalNodePositionGlobal == null) // should already be set at first processed touchMoveEvent, but just to be sure
-      originalNodePositionGlobal = this.getNode().getGlobalPosition();
+  @Override public void update(float dt){
+    if(bDragging && this.dragEvent != null){
+      if(this.node.getActiveTouchEvents().size() == 1){
+        apply(this.dragEvent.offset());
+      }
 
-    PVector globPos = dragOffset.get();
-    globPos.add(originalNodePositionGlobal);
-    this.getNode().setGlobalPosition(globPos);
+      if(this.dragEvent.isFinished()){
+    	  stop();
+      }
+    }
+
+    super.update(dt);
   }
+
+  private void start(TouchEvent event){
+	  if(event == null) return;
+      originalNodePosition = this.node.getPosition();
+      originalNodePositionGlobal = this.node.getGlobalPosition();
+      dragEvent = event;
+      bDragging = true;
+      //logger.info("START DRAGGING");
+      startEvent.trigger(this);
+  }
+
+  private void stop(){
+	  if(bDragging || dragEvent != null) {
+		  bDragging = false;
+		  dragEvent = null;
+      super.stopActiveTransformations();
+		  endEvent.trigger(this);
+	  }
+  }
+
+  @Override public void drawDebug(){
+    super.drawDebug();
+
+    PGraphics pg = Node.getPGraphics();
+    pg.textSize(12);
+    pg.textAlign(PApplet.LEFT);
+    pg.ellipseMode(pg.CENTER);
+    pg.noStroke();
+    pg.colorMode(pg.RGB, 255);
+    pg.fill(pg.color(0,0,255));
+
+    if(originalNodePosition != null && originalNodePositionGlobal != null){
+      pg.text("Original pos (local/global): "+originalNodePosition.toString()+"/"+originalNodePositionGlobal.toString(),
+        0, 20);
+    }
+
+    if(originalNodePositionGlobal != null){
+      pg.fill(pg.color(0,0,255));
+      PVector pos = this.node.toLocal(originalNodePositionGlobal);
+      pg.ellipse(pos.x, pos.y, 20, 20);
+    }
+
+    if(this.dragEvent != null){
+      pg.fill(pg.color(255,0,0, 200));
+      PVector pos = this.node.toLocal(dragEvent.startPosition);
+      pg.ellipse(pos.x, pos.y, 20, 20);
+
+      pg.fill(pg.color(0,255,0, 200));
+      pos = this.node.toLocal(dragEvent.position);
+      pg.ellipse(pos.x, pos.y, 25, 25);
+    }
+  }
+
+  public void apply(PVector globalDragOffset){
+    if(originalNodePositionGlobal == null) // should  be set at first touch
+    	return;
+
+    PVector globPos = globalDragOffset.get();
+    globPos.add(originalNodePositionGlobal);
+    super.transformPositionGlobal(globPos);
+  }
+
+  // state-reader methods // // // // //
 
   public PVector getOffset(){
     if(originalNodePosition == null || node == null)
@@ -98,6 +164,18 @@ public class Draggable extends ExtensionBase {
     return bDragging;
   }
 
+  // configuration methods // // // // //
+
+  public boolean getRestore(){
+    return bRestore;
+  }
+
+  public void setRestore(boolean enableRestore){
+    bRestore = enableRestore;
+  }
+
+  // static factory methods // // // // //
+
   public static Draggable enableFor(Node n){
     for(ExtensionBase ext : n.getExtensions())
       if(Draggable.class.isInstance(ext))
@@ -113,6 +191,4 @@ public class Draggable extends ExtensionBase {
         n.stopUsing(n.getExtensions().get(i));
       }
   }
-
-
 }

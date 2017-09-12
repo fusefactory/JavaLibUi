@@ -15,6 +15,7 @@ public class TouchGenerator {
   private boolean bUpTouch = true;
   private int touchId = 0;
   private Float duration = null;
+  private Float dtAfterEveryTouch = null;
 
 
   public static TouchGenerator on(Node rootNode){
@@ -72,6 +73,15 @@ public class TouchGenerator {
     return this;
   }
 
+  public TouchGenerator updateSceneAfterEveryTouch(){
+    return this.updateSceneAfterEveryTouch(1.0f/30.0f);
+  }
+
+  public TouchGenerator updateSceneAfterEveryTouch(Float dt){
+    dtAfterEveryTouch = dt;
+    return this;
+  }
+
   /** Gets ordered list of events and executes them all */
   public void go(){
     TouchManager touchManager = new TouchManager();
@@ -89,6 +99,8 @@ public class TouchGenerator {
       touchManager.submitTouchEvent(te);
       if(deltaTime != null)
         touchManager.update(deltaTime);
+      if(dtAfterEveryTouch != null)
+        touchManager.getNode().updateSubtree(dtAfterEveryTouch);
     }
   }
 

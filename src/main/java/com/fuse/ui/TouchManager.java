@@ -58,6 +58,8 @@ public class TouchManager extends TouchReceiver {
         touchEventQueue.remove(e);
       }
     }
+
+    //finalizeIdleTouchEvents();
   }
 
   public void update(float dt){
@@ -106,6 +108,11 @@ public class TouchManager extends TouchReceiver {
   }
 
   private TouchEvent updateExistingEvent(TouchEvent existing, TouchEvent event){
+    /*if(existing.position == null && event.position != null
+    || (existing.position != null && event.position != null && !existing.position.equals(event.position))){
+      existing.lastChangeTime = event.time;
+    }*/
+
     // if(existing.touchId != event.touchId) logger.warning("updating existing event with different touchId");
     if(event.velocity == null){
       // calculate velocity
@@ -143,7 +150,7 @@ public class TouchManager extends TouchReceiver {
     switch(event.eventType){
       case TOUCH_DOWN:
         // init time
-        if(event.startTime == null)
+        //if(event.startTime == null)
           event.startTime = event.time;
         // init velocity
         if(event.velocity == null)
@@ -178,22 +185,28 @@ public class TouchManager extends TouchReceiver {
             event.mostRecentNode = n;
 
             // prepare touch exit event
-            TouchEvent tmpEvent = event.copy();
-            tmpEvent.eventType = TouchEvent.EventType.TOUCH_EXIT;
+            //TouchEvent tmpEvent = event.copy();
+            //tmpEvent.eventType = TouchEvent.EventType.TOUCH_EXIT;
+            event.eventType = TouchEvent.EventType.TOUCH_EXIT;
 
             // trigger touch exit events
-            this.receiveTouchEvent(tmpEvent);
+            this.receiveTouchEvent(event);
             if(prev != null)
-              prev.receiveTouchEvent(tmpEvent);
+              prev.receiveTouchEvent(event);
 
             // prepare touch enter event
-            tmpEvent = event.copy();
-            tmpEvent.eventType = TouchEvent.EventType.TOUCH_ENTER;
+            //tmpEvent = event.copy();
+            //tmpEvent.eventType = TouchEvent.EventType.TOUCH_ENTER;
+            event.eventType = TouchEvent.EventType.TOUCH_ENTER;
 
             // trigger touch enter events
-            this.receiveTouchEvent(tmpEvent);
-            if(n != null)
-              n.receiveTouchEvent(tmpEvent);
+            this.receiveTouchEvent(event);
+            if(n != null){
+              n.receiveTouchEvent(event);
+            }
+
+            // restore TOUCH_MOVE type for further processing
+            event.eventType = TouchEvent.EventType.TOUCH_MOVE;
           }
         }
 
@@ -213,28 +226,64 @@ public class TouchManager extends TouchReceiver {
 
         { // Check if the touch moved to another element
           Node n = getNodeForTouchPosition(event.position);
+          Node prev = event.mostRecentNode == null ? event.node : event.mostRecentNode;
 
-          if(n != event.node)
+          // changed to other node since previous event?
+          if(n != prev){
+            // update event
             event.mostRecentNode = n;
+
+            // prepare touch exit event
+            //TouchEvent tmpEvent = event.copy();
+            //tmpEvent.eventType = TouchEvent.EventType.TOUCH_EXIT;
+            event.eventType = TouchEvent.EventType.TOUCH_EXIT;
+
+            // trigger touch exit events
+            this.receiveTouchEvent(event);
+            if(prev != null)
+              prev.receiveTouchEvent(event);
+
+            // prepare touch enter event
+            //tmpEvent = event.copy();
+            //tmpEvent.eventType = TouchEvent.EventType.TOUCH_ENTER;
+            event.eventType = TouchEvent.EventType.TOUCH_ENTER;
+
+            // trigger touch enter events
+            this.receiveTouchEvent(event);
+            if(n != null){
+              n.receiveTouchEvent(event);
+            }
+
+            // restore TOUCH_MOVE type for further processing
+            event.eventType = TouchEvent.EventType.TOUCH_UP;
+          }
         }
 
         { // check for click
           Long dur = event.getDuration();
 
           if(dur != null && dur <= clickMaxInterval && event.distance() <= clickMaxDistance){
-            TouchEvent tmpEvent = event.copy();
-            tmpEvent.eventType = TouchEvent.EventType.TOUCH_CLICK;
+            //TouchEvent tmpEvent = event.copy();
+            //tmpEvent.eventType = TouchEvent.EventType.TOUCH_CLICK;
+            event.eventType = TouchEvent.EventType.TOUCH_CLICK;
 
             // logger.warning("CLICK: dist=" + Float.toString(PVector.dist(tlog.touchEvent.position, event.position)));
             // logger.warning("pos1=" + tlog.touchEvent.position.toString());
             // logger.warning("pos2=" + event.position.toString());
 
             // trigger touch click events
-            this.receiveTouchEvent(tmpEvent);
+            this.receiveTouchEvent(event);
+
             if(event.node != null){
-              logger.finest("TouchManager triggering TOUCH_CLICK event on Node: "+event.node.getName());
-              event.node.receiveTouchEvent(tmpEvent);
+              // logger.finest("TouchManager triggering TOUCH_CLICK event on Node: "+event.node.getName());
+              event.node.receiveTouchEvent(event);
             }
+
+            if(event.mostRecentNode != null && event.mostRecentNode != event.node){
+              event.mostRecentNode.receiveTouchEvent(event);
+            }
+
+            event.eventType = TouchEvent.EventType.TOUCH_UP; // restore
           }
         }
 
@@ -258,6 +307,10 @@ public class TouchManager extends TouchReceiver {
 
     // trigger appropriate events on this
     this.receiveTouchEvent(event);
+  }
+
+  public Node getNode(){
+    return this.node;
   }
 
   public void setNode(Node newNode){
@@ -363,4 +416,36 @@ public class TouchManager extends TouchReceiver {
       return this.time;
     return System.currentTimeMillis();
   }
+
+  // TouchManager doesn't keep active touch events (like this)
+  @Override public void addActiveTouchEvent(TouchEvent evt){}
+
+  /*private void finalizeIdleTouchEvents(){
+    List<TouchEvent> events = super.getActiveTouchEvents();
+    long limit = this.getTime() - super.IDLE_DURATION;
+
+    for(int i=events.size()-1; i>=0; i--){
+      TouchEvent event = activeTouchEvents.get(i);
+      if(event == null)
+        continue;
+
+      if((event.time != null && event.time < limit)
+      || (event.lastChangeTime == null && event.getDuration() > super.IDLE_DURATION)
+      || (event.lastChangeTime != null && event.lastChangeTime < limit)){
+        logger.info("TouchManager removing event");
+        if(event.node != null){
+            logger.info("ON NODE");
+          event.node.removeActiveTouchEvent(event);
+        }
+
+        if(event.mostRecentNode != null && event.mostRecentNode != event.node){
+            logger.info("ON MOST RECENT");
+          event.mostRecentNode.removeActiveTouchEvent(event);
+        }
+
+        this.removeActiveTouchEvent(event);
+      }
+    }
+  }*/
+
 }
