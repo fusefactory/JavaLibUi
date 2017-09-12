@@ -183,19 +183,27 @@ public class DraggableTest {
   @Test public void rotatedParent(){
     Node scene = new Node();
     Node rotator = new Node();
-    rotator.rotate((float)Math.PI * 0.5f); // turned 90 degrees; our so when we move our subject node sideway, globally it's moving vertically
-    //rotator.setPosition(100, 0);
-    scene.addChild(rotator);
+      rotator.rotate((float)Math.PI); // turned 180 degrees;
+      rotator.setPosition(100,100);
+      //rotator.setPosition(100, 0);
+      scene.addChild(rotator);
     Node subject = new Node();
-    subject.setSize(100, 100); // default position: 0,0
-    rotator.addChild(subject);
+      subject.setSize(100, 100); // default position: 0,0
+      rotator.addChild(subject);
+
 
     Draggable.enableFor(subject).disableSmoothing();
-    // drag from global position -5,5  200 pixels DOWN (start at -5 because the rotator rotated around 0,0, putting it outside the scree :/)
-    // with 5 -eqaully spaced- touchMove events in between touchDown and touchUp
-    TouchGenerator.on(scene).from(-5, 5).move(0, 200).moves(5).updateSceneAfterEveryTouch(0.0f).go();
+
+    assertEquals(subject.getPosition(), new PVector(0, 0, 0));
+    // drag from global position 10,10 and move 100 pixels to the right and 20 pixels down
+    // in 5 -eqaully spaced- touchMove events after the touchDown (we're not sending a touch up)
+    TouchGenerator.on(scene)
+      .from(10, 10).move(100, 20)
+      .moves(5).updateSceneAfterEveryTouch(0.0f).noUp()
+      .go();
 
     // in local coordinates the node got dragged 200 pixel RIGHT
-    assertEquals(subject.getPosition(), new PVector(200, 0, 0));
+    assertEquals(subject.getPosition().x, -100.0f, 0.0001f);
+    assertEquals(subject.getPosition().y, -20.0f, 0.0001f);
   }
 }
