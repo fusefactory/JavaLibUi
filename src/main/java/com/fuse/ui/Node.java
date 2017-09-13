@@ -174,8 +174,9 @@ public class Node extends TouchReceiver {
   }
 
   /// set interactive state (if it responds to touch events)
-  public void setInteractive(boolean newValue){
+  public Node setInteractive(boolean newValue){
     bInteractive = newValue;
+    return this;
   }
 
   /// returns this node's plane value
@@ -183,13 +184,18 @@ public class Node extends TouchReceiver {
     return plane;
   }
 
-  public void setPlane(float newPlane){
+  public Node setPlane(float newPlane){
     plane = newPlane;
+    return this;
   }
 
-  public String getName(){ return new String(name); }
-  public void setName(String newName){
+  public String getName(){
+    return new String(name);
+  }
+
+  public Node setName(String newName){
     name = newName;
+    return this;
   }
 
   public PVector getPosition(){
@@ -209,33 +215,36 @@ public class Node extends TouchReceiver {
     return toGlobal(size);
   }
 
-  public void setX(float newX){
-    setPosition(newX, position.y, position.z);
+  public Node setX(float newX){
+    return setPosition(newX, position.y, position.z);
   }
 
-  public void setY(float newY){
-    setPosition(position.x, newY, position.z);
+  public Node setY(float newY){
+    return setPosition(position.x, newY, position.z);
   }
 
-  public void setZ(float newZ){
-    setPosition(position.x, position.y, newZ);
+  public Node setZ(float newZ){
+    return setPosition(position.x, position.y, newZ);
   }
 
-  public void setPosition(PVector newPos){
-    setPosition(newPos.x, newPos.y, newPos.z);
+  public Node setPosition(PVector newPos){
+    return setPosition(newPos.x, newPos.y, newPos.z);
   }
 
-  public void setPosition(float x, float y){
-    this.setPosition(x,y,0f);
+  public Node setPosition(float x, float y){
+    return this.setPosition(x,y,0f);
   }
 
-  public void setPosition(float x, float y, float z){
+  public Node setPosition(float x, float y, float z){
     boolean change = position.x != x || position.y != y || position.z != z;
+
     if(change){
       position.set(x,y,z);
       updateLocalTransformMatrix();
       positionChangeEvent.trigger(this);
     }
+
+    return this;
   }
 
   public PVector getSize(){
@@ -250,34 +259,37 @@ public class Node extends TouchReceiver {
     return result;
   }
 
-  public void setWidth(float newWidth){
-    size.x = newWidth;
+  public Node setWidth(float newWidth){
+    return this.setSize(newWidth, size.y);
   }
 
-  public void setHeight(float newHeight){
-    size.y = newHeight;
+  public Node setHeight(float newHeight){
+    return this.setSize(size.x, newHeight);
   }
 
-  public void setSize(PVector newSize){
+  public Node setSize(PVector newSize){
     size = newSize.get();
     sizeChangeEvent.trigger(this);
+    return this;
   }
 
-  public void setSize(float newWidth, float newHeight){
+  public Node setSize(float newWidth, float newHeight){
     setSize(new PVector(newWidth, newHeight, 0.0f));
+    return this;
   }
 
   public PVector getScale(){
     return scale.get();
   }
 
-  public void setScale(float newScale){
-    setScale(new PVector(newScale, newScale, 1.0f));
+  public Node setScale(float newScale){
+    return setScale(new PVector(newScale, newScale, 1.0f));
   }
 
-  public void setScale(PVector newScale){
+  public Node setScale(PVector newScale){
     scale = newScale;
     updateLocalTransformMatrix();
+    return this;
   }
 
   private void updateLocalTransformMatrix(){
@@ -293,18 +305,20 @@ public class Node extends TouchReceiver {
     return this.rotation.get();
   }
 
-  public void setRotation(PVector newRot){
+  public Node setRotation(PVector newRot){
     this.rotation = newRot.get();
     updateLocalTransformMatrix();
+    return this;
   }
 
-  public void rotate(float amount){
-    this.rotateZ(amount);
+  public Node rotate(float amount){
+    return this.rotateZ(amount);
   }
 
-  public void rotateZ(float amount){
+  public Node rotateZ(float amount){
     this.rotation.z += amount;
     localTransformMatrix.rotateZ(amount);
+    return this;
   }
 
   public float getRight(){
@@ -323,15 +337,16 @@ public class Node extends TouchReceiver {
     return position.y + size.y * scale.y;
   }
 
-  public void setGlobalPosition(PVector globalPos){
+  public Node setGlobalPosition(PVector globalPos){
     Node parentNode = getParent();
 
     if(parentNode == null){
       setPosition(globalPos);
-      return;
+      return this;
     }
 
     setPosition(parentNode.toLocal(globalPos));
+    return this;
   }
 
   public boolean isInside(PVector pos){
@@ -734,13 +749,14 @@ public class Node extends TouchReceiver {
     return extensions;
   }
 
-  public void enable(boolean _enable){
+  public Node enable(boolean _enable){
     this.setVisible(_enable);
     this.setInteractive(_enable);
+    return this;
   }
 
-  public void enable(){ this.enable(true); }
-  public void disable(){ this.enable(false); }
+  public Node enable(){ return this.enable(true); }
+  public Node disable(){ return this.enable(false); }
 
   public void withChild(String name, Consumer<Node> func){
     withChild(name, -1, func);
