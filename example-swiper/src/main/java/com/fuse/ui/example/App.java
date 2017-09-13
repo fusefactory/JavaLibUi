@@ -113,9 +113,12 @@ public class App extends PApplet {
     // Create/enable swiper extensions
     this.swiper = Swiper.enableFor(touchAreaNode, scrollableNode)
       .setSnapEnabled(true)
-      .setSnapThrowFactor(5.0f)
+      .setSnapThrowFactor(7.0f)
       .setMinStep(0,0) // first page
-      .setMaxStep(9,0);
+      .setMaxStep(9,0); // last page
+    this.swiper.setSmoothValue(5.0f);
+    this.swiper.setMinPosY(0.0f); // fix vertical axis
+    this.swiper.setMaxPosY(0.0f);
 
     //
     this.pageLabelNode = new TextNode();

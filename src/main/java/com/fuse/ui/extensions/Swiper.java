@@ -235,17 +235,14 @@ public class Swiper extends TransformerExtension {
 
     if(localEvent.velocitySmoothed != null){
       this.smoothedVelocity = localEvent.velocitySmoothed; // use TouchEvent's velocity smoothing
-      //logger.info("Adopted smoothed velocity: "+smoothedVelocity.toString());
     } else {
       smoothedVelocity.lerp(localEvent.velocity, velocitySmoothCoeff); // apply our own smoothing
-      //logger.info("DIY smoothed velocity: "+smoothedVelocity.toString());
     }
 
-    PVector localPosBefore = scrollableNode.getPosition();
     PVector globPos = dragStartNodePositionGlobal.get();
     globPos.add(this.draggingTouchEvent.offset());
-    scrollableNode.setGlobalPosition(globPos);
-    scrollableNode.setY(localPosBefore.y); // Y-axis locked HACK
+    // use TransformationExtension's smoothing options
+    super.transformPositionGlobal(globPos);
   }
 
   public boolean isDragging(){

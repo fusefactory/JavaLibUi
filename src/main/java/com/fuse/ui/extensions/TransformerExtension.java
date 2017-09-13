@@ -24,6 +24,8 @@ public class TransformerExtension extends ExtensionBase {
   private float positionTimer;
   private float scaleTimer;
   // limits
+  private Float[] minPos = {null, null, null}; // x,y,z axis
+  private Float[] maxPos = {null, null, null}; // x,y,z axis
   private Float[] minScale = {null, null, null}; // x,y,z axis
   private Float[] maxScale = {null, null, null}; // x,y,z axis
   private boolean bFillParent = false; // only if bigger than parent
@@ -294,6 +296,14 @@ public class TransformerExtension extends ExtensionBase {
       }
     }
 
+    if(minPos[0] != null && minPos[0] > result.x) result.x = minPos[0];
+    if(minPos[1] != null && minPos[1] > result.y) result.y = minPos[1];
+    if(minPos[2] != null && minPos[2] > result.z) result.z = minPos[2];
+
+    if(maxPos[0] != null && maxPos[0] < result.x) result.x = maxPos[0];
+    if(maxPos[1] != null && maxPos[1] < result.y) result.y = maxPos[1];
+    if(maxPos[2] != null && maxPos[2] < result.z) result.z = maxPos[2];
+
     return result;
   }
 
@@ -366,6 +376,30 @@ public class TransformerExtension extends ExtensionBase {
 
   public Float getMaxTransformationTime(){
     return maxTransformationTime;
+  }
+
+  public void setMinPosX(Float value){
+    this.minPos[0] = value;
+  }
+
+  public void setMinPosY(Float value){
+    this.minPos[1] = value;
+  }
+
+  public void setMinPosZ(Float value){
+    this.minPos[2] = value;
+  }
+
+  public void setMaxPosX(Float value){
+    this.maxPos[0] = value;
+  }
+
+  public void setMaxPosY(Float value){
+    this.maxPos[1] = value;
+  }
+
+  public void setMaxPosZ(Float value){
+    this.maxPos[2] = value;
   }
 
   public void setMinScale(Float value){
