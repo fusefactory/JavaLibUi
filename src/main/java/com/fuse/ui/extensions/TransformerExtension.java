@@ -184,6 +184,16 @@ public class TransformerExtension extends ExtensionBase {
     return vec;
   }
 
+  public PVector getPositionTransformationDistance(){
+    if(this.targetPosition == null)
+      return new PVector(0,0,0);
+
+    PVector vec = this.targetPosition.get();
+    // delta
+    vec.sub(this.node.getPosition());
+    return vec;
+  }
+
   protected void transformPosition(PVector vec){
     if(bOnlyWhenNotTouched && this.node.isTouched())
       return;

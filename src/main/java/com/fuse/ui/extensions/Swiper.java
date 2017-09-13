@@ -10,6 +10,7 @@ import com.fuse.ui.TouchEvent;
 public class Swiper extends TransformerExtension {
   // attributes
   private Node scrollableNode;
+  private Node touchAreaNode;
   // restore
   private PVector originalNodePosition = null;
   // dragging
@@ -25,6 +26,7 @@ public class Swiper extends TransformerExtension {
   private final static float minVelocityMag = 1.0f; // when velocity reaches this value (or lower), we finalize the movement
   private float velocityReductionFactor = 10.0f; // factor to multipy the (already smoother) smoothedVelocity when setting the main velocity
   // snapping (falling back into place)
+  private boolean bSnapping = false;
   private PVector snapInterval = null;
   private float snapVelocityMag = 75.0f; // when velocity reaches this value (or lower), we start snapping
   private PVector snapPosition = null;
@@ -71,6 +73,9 @@ public class Swiper extends TransformerExtension {
   }
 
   @Override public void update(float dt){
+    // progress all smoothed transformations
+    super.update(dt);
+
     if(bDragging){
       this.updateDragging();
       return;
@@ -87,8 +92,8 @@ public class Swiper extends TransformerExtension {
   }
 
   @Override public void drawDebug(){
-    float deltaX = node.getSize().x * 0.1f;
-    float deltaY = node.getSize().y * 0.1f;
+    float deltaX = this.touchAreaNode.getSize().x * 0.1f;
+    float deltaY = this.touchAreaNode.getSize().y * 0.1f;
     float offsetX = 0.0f;
     float offsetY = 0.0f;
 
@@ -102,22 +107,22 @@ public class Swiper extends TransformerExtension {
     pg.stroke(255,0,0, 150);
     pg.strokeWeight(1.0f);
 
-    for(float x = offsetX; x < node.getSize().x; x += deltaX)
-      pg.line(x, 0, x, node.getSize().y);
+    for(float x = offsetX; x < this.touchAreaNode.getSize().x; x += deltaX)
+      pg.line(x, 0, x, this.touchAreaNode.getSize().y);
 
-    for(float y = offsetY; y < node.getSize().y; y += deltaY)
-      pg.line(0, y, node.getSize().x, y);
+    for(float y = offsetY; y < this.touchAreaNode.getSize().y; y += deltaY)
+      pg.line(0, y, this.touchAreaNode.getSize().x, y);
   }
 
   public void enable(){
     super.enable();
 
-    node.touchDownEvent.addListener((TouchEvent event) -> {
+    this.touchAreaNode.touchDownEvent.addListener((TouchEvent event) -> {
       if(!bDragging)
         this.startDragging(event);
     }, this);
 
-    node.touchUpEvent.addListener((TouchEvent event) -> {
+    this.touchAreaNode.touchUpEvent.addListener((TouchEvent event) -> {
       if(bDragging && this.draggingTouchEvent == event)
         this.endDragging();
     }, this);
@@ -128,8 +133,8 @@ public class Swiper extends TransformerExtension {
   public void disable(){
     super.disable();
 
-    node.touchDownEvent.removeListeners(this);
-    node.touchUpEvent.removeListeners(this);
+    this.touchAreaNode.touchDownEvent.removeListeners(this);
+    this.touchAreaNode.touchUpEvent.removeListeners(this);
 
     velocity = null; // isDamping() = false
     dragStartNodePositionGlobal = null; // isDragging() = false
@@ -137,11 +142,16 @@ public class Swiper extends TransformerExtension {
 
   // configuration methods // // // // //
 
-  public Node getScrollableNode(){
-    return scrollableNode;
+  @Override public void setNode(Node n){
+    super.setNode(n);
+    this.setScrollableNode(n);
   }
 
-  public void setScrollableNode(Node newScrollableNode){
+  public Node getScrollableNode(){
+    return this.scrollableNode;
+  }
+
+  public Swiper setScrollableNode(Node newScrollableNode){
     boolean wasEnabled = isEnabled();
 
     if(wasEnabled)
@@ -153,6 +163,26 @@ public class Swiper extends TransformerExtension {
 
     if(wasEnabled)
       enable();
+
+    return this;
+  }
+
+  public Swiper setTouchAreaNode(Node n){
+    boolean wasEnabled = isEnabled();
+
+    if(wasEnabled)
+      disable();
+
+    touchAreaNode = n;
+
+    if(wasEnabled)
+      enable();
+
+    return this;
+  }
+
+  public Node getTouchAreaNode(){
+    return this.touchAreaNode;
   }
 
   // dragging methods // // // // //
@@ -175,7 +205,7 @@ public class Swiper extends TransformerExtension {
       return;
     }
 
-    TouchEvent localEvent = this.node.toLocal(this.draggingTouchEvent);
+    TouchEvent localEvent = this.touchAreaNode.toLocal(this.draggingTouchEvent);
 
     // update our smoothed velocity
     if(localEvent.velocitySmoothed != null)
@@ -202,7 +232,7 @@ public class Swiper extends TransformerExtension {
 
   /** should only be called when it is already verified that we're dragging (this.draggingTouchEvent can't be null) */
   private void updateDragging(){
-    TouchEvent localEvent = this.node.toLocal(this.draggingTouchEvent);
+    TouchEvent localEvent = this.touchAreaNode.toLocal(this.draggingTouchEvent);
 
     if(localEvent.velocitySmoothed != null){
       this.smoothedVelocity = localEvent.velocitySmoothed; // use TouchEvent's velocity smoothing
@@ -250,9 +280,14 @@ public class Swiper extends TransformerExtension {
   }
 
   private void endDamping(){
+    this.velocity = null;
     this.stopPositionTransformation(); // necessary?
     bDamping = false;
     // TODO trigger event
+  }
+
+  private void stopDamping(){
+    this.endDamping();
   }
 
   public boolean isDamping(){
@@ -282,39 +317,30 @@ public class Swiper extends TransformerExtension {
   // 'snapping' methods // // // // //
 
   private void updateSnapping(float dt){
-    PVector curPos = scrollableNode.getPosition();
-    float local_dt = dt;
+    // PVector curPos = scrollableNode.getPosition();
+    // float local_dt = dt;
+    //
+    // while(local_dt > 1.0f){
+    //   PVector delta = snapPosition.get();
+    //   delta.sub(curPos);
+    //   delta.mult(snapFactor);
+    //   curPos.add(delta);
+    //   local_dt -= 1.0f;
+    // }
+    //
+    // PVector delta = snapPosition.get();
+    // delta.sub(curPos);
+    // delta.mult(snapFactor);
+    // delta.lerp(new PVector(0,0,0), 1.0f-local_dt);
+    // curPos.add(delta);
+    // scrollableNode.setPosition(curPos);
 
-    while(local_dt > 1.0f){
-      PVector delta = snapPosition.get();
-      delta.sub(curPos);
-      delta.mult(snapFactor);
-      curPos.add(delta);
-      local_dt -= 1.0f;
+    if(!super.isTransformingPosition()){ // done?
+      PVector p = this.getOffsetLimitSnapPosition();
+      if(p != null){
+        this.setSnapPosition(p);
+      }
     }
-
-    PVector delta = snapPosition.get();
-    delta.sub(curPos);
-    delta.mult(snapFactor);
-    delta.lerp(new PVector(0,0,0), 1.0f-local_dt);
-    curPos.add(delta);
-
-    scrollableNode.setPosition(curPos);
-
-    // current snap finished?
-    if(curPos.dist(snapPosition) <= snapDoneDist){
-      // apply target snap-position (unsmoothed)
-      scrollableNode.setPosition(snapPosition);
-      // after snapping to desired position, snap again if beyond offset limits
-      this.snapPosition = this.getOffsetLimitSnapPosition();
-      // trigger appropriate events
-      if(this.snapPosition != null)
-        newSnapPositionEvent.trigger(this.snapPosition.get());
-      else
-        restEvent.trigger(scrollableNode);
-    }
-
-    return;
   }
 
   /**
@@ -322,7 +348,7 @@ public class Swiper extends TransformerExtension {
    * @param enable when true enables snapping, when false disables snapping.
    */
   public Swiper setSnapEnabled(boolean enable){
-    return setSnapInterval(enable ? node.getSize() : null);
+    return setSnapInterval(enable ? this.touchAreaNode.getSize() : null);
   }
 
   public PVector getSnapInterval(){
@@ -360,9 +386,9 @@ public class Swiper extends TransformerExtension {
     if(Math.abs(targetOffset.y - curOffset.y) > snapInterval.y * 0.5f)
       targetOffset.y += curOffset.y < targetOffset.y ? -snapInterval.y : snapInterval.y;
 
-    snapPosition = originalNodePosition.get();
-    snapPosition.add(targetOffset); // isSnapping() = true
-    newSnapPositionEvent.trigger(this.snapPosition.get());
+    PVector p = originalNodePosition.get();
+    p.add(targetOffset);
+    this.setSnapPosition(p);
   }
 
   /** @return boolean true only if currently snapping to a target position */
@@ -414,11 +440,13 @@ public class Swiper extends TransformerExtension {
       return;
     }
 
+    this.stopDamping();
+
     // apply offset limit correction (if necessary). TODO: too rigid? make this optional?
     PVector correctedPosition = this.getOffsetLimitsCorrection(pos);
     this.snapPosition = correctedPosition == null ? pos.get() : correctedPosition;
-    // reset damping (isDamping() = false)
-    this.velocity = null;
+    this.bSnapping = true;
+    this.transformPosition(this.snapPosition);
     // trigger notification
     newSnapPositionEvent.trigger(this.snapPosition.get());
   }
@@ -629,8 +657,8 @@ public class Swiper extends TransformerExtension {
     // create new
     if(ext == null){
       ext = new Swiper();
-      ext.setScrollableNode(scrollableNode);
-      touchAreaNode.use(ext);
+      ext.setTouchAreaNode(touchAreaNode);
+      scrollableNode.use(ext);
     }
 
     return ext;
