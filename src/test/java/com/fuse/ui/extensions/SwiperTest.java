@@ -14,7 +14,7 @@ import com.fuse.ui.TouchManager;
 import com.fuse.ui.TouchEvent;
 
 public class SwiperTest extends ExtensionBase {
-  @Ignore @Test public void swipeLeft(){
+  /*@Ignore @Test public void swipeLeft(){
     // create scene
     Node scene = new Node();
     scene.setSize(300, 200);
@@ -61,5 +61,5 @@ public class SwiperTest extends ExtensionBase {
     tm.touchUp(0, new PVector(-190,20,0));
     assertEquals(s.swipeLeftEvent.getHistory().size(), 1);
     assertEquals(n.getPosition(), new PVector(-290,10,0));
-  }
+  }*/
 }

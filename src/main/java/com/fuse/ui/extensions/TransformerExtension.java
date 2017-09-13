@@ -18,8 +18,7 @@ public class TransformerExtension extends ExtensionBase {
   // smoothing
   private PVector targetPosition, targetRotation, targetScale;
   private float smoothValue = 7.0f;
-  private Float smoothValueScale = null;
-
+  private Float smoothValueScale = null; // when null, smoothValue is used for scaling as well
   // time-based transformation expiration
   private Float maxTransformationTime = 3.0f;
   private float positionTimer;
@@ -31,10 +30,11 @@ public class TransformerExtension extends ExtensionBase {
   // touch-related
   private boolean bOnlyWhenNotTouched = false;
   private boolean bStopOnTouch = false;
-
   // endless recursion detection
   private static int maxTransformationsPerUpdate = 9;
   private int transformationsThisUpdate = 0;
+
+  // lifecycle methods // // // // //
 
   @Override public void disable(){
     super.disable();
@@ -159,29 +159,12 @@ public class TransformerExtension extends ExtensionBase {
     }
   }
 
+  // operation methods // // // // //
+
   public void stopActiveTransformations(){
     targetPosition = null;
     targetRotation = null;
     targetScale = null;
-  }
-
-  protected PVector limitedPosition(PVector vec){
-    PVector result = vec.get();
-    Node parentNode = this.node.getParent();
-
-    if(bFillParent && parentNode != null){
-      PVector sizeScaled = this.node.getSizeScaled();
-
-      if(sizeScaled.x > parentNode.getSize().x){ // can only fill if bigger
-        result.x = Math.min(0.0f, Math.max(-sizeScaled.x, result.x));
-      }
-
-      if(sizeScaled.y > parentNode.getSize().y){
-        result.y = Math.min(0.0f, Math.max(-sizeScaled.y, result.y));
-      }
-    }
-
-    return result;
   }
 
   protected void transformPosition(PVector vec){
@@ -239,27 +222,13 @@ public class TransformerExtension extends ExtensionBase {
     this.transformationsThisUpdate++;
   }
 
-  private PVector limitedScale(PVector vec){
-    PVector result = vec.get();
-
-    if(minScale[0] != null && minScale[0] > result.x) result.x = minScale[0];
-    if(minScale[1] != null && minScale[1] > result.y) result.y = minScale[1];
-    if(minScale[2] != null && minScale[2] > result.z) result.z = minScale[2];
-
-    if(maxScale[0] != null && maxScale[0] < result.x) result.x = maxScale[0];
-    if(maxScale[1] != null && maxScale[1] < result.y) result.y = maxScale[1];
-    if(maxScale[2] != null && maxScale[2] < result.z) result.z = maxScale[2];
-
-    return result;
-  }
-
   protected void transformScale(PVector vec){
     if(bOnlyWhenNotTouched && this.node.isTouched())
       return;
 
     vec = this.limitedScale(vec);
 
-    if(this.isSMoothingScale()){
+    if(this.isSmoothingScale()){
       this.targetScale = vec.get();
       scaleTimer = 0.0f;
       return; // let the update method take it from here
@@ -276,8 +245,38 @@ public class TransformerExtension extends ExtensionBase {
     this.transformationsThisUpdate++;
   }
 
-  protected float getSmoothValueForScaling(){
-    return this.smoothValueScale == null ? this.smoothValue : this.smoothValueScale;
+
+  protected PVector limitedPosition(PVector vec){
+    PVector result = vec.get();
+    Node parentNode = this.node.getParent();
+
+    if(bFillParent && parentNode != null){
+      PVector sizeScaled = this.node.getSizeScaled();
+
+      if(sizeScaled.x > parentNode.getSize().x){ // can only fill if bigger
+        result.x = Math.min(0.0f, Math.max(-sizeScaled.x, result.x));
+      }
+
+      if(sizeScaled.y > parentNode.getSize().y){
+        result.y = Math.min(0.0f, Math.max(-sizeScaled.y, result.y));
+      }
+    }
+
+    return result;
+  }
+
+  private PVector limitedScale(PVector vec){
+    PVector result = vec.get();
+
+    if(minScale[0] != null && minScale[0] > result.x) result.x = minScale[0];
+    if(minScale[1] != null && minScale[1] > result.y) result.y = minScale[1];
+    if(minScale[2] != null && minScale[2] > result.z) result.z = minScale[2];
+
+    if(maxScale[0] != null && maxScale[0] < result.x) result.x = maxScale[0];
+    if(maxScale[1] != null && maxScale[1] < result.y) result.y = maxScale[1];
+    if(maxScale[2] != null && maxScale[2] < result.z) result.z = maxScale[2];
+
+    return result;
   }
 
   // state reader methods // // // // //
@@ -287,7 +286,7 @@ public class TransformerExtension extends ExtensionBase {
     return smoothValue > 1.0f;
   }
 
-  public boolean isSMoothingScale(){
+  public boolean isSmoothingScale(){
     return this.getSmoothValueForScaling() > 1.0f;
   }
 
@@ -311,6 +310,10 @@ public class TransformerExtension extends ExtensionBase {
 
   public void setSmoothValueScale(Float val){
     this.smoothValueScale = val; // <= 1.0f mean disable smoothing
+  }
+
+  protected float getSmoothValueForScaling(){
+    return this.smoothValueScale == null ? this.smoothValue : this.smoothValueScale;
   }
 
   public void disableSmoothing(){
