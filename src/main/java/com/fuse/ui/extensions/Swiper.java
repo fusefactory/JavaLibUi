@@ -51,13 +51,6 @@ public class Swiper extends TransformerExtension {
     newStepPositionEvent = new Event<>();
     restEvent = new Event<>();
 
-    // newStepPositionEvent triggers everytime newSnapPositionEvent is triggered
-    newSnapPositionEvent.addListener((PVector snapPos) -> {
-      PVector value = this.toStepPosition(snapPos);
-      if(value != null)
-        newStepPositionEvent.trigger(value);
-    }, this);
-
     super.setMaxTransformationTime(6.0f);
   }
 
@@ -418,6 +411,10 @@ public class Swiper extends TransformerExtension {
     this.bSnapping = true;
     // trigger notification
     newSnapPositionEvent.trigger(correctedPos);
+
+    PVector stepValue = this.toStepPosition(correctedPos);
+    if(stepValue != null)
+      newStepPositionEvent.trigger(stepValue);
   }
 
   public float getSnapThrowFactor(){
