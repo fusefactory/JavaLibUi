@@ -59,7 +59,7 @@ public class TransformerExtension extends ExtensionBase {
     if(targetPosition != null){
       this.positionTimer += dt;
       if( this.maxTransformationTime != null && this.positionTimer > this.maxTransformationTime){
-        logger.fine("position transformation EXPIRED");
+        logger.info("position transformation EXPIRED");
         this.targetPosition = null;
       } else if(smoothValue <= 1.0f){
         // smoothing disabled, apply directly
@@ -184,7 +184,7 @@ public class TransformerExtension extends ExtensionBase {
     return vec;
   }
 
-  public PVector getPositionTransformationDistance(){
+  public PVector getPositionTransformationDelta(){
     if(this.targetPosition == null)
       return new PVector(0,0,0);
 
@@ -195,6 +195,11 @@ public class TransformerExtension extends ExtensionBase {
   }
 
   protected void transformPosition(PVector vec){
+    if(vec == null){
+      targetPosition = null;
+      return;
+    }
+
     if(bOnlyWhenNotTouched && this.node.isTouched())
       return;
 
@@ -323,6 +328,10 @@ public class TransformerExtension extends ExtensionBase {
 
   public boolean isTransformingPosition(){
     return this.targetPosition != null;
+  }
+
+  public PVector getTargetPosition(){
+    return this.targetPosition.get();
   }
 
   // configuration methods // // // // //

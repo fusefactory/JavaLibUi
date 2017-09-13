@@ -29,10 +29,7 @@ public class Swiper extends TransformerExtension {
   private boolean bSnapping = false;
   private PVector snapInterval = null;
   private float snapVelocityMag = 75.0f; // when velocity reaches this value (or lower), we start snapping
-  private PVector snapPosition = null;
-  private float snapFactor = 0.95f;
   private float snapThrowFactor = 1.0f; // multiplier for the smoothed 'throwing' velocity after dragging
-  private final static float snapDoneDist = 0.9f;
   // offset limits
   private PVector minOffset = null;
   private PVector maxOffset = null;
@@ -60,6 +57,8 @@ public class Swiper extends TransformerExtension {
       if(value != null)
         newStepPositionEvent.trigger(value);
     }, this);
+
+    super.setMaxTransformationTime(6.0f);
   }
 
   @Override public void destroy(){
@@ -317,24 +316,6 @@ public class Swiper extends TransformerExtension {
   // 'snapping' methods // // // // //
 
   private void updateSnapping(float dt){
-    // PVector curPos = scrollableNode.getPosition();
-    // float local_dt = dt;
-    //
-    // while(local_dt > 1.0f){
-    //   PVector delta = snapPosition.get();
-    //   delta.sub(curPos);
-    //   delta.mult(snapFactor);
-    //   curPos.add(delta);
-    //   local_dt -= 1.0f;
-    // }
-    //
-    // PVector delta = snapPosition.get();
-    // delta.sub(curPos);
-    // delta.mult(snapFactor);
-    // delta.lerp(new PVector(0,0,0), 1.0f-local_dt);
-    // curPos.add(delta);
-    // scrollableNode.setPosition(curPos);
-
     if(!super.isTransformingPosition()){ // done?
       PVector p = this.getOffsetLimitSnapPosition();
       if(p != null){
@@ -393,16 +374,7 @@ public class Swiper extends TransformerExtension {
 
   /** @return boolean true only if currently snapping to a target position */
   public boolean isSnapping(){
-    return snapPosition != null;
-  }
-
-  /**
-   * Configures snapping behaviour smoothness
-   * @param newFactor offset multiplier; higher value means faster snapping.
-   */
-  public Swiper setSnapFactor(float newFactor){
-    snapFactor = newFactor;
-    return this;
+    return bSnapping;
   }
 
   /**
@@ -416,7 +388,7 @@ public class Swiper extends TransformerExtension {
 
   /** @return PVector current target position for snap-back behaviour. Returns null if not currently snapping */
   public PVector getSnapPosition(){
-      return snapPosition;
+    return bSnapping ? super.getTargetPosition() : null;
   }
 
   /**
@@ -436,19 +408,19 @@ public class Swiper extends TransformerExtension {
     if(pos == null){ // abort snapping?
       // abort current snapping operation (if any) and apply
       // offset-limit exceeded snap position if necessary
-      this.snapPosition = this.getOffsetLimitSnapPosition();
+      super.transformPosition(this.getOffsetLimitSnapPosition());
       return;
     }
 
     this.stopDamping();
 
     // apply offset limit correction (if necessary). TODO: too rigid? make this optional?
-    PVector correctedPosition = this.getOffsetLimitsCorrection(pos);
-    this.snapPosition = correctedPosition == null ? pos.get() : correctedPosition;
+    PVector correctedPos = this.getOffsetLimitsCorrection(pos);
+    correctedPos = correctedPos == null ? pos.get() : correctedPos;
+    this.transformPosition(correctedPos);
     this.bSnapping = true;
-    this.transformPosition(this.snapPosition);
     // trigger notification
-    newSnapPositionEvent.trigger(this.snapPosition.get());
+    newSnapPositionEvent.trigger(correctedPos);
   }
 
   public float getSnapThrowFactor(){
@@ -522,8 +494,8 @@ public class Swiper extends TransformerExtension {
     delta.mult(-1.0f); // invert; step left means offset to right
     delta.x = delta.x * this.snapInterval.x;
     delta.y = delta.y * this.snapInterval.y;
-    if(this.snapPosition != null){
-      delta.add(this.snapPosition);
+    if(bSnapping){
+      delta.add(this.getSnapPosition());
       this.setSnapPosition(delta);
     } else {
       delta.add(this.scrollableNode.getPosition());
