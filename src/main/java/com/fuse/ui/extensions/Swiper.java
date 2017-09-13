@@ -13,7 +13,9 @@ public class Swiper extends TransformerExtension {
   // restore
   private PVector originalNodePosition = null;
   // dragging
+  private boolean bDragging = false;
   private PVector dragStartNodePositionGlobal = null;
+  private TouchEvent draggingTouchEvent = null;
   // velocity / damping
   private PVector velocity = null;
   private PVector smoothedVelocity = null;
@@ -33,6 +35,8 @@ public class Swiper extends TransformerExtension {
   private PVector maxOffset = null;
 
   // events
+  public Event<Swiper> startDraggingEvent;
+  public Event<Swiper> endDraggingEvent;
   public Event<PVector> newSnapPositionEvent;
   public Event<PVector> newStepPositionEvent;
   public Event<Node> restEvent;
@@ -41,6 +45,8 @@ public class Swiper extends TransformerExtension {
 
   public Swiper(){
     smoothedVelocity = new PVector(0.0f, 0.0f, 0.0f);
+    startDraggingEvent = new Event<>();
+    endDraggingEvent = new Event<>();
     newSnapPositionEvent = new Event<>();
     newStepPositionEvent = new Event<>();
     restEvent = new Event<>();
@@ -55,6 +61,8 @@ public class Swiper extends TransformerExtension {
 
   @Override public void destroy(){
     super.destroy();
+    startDraggingEvent.destroy();
+    endDraggingEvent.destroy();
     newSnapPositionEvent.destroy();
     newStepPositionEvent.destroy();
     restEvent.destroy();
@@ -62,9 +70,18 @@ public class Swiper extends TransformerExtension {
   }
 
   @Override public void update(float dt){
+    if(this.isDragging()){
+      this.updateDragging();
+      return;
+    }
+
     if(isSnapping()){
       this.updateSnapping(dt);
       return;
+    }
+
+    if(isDamping()){
+      this.updateDamping(dt);
     }
   }
 
@@ -94,71 +111,23 @@ public class Swiper extends TransformerExtension {
   public void enable(){
     super.enable();
 
-    node.touchMoveEvent.addListener((TouchEvent event) -> {
-      if(scrollableNode == null || event.node != this.node)
-        return; // touch didn't start on our node
-
-      TouchEvent localEvent = this.node.toLocal(event);
-
-      // just started dragging?
-      if(!isDragging()){
-        this.velocity = null; // this makes isDamping() false
-        this.snapPosition = null; // isSnapping() = false
-        dragStartNodePositionGlobal = scrollableNode.getGlobalPosition(); // this makes isDragging true
-        smoothedVelocity = new PVector(0.0f, 0.0f, 0.0f);
-      }
-
-      if(localEvent.velocitySmoothed != null)
-        this.smoothedVelocity = localEvent.velocitySmoothed; // use TouchEvent's velocity smoothing
-      else
-        smoothedVelocity.lerp(localEvent.velocity, velocitySmoothCoeff); // apply our own smoothing
-
-
-      applyDragOffset(event.offset()); // not localized event because dragging is global
+    node.touchDownEvent.addListener((TouchEvent event) -> {
+      if(!bDragging)
+        this.startDragging(event);
     }, this);
 
     node.touchUpEvent.addListener((TouchEvent event) -> {
-      if(!isDragging())
-        return;
-
-      TouchEvent localEvent = this.node.toLocal(event);
-
-      applyDragOffset(event.offset());  // not localized event because dragging is global
-      dragStartNodePositionGlobal = null; // this makes isDragging() false
-
-      // check offset limits; snap-back if necessary
-      snapPosition = getOffsetLimitSnapPosition();
-      if(snapPosition != null){ // isSnapping() = true
-        newSnapPositionEvent.trigger(this.snapPosition.get());
-        return;
-      }
-
-      // update our smoothed velocity
-      if(localEvent.velocitySmoothed != null)
-        this.smoothedVelocity = localEvent.velocitySmoothed; // use TouchEvent's velocity smoothing
-      else
-        smoothedVelocity.lerp(localEvent.velocity, velocitySmoothCoeff); // apply our own smoothing
-
-      // when snapping-behaviour is enabled we don't use velocity/damping;
-      // instead, we calculate a target position to snap to
-      if(this.isSnapEnabled()){
-        PVector throwTarget = this.smoothedVelocity.get();
-        throwTarget.mult(this.snapThrowFactor);
-        throwTarget.add(this.scrollableNode.getPosition());
-        this.setSnapPosition(this.toClosestSnapPosition(throwTarget));
-        return;
-      }
-
-      // initialize a velocity and start damping
-      this.velocity = this.smoothedVelocity.get();
-      this.velocity.mult(velocityReductionFactor);
+      if(bDragging && this.draggingTouchEvent == event)
+        this.endDragging();
     }, this);
+
+    super.enable();
   }
 
   public void disable(){
     super.disable();
 
-    node.touchMoveEvent.removeListeners(this);
+    node.touchDownEvent.removeListeners(this);
     node.touchUpEvent.removeListeners(this);
 
     velocity = null; // isDamping() = false
@@ -187,14 +156,59 @@ public class Swiper extends TransformerExtension {
 
   // dragging methods // // // // //
 
-  private void applyDragOffset(PVector globalDragOffset){
-    if(dragStartNodePositionGlobal == null) // should already be set at first processed touchMoveEvent, but just to be sure
-      dragStartNodePositionGlobal = scrollableNode.getGlobalPosition();
+  private void startDragging(TouchEvent event){
+    this.dragStartNodePositionGlobal = scrollableNode.getGlobalPosition();
+    this.draggingTouchEvent = event;
+    bDragging = true;
+    startDraggingEvent.trigger(this);
+  }
+
+  private void endDragging(){
+    bDragging = false;
+    endDraggingEvent.trigger(this);
+
+    // check offset limits; snap-back if necessary
+    PVector pos = getOffsetLimitSnapPosition();
+    if(pos != null){ // isSnapping() = true
+      this.setSnapPosition(pos);
+      return;
+    }
+
+    TouchEvent localEvent = this.node.toLocal(this.draggingTouchEvent);
+
+    // update our smoothed velocity
+    if(localEvent.velocitySmoothed != null)
+      this.smoothedVelocity = localEvent.velocitySmoothed; // use TouchEvent's velocity smoothing
+    else
+      smoothedVelocity.lerp(localEvent.velocity, velocitySmoothCoeff); // apply our own smoothing
+
+    // when snapping-behaviour is enabled we don't use velocity/damping;
+    // instead, we calculate a target position to snap to
+    if(this.isSnapEnabled()){
+      PVector throwTarget = this.smoothedVelocity.get();
+      throwTarget.mult(this.snapThrowFactor);
+      throwTarget.add(this.scrollableNode.getPosition());
+      this.setSnapPosition(this.toClosestSnapPosition(throwTarget));
+      return;
+    }
+
+    // initialize a velocity and start damping
+    this.velocity = this.smoothedVelocity.get();
+    this.velocity.mult(velocityReductionFactor);
+  }
+
+  /** should only be called when it is already verified that we're dragging (ie. this.draggingTouchEvent != null) */
+  private void updateDragging(){
+    TouchEvent localEvent = this.node.toLocal(this.draggingTouchEvent);
+
+    if(localEvent.velocitySmoothed != null)
+      this.smoothedVelocity = localEvent.velocitySmoothed; // use TouchEvent's velocity smoothing
+    else
+      smoothedVelocity.lerp(localEvent.velocity, velocitySmoothCoeff); // apply our own smoothing
 
     PVector localPosBefore = scrollableNode.getPosition();
-
     PVector globPos = dragStartNodePositionGlobal.get();
-    globPos.add(globalDragOffset);
+    globPos.add(this.draggingTouchEvent.offset());
     scrollableNode.setGlobalPosition(globPos);
     scrollableNode.setY(localPosBefore.y); // Y-axis locked HACK
   }
