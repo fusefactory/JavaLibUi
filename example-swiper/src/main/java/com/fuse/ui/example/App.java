@@ -8,7 +8,7 @@ import com.fuse.ui.example.utils.TuioInput;
 import com.fuse.ui.TouchManager;
 import com.fuse.ui.Node;
 import com.fuse.ui.RectNode;
-import com.fuse.ui.ImageNode;
+import com.fuse.ui.TextNode;
 import com.fuse.ui.extensions.Swiper;
 
 public class App extends PApplet {
@@ -25,6 +25,7 @@ public class App extends PApplet {
   private Node sceneNode;
   private Node touchAreaNode;
   private Node scrollableNode;
+  private TextNode pageLabelNode;
   private Swiper swiper;
 
   public static void main( String[] args ){
@@ -110,12 +111,28 @@ public class App extends PApplet {
 
 
     // Create/enable swiper extensions
-    this.swiper = Swiper.enableFor(touchAreaNode, scrollableNode);
-    this.swiper.setSnapEnabled(true);
+    this.swiper = Swiper.enableFor(touchAreaNode, scrollableNode)
+      .setSnapEnabled(true)
+      .setSnapThrowFactor(5.0f)
+      .setMinStep(0,0) // first page
+      .setMaxStep(9,0);
+
+    //
+    this.pageLabelNode = new TextNode();
+    this.sceneNode.addChild(
+      this.pageLabelNode
+        .setAlignX(PApplet.CENTER)
+        .setTextSize(18)
+        .setSize(200,50)
+        .setPosition(300,520));
+
+    // update page label node when swiper changes "step-position"
+    this.swiper.newStepPositionEvent.addListener((PVector stepPos) -> {
+      this.pageLabelNode.setText("Page: "+Integer.toString(((int)stepPos.x)+1));
+    });
 
     // Create some dummy content so we actually see some stuff happening
-
-    for(int x=0; x<100; x++){
+    for(int x=0; x<60; x++){
       for(int y=0; y<4; y++){
         this.scrollableNode.addChild(
           (new RectNode())

@@ -189,7 +189,8 @@ public class Swiper extends TransformerExtension {
       PVector throwTarget = this.smoothedVelocity.get();
       throwTarget.mult(this.snapThrowFactor);
       throwTarget.add(this.scrollableNode.getPosition());
-      this.setSnapPosition(this.toClosestSnapPosition(throwTarget));
+      throwTarget = this.toClosestSnapPosition(throwTarget);
+      this.setSnapPosition(throwTarget);
       return;
     }
 
@@ -199,7 +200,7 @@ public class Swiper extends TransformerExtension {
     this.startDamping(vel);
   }
 
-  /** should only be called when it is already verified that we're dragging (ie. this.draggingTouchEvent != null) */
+  /** should only be called when it is already verified that we're dragging (this.draggingTouchEvent can't be null) */
   private void updateDragging(){
     TouchEvent localEvent = this.node.toLocal(this.draggingTouchEvent);
 
@@ -320,8 +321,8 @@ public class Swiper extends TransformerExtension {
    * Enables/disables snapping. When enabling, it sets the snap interval to the extended node's size
    * @param enable when true enables snapping, when false disables snapping.
    */
-  public void setSnapEnabled(boolean enable){
-    setSnapInterval(enable ? node.getSize() : null);
+  public Swiper setSnapEnabled(boolean enable){
+    return setSnapInterval(enable ? node.getSize() : null);
   }
 
   public PVector getSnapInterval(){
@@ -332,8 +333,9 @@ public class Swiper extends TransformerExtension {
    * Enables/disables/configures snapping bahaviour.
    * @param interval specifies the two-dimensional (z-attribute is ignored) snap interval. When null, disables snapping behaviour.
    */
-  public void setSnapInterval(PVector interval){
+  public Swiper setSnapInterval(PVector interval){
     snapInterval = interval == null ? null : interval.get();
+    return this;
   }
 
   /** @return true if snapping behaviour is enabled */
@@ -372,16 +374,18 @@ public class Swiper extends TransformerExtension {
    * Configures snapping behaviour smoothness
    * @param newFactor offset multiplier; higher value means faster snapping.
    */
-  public void setSnapFactor(float newFactor){
+  public Swiper setSnapFactor(float newFactor){
     snapFactor = newFactor;
+    return this;
   }
 
   /**
    * Configures snapping behaviour responsiveness
    * @param newSnapVelocity specifies the velocity at which we'll start snapping into place
    */
-  public void setSnapVelocity(float snapVelocity){
+  public Swiper setSnapVelocity(float snapVelocity){
     snapVelocityMag = snapVelocity;
+    return this;
   }
 
   /** @return PVector current target position for snap-back behaviour. Returns null if not currently snapping */
@@ -428,8 +432,9 @@ public class Swiper extends TransformerExtension {
    * @param multiplier multiplies the -smoothed- velocity when calculating
    * the snapping-target-position. A higher value makes it "further" throwable.
    */
-  public void setSnapThrowFactor(float multiplier){
+  public Swiper setSnapThrowFactor(float multiplier){
     snapThrowFactor = multiplier;
+    return this;
   }
 
   private PVector toClosestSnapPosition(PVector pos){
@@ -463,22 +468,27 @@ public class Swiper extends TransformerExtension {
   }
 
   private PVector stepPositionToNodePosition(PVector pos){
-    PVector p = pos.get();
-    p.x = -p.x * this.snapInterval.x;
-    p.y = -p.y * this.snapInterval.y;
-    return p;
+    PVector interval = this.snapInterval;
+    if(interval == null) return this.originalNodePosition.get();
+    // get offset; multiply step-position by interval size and invert direction
+    PVector delta = pos.get();
+    delta.x = -delta.x * interval.x;
+    delta.y = -delta.y * interval.y;
+    // add offset of the original node position
+    delta.add(this.originalNodePosition);
+    return delta;
   }
 
   public PVector getStepPosition(){
     return this.toStepPosition(this.scrollableNode.getPosition());
   }
 
-  public void step(float x, float y){
-    this.step(new PVector(x,y,0.0f));
+  public Swiper step(float x, float y){
+    return this.step(new PVector(x,y,0.0f));
   }
 
-  public void step(PVector offset){
-    if(this.snapInterval == null) return;
+  public Swiper step(PVector offset){
+    if(this.snapInterval == null) return this;
     PVector current = this.toStepPosition(this.scrollableNode.getPosition());
     PVector delta = offset.get();
     delta.mult(-1.0f); // invert; step left means offset to right
@@ -491,6 +501,26 @@ public class Swiper extends TransformerExtension {
       delta.add(this.scrollableNode.getPosition());
       this.setSnapPosition(delta);
     }
+
+    return this;
+  }
+
+  public Swiper setMinStep(float x, float y){
+    return this.setMinStep(new PVector(x,y,0));
+  }
+
+  public Swiper setMinStep(PVector step){
+    // max offset, not min offset; higher 'step' means lower (negative) offset
+    return this.setMaxOffset(this.stepPositionToNodePosition(step));
+  }
+
+  public Swiper setMaxStep(float x, float y){
+    return this.setMaxStep(new PVector(x,y,0));
+  }
+
+  public Swiper setMaxStep(PVector step){
+    // max offset, not min offset; higher 'step' means lower (negative) offset
+    return this.setMinOffset(this.stepPositionToNodePosition(step));
   }
 
   // offset/limits methods // // // // //
@@ -508,28 +538,32 @@ public class Swiper extends TransformerExtension {
     return this.minOffset != null || this.maxOffset != null;
   }
 
-  public void setMinOffset(float x, float y){
-    this.setMinOffset(new PVector(x,y,0.0f));
+  public Swiper setMinOffset(float x, float y){
+    return this.setMinOffset(new PVector(x,y,0.0f));
   }
 
-  public void setMinOffset(PVector offset){
+  public Swiper setMinOffset(PVector offset){
     this.minOffset = offset.get();
 
     PVector p = getOffsetLimitSnapPosition();
     if(p != null)
       this.setSnapPosition(p);
+
+    return this;
   }
 
-  public void setMaxOffset(float x, float y){
-    this.setMaxOffset(new PVector(x,y,0.0f));
+  public Swiper setMaxOffset(float x, float y){
+    return this.setMaxOffset(new PVector(x,y,0.0f));
   }
 
-  public void setMaxOffset(PVector offset){
+  public Swiper setMaxOffset(PVector offset){
     this.maxOffset = offset;
 
     PVector p = getOffsetLimitSnapPosition();
     if(p != null)
       this.setSnapPosition(p);
+
+    return this;
   }
 
   /** @return PVector target position for snap-back after offset limit is exceeded. Returns null if offset limit is not exceeded */

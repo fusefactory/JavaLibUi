@@ -33,25 +33,25 @@ public class TextNode extends Node {
     _init();
   }
 
-  public void setText(String txt){ text = txt == null ? "" : txt; }
+  public TextNode setText(String txt){ text = txt == null ? "" : txt; return this; }
   public String getText(){ return text; }
 
-  public void setTextColor(int newColor){ this.textColor = newColor; }
+  public TextNode setTextColor(int newColor){ this.textColor = newColor; return this; }
   public int getTextColor(){ return textColor; }
 
-  public void setTextSize(float newSize){ textSize = newSize; }
+  public TextNode setTextSize(float newSize){ textSize = newSize; return this; }
   public float getTextSize(){ return textSize; }
 
-  public void setFont(PFont newFont){ this.font = newFont; }
+  public TextNode setFont(PFont newFont){ this.font = newFont; return this; }
   public PFont getFont(){ return this.font; }
 
   public PVector getTextOffset(){ return textOffset.get(); }
-  public void setTextOffset(PVector offset){ textOffset = offset.get(); }
+  public TextNode setTextOffset(PVector offset){ textOffset = offset.get(); return this; }
 
-  public void setAlignX(int align){ alignX = align; }
+  public TextNode setAlignX(int align){ alignX = align; return this; }
   public int getAlignX(int align){ return alignX; }
 
-  public void setAlignY(int align){ alignY = align; }
+  public TextNode setAlignY(int align){ alignY = align; return this; }
   public int getAlignY(int align){ return alignY; }
 
   @Override
