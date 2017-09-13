@@ -265,6 +265,7 @@ public class Swiper extends TransformerExtension {
       }
     } else {
       this.endDamping();
+      restEvent.trigger(scrollableNode);
     }
   }
 
@@ -310,6 +311,8 @@ public class Swiper extends TransformerExtension {
       PVector p = this.getOffsetLimitSnapPosition();
       if(p != null){
         this.setSnapPosition(p);
+      } else {
+        restEvent.trigger(scrollableNode);
       }
     }
   }
@@ -477,6 +480,16 @@ public class Swiper extends TransformerExtension {
     return this.toStepPosition(this.scrollableNode.getPosition());
   }
 
+  public void setStepPosition(float x, float y){
+    this.setStepPosition(new PVector(x,y,0));
+  }
+
+  public void setStepPosition(PVector pos){
+    pos = this.stepPositionToNodePosition(pos);
+    pos = this.toClosestSnapPosition(pos);
+    this.setSnapPosition(pos);
+  }
+
   public Swiper step(float x, float y){
     return this.step(new PVector(x,y,0.0f));
   }
@@ -623,8 +636,9 @@ public class Swiper extends TransformerExtension {
     // create new
     if(ext == null){
       ext = new Swiper();
+      ext.setNode(scrollableNode);
       ext.setTouchAreaNode(touchAreaNode);
-      scrollableNode.use(ext);
+      touchAreaNode.addExtension(ext);
     }
 
     return ext;
@@ -647,6 +661,15 @@ public class Swiper extends TransformerExtension {
       if(Swiper.class.isInstance(ext))
         if(((Swiper)ext).getScrollableNode() == scrollableNode)
           return (Swiper)ext;
+
+    return null;
+  }
+
+  public static Swiper getFirstFor(Node touchAreaNode){
+    // find first extension of this type
+    for(ExtensionBase ext : touchAreaNode.getExtensions())
+      if(Swiper.class.isInstance(ext))
+        return (Swiper)ext;
 
     return null;
   }

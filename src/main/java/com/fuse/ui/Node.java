@@ -716,15 +716,18 @@ public class Node extends TouchReceiver {
   }
 
   public void use(ExtensionBase newExtension){
+    newExtension.setNode(this);
+    newExtension.enable();
+    this.addExtension(newExtension);
+  }
+
+  public void addExtension(ExtensionBase ext){
     // lazy create so extensions attribute doesn't use any memory
     // unless this Node actually gets extensions
     if(extensions == null)
       extensions = new ArrayList<>();
 
-    newExtension.setNode(this);
-    newExtension.enable();
-
-    extensions.add(newExtension);
+    extensions.add(ext);
   }
 
   public void stopUsing(ExtensionBase ext){
