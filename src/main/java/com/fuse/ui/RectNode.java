@@ -46,12 +46,11 @@ public class RectNode extends Node {
   }
 
   public Integer getRectColor(){ return rectFillColor; }
-  public void setRectColor(Integer newRectColor){ rectFillColor = newRectColor; }
+  public RectNode setRectColor(Integer newRectColor){ rectFillColor = newRectColor; return this; }
 
   public Integer getRectStrokeColor(){ return rectStrokeColor; }
-  public void setRectStrokeColor(Integer newColor){ rectStrokeColor = newColor; }
+  public RectNode setRectStrokeColor(Integer newColor){ rectStrokeColor = newColor; return this; }
 
   public Float getStrokeWeight(){ return rectStrokeWeight; }
-  public void setStrokeWeight(Float newWeight){ rectStrokeWeight = newWeight; }
-
+  public RectNode setStrokeWeight(Float newWeight){ rectStrokeWeight = newWeight; return this; }
 }
