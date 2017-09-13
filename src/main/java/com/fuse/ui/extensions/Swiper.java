@@ -17,12 +17,13 @@ public class Swiper extends TransformerExtension {
   private PVector dragStartNodePositionGlobal = null;
   private TouchEvent draggingTouchEvent = null;
   // velocity / damping
+  private boolean bDamping = false;
   private PVector velocity = null;
   private PVector smoothedVelocity = null;
   private final static float velocitySmoothCoeff = 0.1f;
   private float dampingFactor = 0.001f;
   private final static float minVelocityMag = 1.0f; // when velocity reaches this value (or lower), we finalize the movement
-  private float velocityReductionFactor = 0.2f; // factor to multipy the (already smoother) smoothedVelocity when setting the main velocity
+  private float velocityReductionFactor = 10.0f; // factor to multipy the (already smoother) smoothedVelocity when setting the main velocity
   // snapping (falling back into place)
   private PVector snapInterval = null;
   private float snapVelocityMag = 75.0f; // when velocity reaches this value (or lower), we start snapping
@@ -70,7 +71,7 @@ public class Swiper extends TransformerExtension {
   }
 
   @Override public void update(float dt){
-    if(this.isDragging()){
+    if(bDragging){
       this.updateDragging();
       return;
     }
@@ -192,19 +193,23 @@ public class Swiper extends TransformerExtension {
       return;
     }
 
-    // initialize a velocity and start damping
-    this.velocity = this.smoothedVelocity.get();
-    this.velocity.mult(velocityReductionFactor);
+    // TODO damping doesn't work (well) yet...
+    PVector vel = this.smoothedVelocity.get();
+    vel.mult(velocityReductionFactor);
+    this.startDamping(vel);
   }
 
   /** should only be called when it is already verified that we're dragging (ie. this.draggingTouchEvent != null) */
   private void updateDragging(){
     TouchEvent localEvent = this.node.toLocal(this.draggingTouchEvent);
 
-    if(localEvent.velocitySmoothed != null)
+    if(localEvent.velocitySmoothed != null){
       this.smoothedVelocity = localEvent.velocitySmoothed; // use TouchEvent's velocity smoothing
-    else
+      //logger.info("Adopted smoothed velocity: "+smoothedVelocity.toString());
+    } else {
       smoothedVelocity.lerp(localEvent.velocity, velocitySmoothCoeff); // apply our own smoothing
+      //logger.info("DIY smoothed velocity: "+smoothedVelocity.toString());
+    }
 
     PVector localPosBefore = scrollableNode.getPosition();
     PVector globPos = dragStartNodePositionGlobal.get();
@@ -214,49 +219,43 @@ public class Swiper extends TransformerExtension {
   }
 
   public boolean isDragging(){
-    return dragStartNodePositionGlobal != null;
+    return bDragging;
   }
 
   // velocity/damping methods // // // // //
 
+  private void startDamping(PVector velocity){
+    velocity = velocity.get();
+    velocity.mult(velocityReductionFactor);
+    super.transformPosition(velocity);
+    this.bDamping = true;
+    // TODO trigger event
+  }
+
   private void updateDamping(float dt){
-    // apply current velocity
-    PVector deltaPos = velocity.get();
-    deltaPos.mult(dt);
-    PVector pos = scrollableNode.getPosition();
-    pos.add(deltaPos);
-    scrollableNode.setPosition(pos);
+    if(super.isTransformingPosition()){
+      PVector vel = super.getPositionTransformationVelocity();
+      float mag = vel.mag();
 
-    // start "snap back" when damping beyond limits
-    this.snapPosition = getOffsetLimitSnapPosition();
-    if(this.snapPosition != null){ // isSnapping() == true
-      this.velocity = null; // isDamping() = false
-      newSnapPositionEvent.trigger(this.snapPosition.get());
-      return;
-    }
-
-    // apply damping (velocity reducation due to "friction")
-    PVector dampedVelocity = velocity.get();
-    dampedVelocity.mult(dampingFactor);
-    velocity.lerp(dampedVelocity, dt);
-
-    float mag = velocity.mag();
-
-    // start snap-back (if enabled) when velocity has dropped low enough
-    if(this.isSnapEnabled() && mag <= snapVelocityMag){
-      this.startSnapping();
-      return;
-    }
-
-    // no snapping; finalize damping
-    if(mag < minVelocityMag){
-      velocity = null; // isDamping() = false
-      restEvent.trigger(scrollableNode);
+      // start snap-back (if enabled) when velocity has dropped low enough
+      if(this.isSnapEnabled() && mag <= snapVelocityMag){
+        this.endDamping();
+        this.startSnapping();
+        return;
+      }
+    } else {
+      this.endDamping();
     }
   }
 
+  private void endDamping(){
+    this.stopPositionTransformation(); // necessary?
+    bDamping = false;
+    // TODO trigger event
+  }
+
   public boolean isDamping(){
-    return this.velocity != null;
+    return bDamping;
   }
 
   public PVector getVelocity(){

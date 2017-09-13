@@ -111,6 +111,7 @@ public class App extends PApplet {
 
     // Create/enable swiper extensions
     this.swiper = Swiper.enableFor(touchAreaNode, scrollableNode);
+    this.swiper.setSnapEnabled(true);
 
     // Create some dummy content so we actually see some stuff happening
 

@@ -167,6 +167,23 @@ public class TransformerExtension extends ExtensionBase {
     targetScale = null;
   }
 
+  public void stopPositionTransformation(){
+    targetPosition = null;
+  }
+
+  public PVector getPositionTransformationVelocity(){
+    if(this.targetPosition == null)
+      return new PVector(0,0,0);
+
+    PVector vec = this.targetPosition.get();
+    // delta
+    vec.sub(this.node.getPosition());
+    // smoothed delta
+    vec.mult(1.0f / this.smoothValue);
+
+    return vec;
+  }
+
   protected void transformPosition(PVector vec){
     if(bOnlyWhenNotTouched && this.node.isTouched())
       return;
@@ -292,6 +309,10 @@ public class TransformerExtension extends ExtensionBase {
 
   private boolean endlessRecursionDetected(){
     return transformationsThisUpdate >= maxTransformationsPerUpdate;
+  }
+
+  public boolean isTransformingPosition(){
+    return this.targetPosition != null;
   }
 
   // configuration methods // // // // //
