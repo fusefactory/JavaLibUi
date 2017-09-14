@@ -317,6 +317,8 @@ public class Swiper extends TransformerExtension {
       } else {
         restEvent.trigger(scrollableNode);
       }
+
+      bSnapping = false;
     }
   }
 
