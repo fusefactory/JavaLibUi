@@ -70,4 +70,18 @@ public class TextNode extends Node {
     pg.textAlign(alignX, alignY);
     pg.text(text, textOffset.x, textOffset.y, getSize().x, getSize().y);
   }
+
+  public float getDrawWidth(){
+	  if(text.equals(""))
+		  return 0.0f;
+
+	  if(this.font != null)
+	      pg.textFont(this.font);
+
+	  pg.noStroke();
+	  //pg.fill(textColor);
+	  pg.textSize(textSize);
+	  pg.textAlign(alignX, alignY);
+	  return pg.textWidth(text);
+  }
 }
