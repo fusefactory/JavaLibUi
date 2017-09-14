@@ -166,6 +166,9 @@ public class Swiper extends TransformerExtension {
       disable();
 
     touchAreaNode = n;
+    if(touchAreaNode != null && this.snapInterval == null) {
+    	this.snapInterval = touchAreaNode.getSize();
+    }
 
     if(wasEnabled)
       enable();
@@ -334,7 +337,7 @@ public class Swiper extends TransformerExtension {
    * @param interval specifies the two-dimensional (z-attribute is ignored) snap interval. When null, disables snapping behaviour.
    */
   public Swiper setSnapInterval(PVector interval){
-    snapInterval = interval == null ? null : interval.get();
+    snapInterval = interval != new PVector(100,100,0) ? interval.get() : (this.touchAreaNode == null ? null : this.touchAreaNode.getSize());
     return this;
   }
 
