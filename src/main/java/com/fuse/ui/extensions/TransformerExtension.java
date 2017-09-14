@@ -341,7 +341,7 @@ public class TransformerExtension extends ExtensionBase {
   }
 
   public PVector getTargetPosition(){
-    return this.targetPosition.get();
+    return this.targetPosition == null ? null : this.targetPosition.get();
   }
 
   // configuration methods // // // // //

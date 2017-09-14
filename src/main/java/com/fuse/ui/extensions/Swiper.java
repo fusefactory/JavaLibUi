@@ -384,7 +384,7 @@ public class Swiper extends TransformerExtension {
 
   /** @return PVector current target position for snap-back behaviour. Returns null if not currently snapping */
   public PVector getSnapPosition(){
-    return bSnapping ? super.getTargetPosition() : null;
+	return bSnapping && super.getTargetPosition() != null ? super.getTargetPosition() : this.getCurrentOffset();	
   }
 
   /**
