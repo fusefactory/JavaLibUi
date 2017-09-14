@@ -35,8 +35,8 @@ public class Swiper extends TransformerExtension {
   private PVector maxOffset = null;
 
   // events
-  public Event<Swiper> startDraggingEvent;
-  public Event<Swiper> endDraggingEvent;
+  public Event<TouchEvent> startDraggingEvent;
+  public Event<TouchEvent> endDraggingEvent;
   public Event<PVector> newSnapPositionEvent;
   public Event<PVector> newStepPositionEvent;
   public Event<Node> restEvent;
@@ -186,12 +186,12 @@ public class Swiper extends TransformerExtension {
     this.dragStartNodePositionGlobal = scrollableNode.getGlobalPosition();
     this.draggingTouchEvent = event;
     bDragging = true;
-    startDraggingEvent.trigger(this);
+    startDraggingEvent.trigger(event);
   }
 
   private void endDragging(){
     bDragging = false;
-    endDraggingEvent.trigger(this);
+    endDraggingEvent.trigger(this.draggingTouchEvent);
 
     // check offset limits; snap-back if necessary
     PVector pos = getOffsetLimitSnapPosition();
@@ -384,7 +384,7 @@ public class Swiper extends TransformerExtension {
 
   /** @return PVector current target position for snap-back behaviour. Returns null if not currently snapping */
   public PVector getSnapPosition(){
-	return bSnapping && super.getTargetPosition() != null ? super.getTargetPosition() : this.getCurrentOffset();	
+	return bSnapping && super.getTargetPosition() != null ? super.getTargetPosition() : this.getCurrentOffset();
   }
 
   /**
