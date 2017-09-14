@@ -631,6 +631,20 @@ public class Swiper extends TransformerExtension {
 
   // Static factory methods // // // // //
 
+  public static Swiper enableFor(Node touchAreaNode){
+    // find existing
+    Swiper ext = getFirstFor(touchAreaNode);
+
+    if(ext == null){
+      Node scrollerNode = new Node();
+      scrollerNode.setInteractive(false); // we don't want it to take our touch events
+      touchAreaNode.addChild(scrollerNode);
+      ext = enableFor(touchAreaNode, scrollerNode);
+    }
+
+    return ext;
+  }
+
   public static Swiper enableFor(Node touchAreaNode, Node scrollableNode){
     // find existing
     Swiper ext = getFor(touchAreaNode, scrollableNode);
@@ -641,6 +655,7 @@ public class Swiper extends TransformerExtension {
       ext.setNode(scrollableNode);
       ext.setTouchAreaNode(touchAreaNode);
       touchAreaNode.addExtension(ext);
+      ext.enable();
     }
 
     return ext;
