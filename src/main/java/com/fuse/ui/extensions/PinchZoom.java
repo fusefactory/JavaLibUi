@@ -88,6 +88,8 @@ public class PinchZoom extends TransformerExtension {
   private void onDoubleClick() {
 	  if(this.initScale == null) return;
 	  
+	  // TODO; make this behaviour optional;
+	  
 	  if(Math.abs(this.node.getScale().x - this.initScale.x) > 0.03f){
 		  this.transformScale(this.initScale.get()); // restore original scale
 	  } else {

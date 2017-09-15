@@ -12,6 +12,7 @@ public class Draggable extends TransformerExtension {
   private PVector originalNodePosition = null;
   private PVector originalNodePositionGlobal = null;
   private boolean bDragging = false;
+  private boolean bAbortOnSecondTouch = true;
   private TouchEvent dragEvent = null;
   // configurables
   private boolean bRestore = false;
@@ -37,8 +38,14 @@ public class Draggable extends TransformerExtension {
     super.enable();
 
     node.touchDownEvent.addListener((TouchEvent event) -> {
-      if(bDragging)
-        return;
+      if(bDragging) {
+    	  if(bAbortOnSecondTouch) {
+    		  stop();
+    	  }
+
+    	  return;
+      }
+        
 
       Node ourNode = this.getNode();
 
@@ -98,7 +105,7 @@ public class Draggable extends TransformerExtension {
 	  if(bDragging || dragEvent != null) {
 		  bDragging = false;
 		  dragEvent = null;
-      super.stopActiveTransformations();
+		  super.stopActiveTransformations();
 		  endEvent.trigger(this);
 	  }
   }
@@ -190,5 +197,13 @@ public class Draggable extends TransformerExtension {
       if(Draggable.class.isInstance(n.getExtensions().get(i))){
         n.stopUsing(n.getExtensions().get(i));
       }
+  }
+  
+  public void setAbortOnSecondTouch(boolean enable) {
+	  this.bAbortOnSecondTouch = enable;
+  }
+  
+  public boolean getAbortOnSecondTouch() {
+	  return bAbortOnSecondTouch;
   }
 }
