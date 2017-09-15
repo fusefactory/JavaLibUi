@@ -393,6 +393,10 @@ public class Node extends TouchReceiver {
     TouchEvent newEvent = event.copy();
     newEvent.position = toLocal(event.position);
     newEvent.startPosition = toLocal(event.startPosition);
+    if(event.velocity != null)
+    	newEvent.velocity = toLocal(event.velocity); 
+    if(event.velocitySmoothed != null)
+    	newEvent.velocitySmoothed = toLocal(event.velocitySmoothed);
     return newEvent;
   }
 
