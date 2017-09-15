@@ -12,9 +12,12 @@ import com.fuse.ui.TouchEvent;
 public class PinchZoom extends TransformerExtension {
   // attributes
   private PinchMath math = null;
+  private PVector initScale = null;
   private PVector originalScale, originalPosition;
   // configurables
   private boolean bRestore = false;
+  private Long lastClickTime = null;
+  private Long doubleClickMaxInterval = 1000l;
 
   // events
   public Event<Node> startPinchEvent, endPinchEvent;
@@ -42,6 +45,8 @@ public class PinchZoom extends TransformerExtension {
   @Override public void enable(){
     if(this.isEnabled() || this.node == null) return;
     super.enable();
+    
+    this.initScale = this.node.getScale();
 
     this.node.touchDownEvent.addListener((TouchEvent event) -> {
       if(!this.isPinching()){
@@ -62,6 +67,32 @@ public class PinchZoom extends TransformerExtension {
           stopPinching(); // remove this.math, making this.isPinching() == true
       }
     });
+    
+    this.node.touchClickEvent.addListener((TouchEvent) -> {
+    	Long t = System.currentTimeMillis();
+    	if(this.lastClickTime == null) {
+    		this.lastClickTime = t;
+    		return;
+    	}
+    	
+    	if(t - this.lastClickTime > this.doubleClickMaxInterval) {
+    		this.lastClickTime = t;
+    		return;
+    	}
+    	
+    	this.lastClickTime = t;
+    	this.onDoubleClick();
+    });
+  }
+  
+  private void onDoubleClick() {
+	  if(this.initScale == null) return;
+	  
+	  if(Math.abs(this.node.getScale().x - this.initScale.x) > 0.03f){
+		  this.transformScale(this.initScale.get()); // restore original scale
+	  } else {
+		  this.transformScale(new PVector(this.initScale.x+0.8f, this.initScale.y+0.8f, this.initScale.z)); // zoom-in
+	  }
   }
 
   @Override public void disable(){
@@ -69,6 +100,7 @@ public class PinchZoom extends TransformerExtension {
     if(this.node == null) return;
     this.node.touchDownEvent.removeListeners(this);
     this.node.touchUpEvent.removeListeners(this);
+    this.node.touchClickEvent.removeListeners(this);
   }
 
   private void startPinching(TouchEvent[] events){
