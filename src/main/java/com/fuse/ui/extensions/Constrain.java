@@ -76,7 +76,12 @@ public class Constrain extends TransformerExtension {
     if(bFillParent){
       Node parentNode = node.getParent();
       if(parentNode != null){
-        PVector sizeScaled = node.getSizeScaled();
+        //PVector sizeScaled = node.getSizeScaled();
+    	PVector sizeScaled = node.getSize();
+    	PVector scaler = (this.getTargetScale() != null ? this.getTargetScale() : this.node.getScale());
+    	sizeScaled.x = sizeScaled.x * scaler.x;
+    	sizeScaled.y = sizeScaled.y * scaler.y; 
+    	sizeScaled.z = sizeScaled.z * scaler.z; 
 
         if(sizeScaled.x > parentNode.getSize().x){ // can only fill if bigger
           result.x = Math.min(0.0f, Math.max((parentNode.getSize().x-sizeScaled.x), result.x));
@@ -91,7 +96,12 @@ public class Constrain extends TransformerExtension {
     if(bCenterWhenFitting){
       Node parentNode = node.getParent();
       if(parentNode != null){
-        PVector sizeScaled = node.getSizeScaled();
+          //PVector sizeScaled = node.getSizeScaled();
+      	PVector sizeScaled = node.getSize();
+      	PVector scaler = (this.getTargetScale() != null ? this.getTargetScale() : this.node.getScale());
+      	sizeScaled.x = sizeScaled.x * scaler.x;
+      	sizeScaled.y = sizeScaled.y * scaler.y; 
+      	sizeScaled.z = sizeScaled.z * scaler.z;
 
         if(sizeScaled.x < parentNode.getSize().x){
           result.x = (parentNode.getSize().x - sizeScaled.x) * 0.5f;
