@@ -13,6 +13,7 @@ public class PinchZoom extends TransformerExtension {
   // attributes
   private PinchMath math = null;
   private PVector initScale = null;
+  private PVector initPosition = null;
   private PVector originalScale, originalPosition;
   // configurables
   private boolean bRestore = false;
@@ -47,6 +48,7 @@ public class PinchZoom extends TransformerExtension {
     super.enable();
     
     this.initScale = this.node.getScale();
+    this.initPosition = this.node.getPosition();
 
     this.node.touchDownEvent.addListener((TouchEvent event) -> {
       if(!this.isPinching()){
@@ -68,7 +70,7 @@ public class PinchZoom extends TransformerExtension {
       }
     });
     
-    this.node.touchClickEvent.addListener((TouchEvent) -> {
+    this.node.touchClickEvent.addListener((TouchEvent event) -> {
     	Long t = System.currentTimeMillis();
     	if(this.lastClickTime == null) {
     		this.lastClickTime = t;
@@ -81,19 +83,40 @@ public class PinchZoom extends TransformerExtension {
     	}
     	
     	this.lastClickTime = t;
-    	this.onDoubleClick();
+    	this.onDoubleClick(event);
     });
   }
   
-  private void onDoubleClick() {
-	  if(this.initScale == null) return;
-	  
+  private void onDoubleClick(TouchEvent event) {
 	  // TODO; make this behaviour optional;
 	  
 	  if(Math.abs(this.node.getScale().x - this.initScale.x) > 0.03f){
 		  this.transformScale(this.initScale.get()); // restore original scale
+		  this.transformPosition(this.initPosition.get());
 	  } else {
-		  this.transformScale(new PVector(this.initScale.x+0.8f, this.initScale.y+0.8f, this.initScale.z)); // zoom-in
+		  PVector newScale = new PVector(this.initScale.x+0.8f, this.initScale.y+0.8f, this.initScale.z);
+		  
+		  //TouchEvent localEvent = this.node.toLocal(event);
+		  //PVector localPos = localEvent.position;
+
+		  PVector originalSize = this.node.getSize();
+		  originalSize.x = originalSize.x * this.initScale.x;
+		  originalSize.y = originalSize.y * this.initScale.y;
+
+		  PVector originalCenter = originalPosition.get();
+		  originalSize.mult(0.5f);
+		  originalCenter.add(originalSize);
+
+		  PVector newSize = this.node.getSize();
+		  newSize.x = newSize.x * newScale.x;
+		  newSize.y = newSize.y * newScale.y;
+
+		  PVector newPos = originalCenter.get();
+		  newSize.mult(-0.5f);
+		  newPos.add(newSize);
+
+		  this.transformScale(newScale); // zoom-in
+		  this.transformPosition(newPos);
 	  }
   }
 
