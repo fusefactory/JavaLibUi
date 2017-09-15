@@ -73,7 +73,7 @@ public class Constrain extends TransformerExtension {
     if(axisMaxValues[1] != null && axisMaxValues[1] < result.y) result.y = axisMaxValues[1];
     if(axisMaxValues[2] != null && axisMaxValues[2] < result.z) result.z = axisMaxValues[2];
 
-    if(bFillParent){
+    if(bFillParent && this.getTargetScale() == null){ // not while scaling
       Node parentNode = node.getParent();
       if(parentNode != null){
         //PVector sizeScaled = node.getSizeScaled();
