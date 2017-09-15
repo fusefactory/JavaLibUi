@@ -18,7 +18,7 @@ public class PinchZoom extends TransformerExtension {
   // configurables
   private boolean bRestore = false;
   private Long lastClickTime = null;
-  private Long doubleClickMaxInterval = 1000l;
+  private Long doubleClickMaxInterval = 850l; // TODO; make configurable (and refactor to TouchManager)
 
   // events
   public Event<Node> startPinchEvent, endPinchEvent;
@@ -81,15 +81,15 @@ public class PinchZoom extends TransformerExtension {
     		this.lastClickTime = t;
     		return;
     	}
-    	
-    	this.lastClickTime = t;
+
+    	this.lastClickTime = null;
     	this.onDoubleClick(event);
     });
   }
   
   private void onDoubleClick(TouchEvent event) {
 	  // TODO; make this behaviour optional;
-	  
+
 	  if(Math.abs(this.node.getScale().x - this.initScale.x) > 0.03f){
 		  this.transformScale(this.initScale.get()); // restore original scale
 		  this.transformPosition(this.initPosition.get());
