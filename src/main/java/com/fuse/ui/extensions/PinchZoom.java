@@ -103,7 +103,7 @@ public class PinchZoom extends TransformerExtension {
 		  originalSize.x = originalSize.x * this.initScale.x;
 		  originalSize.y = originalSize.y * this.initScale.y;
 
-		  PVector originalCenter = originalPosition.get();
+		  PVector originalCenter = this.initPosition.get();
 		  originalSize.mult(0.5f);
 		  originalCenter.add(originalSize);
 
