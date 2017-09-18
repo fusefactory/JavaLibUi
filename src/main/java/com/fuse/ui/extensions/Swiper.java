@@ -35,8 +35,8 @@ public class Swiper extends TransformerExtension {
   private PVector maxOffset = null;
 
   // events
-  public Event<Swiper> startDraggingEvent;
-  public Event<Swiper> endDraggingEvent;
+  public Event<TouchEvent> startDraggingEvent;
+  public Event<TouchEvent> endDraggingEvent;
   public Event<PVector> newSnapPositionEvent;
   public Event<PVector> newStepPositionEvent;
   public Event<Node> restEvent;
@@ -51,13 +51,6 @@ public class Swiper extends TransformerExtension {
     newStepPositionEvent = new Event<>();
     restEvent = new Event<>();
 
-    // newStepPositionEvent triggers everytime newSnapPositionEvent is triggered
-    newSnapPositionEvent.addListener((PVector snapPos) -> {
-      PVector value = this.toStepPosition(snapPos);
-      if(value != null)
-        newStepPositionEvent.trigger(value);
-    }, this);
-
     super.setMaxTransformationTime(6.0f);
   }
 
@@ -68,7 +61,7 @@ public class Swiper extends TransformerExtension {
     newSnapPositionEvent.destroy();
     newStepPositionEvent.destroy();
     restEvent.destroy();
-    scrollableNode = null;
+    // scrollableNode = null;
   }
 
   @Override public void update(float dt){
@@ -173,6 +166,9 @@ public class Swiper extends TransformerExtension {
       disable();
 
     touchAreaNode = n;
+    if(touchAreaNode != null && this.snapInterval == null) {
+    	this.snapInterval = touchAreaNode.getSize();
+    }
 
     if(wasEnabled)
       enable();
@@ -190,12 +186,12 @@ public class Swiper extends TransformerExtension {
     this.dragStartNodePositionGlobal = scrollableNode.getGlobalPosition();
     this.draggingTouchEvent = event;
     bDragging = true;
-    startDraggingEvent.trigger(this);
+    startDraggingEvent.trigger(event);
   }
 
   private void endDragging(){
     bDragging = false;
-    endDraggingEvent.trigger(this);
+    endDraggingEvent.trigger(this.draggingTouchEvent);
 
     // check offset limits; snap-back if necessary
     PVector pos = getOffsetLimitSnapPosition();
@@ -272,6 +268,7 @@ public class Swiper extends TransformerExtension {
       }
     } else {
       this.endDamping();
+      restEvent.trigger(scrollableNode);
     }
   }
 
@@ -317,7 +314,11 @@ public class Swiper extends TransformerExtension {
       PVector p = this.getOffsetLimitSnapPosition();
       if(p != null){
         this.setSnapPosition(p);
+      } else {
+        restEvent.trigger(scrollableNode);
       }
+
+      bSnapping = false;
     }
   }
 
@@ -338,7 +339,7 @@ public class Swiper extends TransformerExtension {
    * @param interval specifies the two-dimensional (z-attribute is ignored) snap interval. When null, disables snapping behaviour.
    */
   public Swiper setSnapInterval(PVector interval){
-    snapInterval = interval == null ? null : interval.get();
+    snapInterval = interval != new PVector(100,100,0) ? interval.get() : (this.touchAreaNode == null ? null : this.touchAreaNode.getSize());
     return this;
   }
 
@@ -385,7 +386,7 @@ public class Swiper extends TransformerExtension {
 
   /** @return PVector current target position for snap-back behaviour. Returns null if not currently snapping */
   public PVector getSnapPosition(){
-    return bSnapping ? super.getTargetPosition() : null;
+	return bSnapping && super.getTargetPosition() != null ? super.getTargetPosition() : this.getCurrentOffset();
   }
 
   /**
@@ -418,6 +419,10 @@ public class Swiper extends TransformerExtension {
     this.bSnapping = true;
     // trigger notification
     newSnapPositionEvent.trigger(correctedPos);
+
+    PVector stepValue = this.toStepPosition(correctedPos);
+    if(stepValue != null)
+      newStepPositionEvent.trigger(stepValue);
   }
 
   public float getSnapThrowFactor(){
@@ -478,6 +483,16 @@ public class Swiper extends TransformerExtension {
 
   public PVector getStepPosition(){
     return this.toStepPosition(this.scrollableNode.getPosition());
+  }
+
+  public void setStepPosition(float x, float y){
+    this.setStepPosition(new PVector(x,y,0));
+  }
+
+  public void setStepPosition(PVector pos){
+    pos = this.stepPositionToNodePosition(pos);
+    pos = this.toClosestSnapPosition(pos);
+    this.setSnapPosition(pos);
   }
 
   public Swiper step(float x, float y){
@@ -565,7 +580,9 @@ public class Swiper extends TransformerExtension {
 
   /** @return PVector target position for snap-back after offset limit is exceeded. Returns null if offset limit is not exceeded */
   private PVector getOffsetLimitSnapPosition(){
-    return this.getOffsetLimitsCorrection(scrollableNode.getPosition());
+    Node n = this.scrollableNode;
+    if(n == null) return null;
+    return this.getOffsetLimitsCorrection(n.getPosition());
   }
 
   private PVector getOffsetLimitsCorrection(PVector pos){
@@ -619,6 +636,20 @@ public class Swiper extends TransformerExtension {
 
   // Static factory methods // // // // //
 
+  public static Swiper enableFor(Node touchAreaNode){
+    // find existing
+    Swiper ext = getFirstFor(touchAreaNode);
+
+    if(ext == null){
+      Node scrollerNode = new Node();
+      scrollerNode.setInteractive(false); // we don't want it to take our touch events
+      touchAreaNode.addChild(scrollerNode);
+      ext = enableFor(touchAreaNode, scrollerNode);
+    }
+
+    return ext;
+  }
+
   public static Swiper enableFor(Node touchAreaNode, Node scrollableNode){
     // find existing
     Swiper ext = getFor(touchAreaNode, scrollableNode);
@@ -626,8 +657,10 @@ public class Swiper extends TransformerExtension {
     // create new
     if(ext == null){
       ext = new Swiper();
+      ext.setNode(scrollableNode);
       ext.setTouchAreaNode(touchAreaNode);
-      scrollableNode.use(ext);
+      touchAreaNode.addExtension(ext);
+      ext.enable();
     }
 
     return ext;
@@ -650,6 +683,15 @@ public class Swiper extends TransformerExtension {
       if(Swiper.class.isInstance(ext))
         if(((Swiper)ext).getScrollableNode() == scrollableNode)
           return (Swiper)ext;
+
+    return null;
+  }
+
+  public static Swiper getFirstFor(Node touchAreaNode){
+    // find first extension of this type
+    for(ExtensionBase ext : touchAreaNode.getExtensions())
+      if(Swiper.class.isInstance(ext))
+        return (Swiper)ext;
 
     return null;
   }

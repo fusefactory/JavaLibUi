@@ -53,7 +53,7 @@ public class SmoothScroll extends ExtensionBase {
 
   @Override public void destroy(){
     super.destroy();
-    scrollableNode = null;
+    // scrollableNode = null;
   }
 
   @Override
@@ -514,7 +514,9 @@ public class SmoothScroll extends ExtensionBase {
 
   /** @return PVector target position for snap-back after offset limit is exceeded. Returns null if offset limit is not exceeded */
   private PVector getOffsetLimitSnapPosition(){
-    return this.getOffsetLimitsCorrection(scrollableNode.getPosition());
+	  Node n = this.scrollableNode;
+	  if(n == null) return null;
+    return this.getOffsetLimitsCorrection(n.getPosition());
   }
 
   private PVector getOffsetLimitsCorrection(PVector pos){

@@ -102,25 +102,17 @@ public class App extends PApplet {
     this.touchAreaNode.setClipContent(true); // toggle-able with the 'c' key
     this.sceneNode.addChild(this.touchAreaNode);
 
-    // Scrollable content sub-container
-    this.scrollableNode = new Node();
-    this.touchAreaNode.addChild(
-      this.scrollableNode
-        .setName("scrollable")
-        .setInteractive(false));
-
-
     // Create/enable swiper extensions
-    this.swiper = Swiper.enableFor(touchAreaNode, scrollableNode)
+    this.swiper = Swiper.enableFor(touchAreaNode)
       .setSnapEnabled(true)
-      .setSnapThrowFactor(7.0f)
-      .setMinStep(0,0) // first page
-      .setMaxStep(9,0); // last page
+      .setSnapThrowFactor(7.0f);
+      //.setMinStep(0,0); // first page
+    //  .setMaxStep(9,0); // last page
     this.swiper.setSmoothValue(5.0f);
     this.swiper.setMinPosY(0.0f); // fix vertical axis
     this.swiper.setMaxPosY(0.0f);
 
-    //
+    // current page label element
     this.pageLabelNode = new TextNode();
     this.sceneNode.addChild(
       this.pageLabelNode
@@ -133,6 +125,8 @@ public class App extends PApplet {
     this.swiper.newStepPositionEvent.addListener((PVector stepPos) -> {
       this.pageLabelNode.setText("Page: "+Integer.toString(((int)stepPos.x)+1));
     });
+
+    this.scrollableNode = this.swiper.getScrollableNode();
 
     // Create some dummy content so we actually see some stuff happening
     for(int x=0; x<60; x++){
