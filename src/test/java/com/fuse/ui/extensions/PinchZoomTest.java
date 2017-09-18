@@ -32,4 +32,8 @@ public class PinchZoomTest {
         gen.go();
         assertTrue(pz.isPinching());
     }
+
+    @Ignore @Test public void doubleTapZoom(){
+      assertEquals("TODO", "refactor to separate extension");
+    }
 }

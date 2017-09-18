@@ -46,7 +46,7 @@ public class PinchZoom extends TransformerExtension {
   @Override public void enable(){
     if(this.isEnabled() || this.node == null) return;
     super.enable();
-    
+
     this.initScale = this.node.getScale();
     this.initPosition = this.node.getPosition();
 
@@ -69,14 +69,14 @@ public class PinchZoom extends TransformerExtension {
           stopPinching(); // remove this.math, making this.isPinching() == true
       }
     });
-    
+
     this.node.touchClickEvent.addListener((TouchEvent event) -> {
     	Long t = System.currentTimeMillis();
     	if(this.lastClickTime == null) {
     		this.lastClickTime = t;
     		return;
     	}
-    	
+
     	if(t - this.lastClickTime > this.doubleClickMaxInterval) {
     		this.lastClickTime = t;
     		return;
@@ -86,7 +86,10 @@ public class PinchZoom extends TransformerExtension {
     	this.onDoubleClick(event);
     });
   }
-  
+
+  // TODO; refactor this behaviour to separate extension;
+  // doesn't really relate much to pinchzoom
+  // maybe make zoom-with-anchor logic part of TransformerExtension?
   private void onDoubleClick(TouchEvent event) {
 	  // TODO; make this behaviour optional;
 
@@ -95,7 +98,7 @@ public class PinchZoom extends TransformerExtension {
 		  this.transformPosition(this.initPosition.get());
 	  } else {
 		  PVector newScale = new PVector(this.initScale.x+0.8f, this.initScale.y+0.8f, this.initScale.z);
-		  
+
 		  //TouchEvent localEvent = this.node.toLocal(event);
 		  //PVector localPos = localEvent.position;
 
