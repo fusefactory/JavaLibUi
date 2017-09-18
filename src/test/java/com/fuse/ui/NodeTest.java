@@ -647,14 +647,8 @@ public class NodeTest {
         draggable.startEvent.addListener((Draggable d) -> {});
         assertEquals(draggable.startEvent.size(), 1);
         Constrain constrain = Constrain.enableFor(n, true);
-
-        SmoothScroll smoothScroll = SmoothScroll.enableFor(n, child);
-        Swiper swiper = Swiper.enableFor(n);
-        swiper.swipeEvent.addListener((Swiper s) -> {});
-        assertEquals(swiper.swipeEvent.size(), 1);
-        PinchZoom pinchZoom = PinchZoom.enableFor(n);
         TouchEventForwarder touchEventForwarder = TouchEventForwarder.enableFromTo(child, n);
-        assertEquals(n.getExtensions().size(), 7);
+        assertEquals(n.getExtensions().size(), 4);
 
         n.destroy();
 
@@ -663,17 +657,12 @@ public class NodeTest {
         assertEquals(n.newOffspringEvent.size(), 0);
         assertEquals(n.positionChangeEvent.size(), 0);
         assertEquals(n.sizeChangeEvent.size(), 0);
-
         assertEquals(n.getChildNodes().size(), 0);
-
         assertEquals(child.sizeChangeEvent.size(), 0);
         assertEquals(child.getChildNodes().size(), 0);
-
         assertEquals(grandchild.sizeChangeEvent.size(), 0);
-
         assertEquals(n.getExtensions().size(), 0);
         assertEquals(draggable.startEvent.size(), 0);
-        assertEquals(swiper.swipeEvent.size(), 0);
     }
 
     @Test public void translateAfterRotateAndScale(){
