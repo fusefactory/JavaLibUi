@@ -9,6 +9,7 @@ import java.util.Iterator;
 
 import java.util.logging.*;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 import processing.core.PGraphics;
@@ -32,14 +33,15 @@ public class TouchManager extends TouchReceiver {
   private final static float velocitySmoothCoeff = 0.25f;
   private final static float velocityDump = 0.6f;
 
-  private List<TouchEvent> touchEventQueue;
+  
+  private ConcurrentLinkedQueue<TouchEvent> touchEventQueue;
   private Map<Integer, TouchEvent> activeTouchEvents;
   private final static int MAX_CLICK_HISTORY_SIZE = 10; // no need to remember more; only remembering for double-click events, but have to consider multiple simultanous users
   private ConcurrentLinkedDeque<TouchEvent> clickHistory;
 
   private void _init(){
     logger = Logger.getLogger(TouchManager.class.getName());
-    touchEventQueue = new ArrayList<TouchEvent>();
+    touchEventQueue = new ConcurrentLinkedQueue<TouchEvent>();
     activeTouchEvents = new HashMap<Integer, TouchEvent>();
     //clickHistory = new ConcurrentLinkedDeque<>();
   }
@@ -69,12 +71,8 @@ public class TouchManager extends TouchReceiver {
     }
 
     if(dispatchOnUpdate){
-      List<TouchEvent> queueCopy = new ArrayList<>();
-      queueCopy.addAll(touchEventQueue);
-
-      for(TouchEvent e : queueCopy){
-        processTouchEvent(e);
-        touchEventQueue.remove(e);
+      while(!this.touchEventQueue.isEmpty()) {
+    	  processTouchEvent(this.touchEventQueue.poll());
       }
     }
 
@@ -113,7 +111,7 @@ public class TouchManager extends TouchReceiver {
       event.time = this.getTime();
 
     if(dispatchOnUpdate){
-      touchEventQueue.add(event);
+      this.touchEventQueue.add(event);
       return;
     }
 
