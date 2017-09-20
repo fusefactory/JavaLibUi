@@ -57,6 +57,7 @@ public class Node extends TouchReceiver {
   public Event<Node> newParentEvent;
   /** Triggered when a -direct- child is added to this node */
   public Event<Node> newChildEvent;
+  public Event<Node> childRemovedEvent;
   /** Triggered when a child is added to this node, or any of its offspring */
   public Event<Node> newOffspringEvent;
   public Event<Node> positionChangeEvent, sizeChangeEvent, scaleChangeEvent, rotationChangeEvent;
@@ -85,6 +86,7 @@ public class Node extends TouchReceiver {
     name = "";
     newParentEvent = new Event<>();
     newChildEvent = new Event<>();
+    childRemovedEvent = new Event<>();
     newOffspringEvent = new Event<>();
     positionChangeEvent = new Event<>();
     sizeChangeEvent = new Event<>();
@@ -107,8 +109,11 @@ public class Node extends TouchReceiver {
     newParentEvent.destroy();
     newOffspringEvent.destroy();
     newChildEvent.destroy();
+    childRemovedEvent.destroy();
     positionChangeEvent.destroy();
     sizeChangeEvent.destroy();
+    rotationChangeEvent.destroy();
+    scaleChangeEvent.destroy();
 
     // detach from scenegraph if still connected
     if(getParent() != null)
@@ -120,7 +125,7 @@ public class Node extends TouchReceiver {
       this.removeChild(childNode);
       childNode.destroy();
     }
-    
+
     // cleanup this node's extensions
     if(extensions != null){
       while(extensions != null && !extensions.isEmpty()){
@@ -441,6 +446,7 @@ public class Node extends TouchReceiver {
   public void removeChild(Node n){
     childNodes.remove(n);
     newOffspringEvent.stopForward(n.newOffspringEvent);
+    childRemovedEvent.trigger(n);
   }
 
   public void removeAllChildren(){

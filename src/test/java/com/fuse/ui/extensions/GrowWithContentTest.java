@@ -42,5 +42,13 @@ public class GrowWithContentTest {
     Node baby = new Node();
     baby.setPosition(5000,5000).setSize(3000,3000);
     assertEquals(n.getSize(), new PVector(820, 620, 0));
+
+    // now n should stop adepting its size to child
+    n.removeChild(child);
+    child.setPosition(30,30);
+    assertEquals(n.getSize(), new PVector(820, 620, 0));
+    assertEquals(child.positionChangeEvent.size(), 0);
+    assertEquals(child.sizeChangeEvent.size(), 0);
+    assertEquals(child.scaleChangeEvent.size(), 0);
   }
 }
