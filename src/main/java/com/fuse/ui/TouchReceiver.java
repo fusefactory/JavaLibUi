@@ -20,7 +20,7 @@ public class TouchReceiver {
     touchClickEvent,
     touchDoubleClickEvent;
 
-  private Logger logger;
+  protected Logger logger;
   private List<TouchEvent> activeTouchEvents = null;
 
   public TouchReceiver(){
@@ -69,7 +69,7 @@ public class TouchReceiver {
           if(this != event.node) { // for original touch target enter/exit doesn't affect the touch activeness
             addActiveTouchEvent(event);
           }
-          
+
           touchEnterEvent.trigger(event);
           break;
         }

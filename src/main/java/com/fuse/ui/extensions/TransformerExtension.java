@@ -15,14 +15,16 @@ public class TransformerExtension extends ExtensionBase {
   private static float doneScaleDeltaMag = 0.01f;
   private static float donePositionDeltaMag = 0.1f;
   private static float doneRotationDeltaMag = 0.1f;
+  private static float doneSizeDeltaMag = 0.1f;
   // smoothing
-  private PVector targetPosition, targetRotation, targetScale;
+  private PVector targetPosition, targetRotation, targetScale, targetSize;
   private float smoothValue = 7.0f;
   private Float smoothValueScale = null; // when null, smoothValue is used for scaling as well
   // time-based transformation expiration
   private Float maxTransformationTime = 3.0f;
   private float positionTimer;
   private float scaleTimer;
+  private float sizeTimer;
   // limits
   private Float[] minPos = {null, null, null}; // x,y,z axis
   private Float[] maxPos = {null, null, null}; // x,y,z axis
@@ -144,6 +146,35 @@ public class TransformerExtension extends ExtensionBase {
           vec.add(this.node.getScale());
           // apply update to node
           this.node.setScale(vec);
+        }
+      }
+    }
+
+    if(targetSize != null){
+      this.sizeTimer += dt;
+      if( this.maxTransformationTime != null && this.sizeTimer > this.maxTransformationTime){
+        logger.fine("size transformation expired");
+        this.targetSize = null;
+      } else if(smoothValue <= 1.0f){
+        // smoothing disabled, apply directly
+        this.node.setSize(targetSize);
+        targetSize = null;
+      } else {
+        PVector vec = targetSize.get();
+        // delta
+        vec.sub(this.node.getSize());
+        // smoothed delta
+        vec.mult(1.0f / this.smoothValue);
+
+        if(vec.mag() < doneSizeDeltaMag){
+          // finalize
+          this.node.setRotation(targetSize);
+          targetSize = null;
+        } else {
+          // apply delta to current node value
+          vec.add(this.node.getSize());
+          // apply update to node
+          this.node.setSize(vec);
         }
       }
     }
@@ -279,6 +310,42 @@ public class TransformerExtension extends ExtensionBase {
     this.transformationsThisUpdate++;
   }
 
+  protected void transformSize(PVector vec){
+    if(bOnlyWhenNotTouched && this.node.isTouched())
+      return;
+
+    //vec = this.limitedScale(vec);
+
+    if(this.isSmoothing()){
+      this.targetSize = vec.get();
+      sizeTimer = 0.0f;
+      return; // let the update method take it from here
+    }
+
+    // not smoothing, apply immediately
+    if(this.endlessRecursionDetected()){
+      this.logger.warning("TransformerExtension for Node: '"+this.node.getName()+"' detected endless recursion");
+      return;
+    }
+
+    // apply position directly, unsmoothed
+    this.node.setSize(vec);
+    this.transformationsThisUpdate++;
+  }
+  
+  protected void transformWidth(float newValue) {
+	  // consider active resize transformation that might be going on
+	  PVector vec = this.targetSize != null ? this.targetSize.get() : this.node.getSize();
+	  vec.x = newValue;
+	  this.transformSize(vec);
+  }
+
+  protected void transformHeight(float newValue) {
+	  // consider active resize transformation that might be going on
+	  PVector vec = this.targetSize != null ? this.targetSize.get() : this.node.getSize();
+	  vec.y = newValue;
+	  this.transformSize(vec);
+  }
 
   protected PVector limitedPosition(PVector vec){
     PVector result = vec.get();
@@ -343,7 +410,7 @@ public class TransformerExtension extends ExtensionBase {
   public PVector getTargetPosition(){
     return this.targetPosition == null ? null : this.targetPosition.get();
   }
-  
+
   public PVector getTargetScale() {
 	  return this.targetScale == null ? null : this.targetScale.get();
   }

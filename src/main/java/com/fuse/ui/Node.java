@@ -59,7 +59,7 @@ public class Node extends TouchReceiver {
   public Event<Node> newChildEvent;
   /** Triggered when a child is added to this node, or any of its offspring */
   public Event<Node> newOffspringEvent;
-  public Event<Node> positionChangeEvent, sizeChangeEvent;
+  public Event<Node> positionChangeEvent, sizeChangeEvent, scaleChangeEvent, rotationChangeEvent;
 
   /** Comparator for ordering a list of Nodes from lower plane to higher plane (used for rendering) */
   static public Comparator<Node> bottomPlaneFirst = (a,b) -> {
@@ -88,6 +88,8 @@ public class Node extends TouchReceiver {
     newOffspringEvent = new Event<>();
     positionChangeEvent = new Event<>();
     sizeChangeEvent = new Event<>();
+    rotationChangeEvent = new Event<>();
+    scaleChangeEvent = new Event<>();
   }
 
   /** Default constructor; intializes default value (visible, interactive, empty name, position zero, size zero) */
@@ -292,6 +294,7 @@ public class Node extends TouchReceiver {
   public Node setScale(PVector newScale){
     scale = newScale;
     updateLocalTransformMatrix();
+    this.scaleChangeEvent.trigger(this);
     return this;
   }
 
@@ -311,6 +314,7 @@ public class Node extends TouchReceiver {
   public Node setRotation(PVector newRot){
     this.rotation = newRot.get();
     updateLocalTransformMatrix();
+    this.rotationChangeEvent.trigger(this);
     return this;
   }
 
@@ -397,7 +401,7 @@ public class Node extends TouchReceiver {
     newEvent.position = toLocal(event.position);
     newEvent.startPosition = toLocal(event.startPosition);
     if(event.velocity != null)
-    	newEvent.velocity = toLocal(event.velocity); 
+    	newEvent.velocity = toLocal(event.velocity);
     if(event.velocitySmoothed != null)
     	newEvent.velocitySmoothed = toLocal(event.velocitySmoothed);
     return newEvent;
@@ -799,5 +803,59 @@ public class Node extends TouchReceiver {
 
   public ExtensionBase stopCopyingAllTouchEventsFrom(TouchReceiver source){
     return TouchEventForwarder.disableFromTo(source, this);
+  }
+
+  // layout methods
+
+  public Node placeLeft(Node subject){
+    return this.placeLeft(subject, false);
+  }
+
+  public Node placeLeft(Node subject, boolean active){
+    if(active){
+      logger.warning("active layouting in Node not yet implemented");
+    }
+
+    subject.setX(this.position.x - subject.getSizeScaled().x);
+    return this;
+  }
+
+  public Node placeRight(Node subject){
+    return this.placeRight(subject, false);
+  }
+
+  public Node placeRight(Node subject, boolean active){
+    if(active){
+      logger.warning("active layouting in Node not yet implemented");
+    }
+
+    subject.setX(this.getRightScaled());
+    return this;
+  }
+
+  public Node placeAbove(Node subject){
+    return this.placeAbove(subject, false);
+  }
+
+  public Node placeAbove(Node subject, boolean active){
+    if(active){
+      logger.warning("active layouting in Node not yet implemented");
+    }
+
+    subject.setY(this.position.y - subject.getSizeScaled().y);
+    return this;
+  }
+
+  public Node placeBelow(Node subject){
+    return this.placeBelow(subject, false);
+  }
+
+  public Node placeBelow(Node subject, boolean active){
+    if(active){
+      logger.warning("active layouting in Node not yet implemented");
+    }
+
+    subject.setY(this.getBottomScaled());
+    return this;
   }
 }
