@@ -62,14 +62,18 @@ public class GrowWithContent extends TransformerExtension {
 		  return;
 	  }
 
+    // TODO; calculate Node's bounding box to also consider rotational factors
+
 	  float fl = n.getRightScaled();
 	  if(fl > this.node.getSize().x) {
-		  this.transformWidth(fl);
+      // use TransformerExtension's smoothing options (disabled by default)
+		  super.transformWidth(fl);
 	  }
 
 	  fl = n.getBottomScaled();
 	  if(fl > this.node.getSize().y) {
-		  this.transformHeight(fl);
+      // use TransformerExtension's smoothing options (disabled by default)
+		  super.transformHeight(fl);
 	  }
   }
 
