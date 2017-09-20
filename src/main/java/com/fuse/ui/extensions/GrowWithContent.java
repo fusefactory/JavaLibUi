@@ -1,10 +1,6 @@
 package com.fuse.ui.extensions;
 
-import processing.core.PVector;
-import processing.core.PGraphics;
-
 import com.fuse.ui.Node;
-
 
 /**
  * The TransformationExtension bass class provides the smoothing logic
