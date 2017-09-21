@@ -1,9 +1,9 @@
 package com.fuse.ui;
 
 import processing.core.PApplet;
-import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.core.PVector;
+import processing.opengl.Texture;
 
 public class ImageNode extends Node {
 
@@ -18,9 +18,10 @@ public class ImageNode extends Node {
   protected PImage image;
   protected Mode mode;
   private boolean autoResizeToImage = false;
+  private boolean bClearImageOnDestroy = false;
   protected Integer tintColor = null;
-  protected PVector fitCenteredSize = null;
-  protected PVector fillSize = null;
+
+  // instance lifecycle methods // // // // //
 
   private void _init(){
     image = null;
@@ -29,12 +30,28 @@ public class ImageNode extends Node {
 
   /** Default constructor; intialized with default values: image=null and mode=NORMAL */
   public ImageNode(){
+	super();
     _init();
   }
 
   public ImageNode(String nodeName){
     super(nodeName);
     _init();
+  }
+
+  @Override
+  public void destroy(){
+    if(this.bClearImageOnDestroy && this.image!=null){
+      // only processing2?
+      Object cache = pg.getCache(image);
+      if(cache instanceof Texture) {
+    	  Texture tex = (Texture)cache;
+    	  tex.unbind();
+    	  tex.disposeSourceBuffer();
+      }
+      pg.removeCache(image);
+      this.image = null;
+    }
   }
 
   /** Draw this node's image at this Node's position */
@@ -63,9 +80,7 @@ public class ImageNode extends Node {
         break;
       }
       case FIT_CENTERED : {
-        // "cache" the centered fit size
-        if(fitCenteredSize == null)
-          fitCenteredSize = calculateFitCenteredSize();
+        PVector fitCenteredSize = calculateFitCenteredSize();
         PVector pos = PVector.mult(getSize(), 0.5f);
         pg.imageMode(PApplet.CENTER);
         pg.image(image, pos.x, pos.y, fitCenteredSize.x, fitCenteredSize.y);
@@ -73,9 +88,7 @@ public class ImageNode extends Node {
         break;
       }
       case FILL : {
-        // "cache" the centered fit size
-        //if(fillSize == null)
-        fillSize = calculateFillSize();
+        PVector fillSize = calculateFillSize();
         PVector pos = PVector.mult(getSize(), 0.5f);
         pg.imageMode(PApplet.CENTER);
         pg.image(image, pos.x, pos.y, fillSize.x, fillSize.y);
@@ -86,6 +99,8 @@ public class ImageNode extends Node {
     if(tintColor != null)
       pg.noTint();
   }
+
+  // config getter/setter methods // // // // //
 
   /**
    * Set/change the image of this node.
@@ -112,8 +127,13 @@ public class ImageNode extends Node {
     }
   }
 
-  public void setTint(Integer clr){ tintColor = clr; }
+  public ImageNode setTint(Integer clr){ tintColor = clr; return this; }
   public Integer getTint(){ return tintColor; }
+
+  public ImageNode setClearImageOnDestroy(boolean enable){ this.bClearImageOnDestroy = enable; return this; }
+  public boolean getClearImageOnDestroy(){ return this.bClearImageOnDestroy; }
+
+  // private helper methods // // // // //
 
   private PVector calculateFitCenteredSize(){
     if(image == null) return new PVector(0.0f,0.0f,0.0f);
@@ -130,4 +150,5 @@ public class ImageNode extends Node {
     float factor = Math.max(w,h);
     return new PVector(factor * image.width, factor * image.height, 0.0f);
   }
+
 }

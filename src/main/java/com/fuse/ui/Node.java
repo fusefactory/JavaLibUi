@@ -102,9 +102,24 @@ public class Node extends TouchReceiver {
   }
 
   public void destroy(){
+    newParentEvent.destroy();
+    newOffspringEvent.destroy();
+    newChildEvent.destroy();
+    positionChangeEvent.destroy();
+    sizeChangeEvent.destroy();
+
+    // detach from scenegraph if still connected
     if(getParent() != null)
       getParent().removeChild(this);
 
+    // recursively destroy this node's subtree
+    while(!childNodes.isEmpty()){
+      Node childNode = childNodes.get(0);
+      this.removeChild(childNode);
+      childNode.destroy();
+    }
+    
+    // cleanup this node's extensions
     if(extensions != null){
       while(extensions != null && !extensions.isEmpty()){
         ExtensionBase ext = extensions.get(0);
@@ -112,18 +127,6 @@ public class Node extends TouchReceiver {
         ext.destroy();
       }
     }
-
-    while(!childNodes.isEmpty()){
-      Node childNode = childNodes.get(0);
-      this.removeChild(childNode);
-      childNode.destroy();
-    }
-
-    newParentEvent.destroy();
-    newOffspringEvent.destroy();
-    newChildEvent.destroy();
-    positionChangeEvent.destroy();
-    sizeChangeEvent.destroy();
   }
 
   public void update(float dt){
