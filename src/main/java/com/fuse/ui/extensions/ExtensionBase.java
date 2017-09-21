@@ -14,7 +14,7 @@ public class ExtensionBase {
 
   public void destroy(){
     this.disable();
-    node = null;
+    // node = null;
   }
 
   public void update(float dt){
