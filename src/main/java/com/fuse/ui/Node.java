@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.function.Consumer;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 import processing.core.PGraphics;
 import processing.core.PVector;
@@ -26,7 +27,7 @@ public class Node extends TouchReceiver {
   public static void setPGraphics(PGraphics newPg){ pg = newPg; }
   public static PGraphics getPGraphics(){ return pg; }
 
-  private List<Node> childNodes;
+  private ConcurrentLinkedDeque<Node> childNodes;
   private Node parentNode;
   /** The name of this node, which can be used to find specific child-nodes */
   private String name;
@@ -74,7 +75,7 @@ public class Node extends TouchReceiver {
 
   /** The private _init method is only used in constructor (to keep them DRY) */
   private void _init(){
-    childNodes = new ArrayList<Node>();
+    childNodes = new ConcurrentLinkedDeque<Node>();
     parentNode = null;
     bVisible = true;
     bInteractive = true;
@@ -121,9 +122,11 @@ public class Node extends TouchReceiver {
 
     // recursively destroy this node's subtree
     while(!childNodes.isEmpty()){
-      Node childNode = childNodes.get(0);
-      this.removeChild(childNode);
-      childNode.destroy();
+      Node childNode = childNodes.pollFirst();
+      if(childNode != null) {
+    	this.removeChild(childNode);
+      	childNode.destroy();
+      }
     }
 
     // cleanup this node's extensions
@@ -451,7 +454,7 @@ public class Node extends TouchReceiver {
 
   public void removeAllChildren(){
     while(!childNodes.isEmpty())
-    removeChild(childNodes.get(0));
+    	this.removeChild(childNodes.pollFirst());
   }
 
   public Node getChildWithName(String name){
