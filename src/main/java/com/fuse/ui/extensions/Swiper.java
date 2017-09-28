@@ -24,7 +24,7 @@ public class Swiper extends TransformerExtension {
   private final static float velocitySmoothCoeff = 0.1f;
   private float dampingFactor = 0.001f;
   private final static float minVelocityMag = 1.0f; // when velocity reaches this value (or lower), we finalize the movement
-  private float velocityReductionFactor = 10.0f; // factor to multipy the (already smoother) smoothedVelocity when setting the main velocity
+  private float velocityReductionFactor = 1.0f; // factor to multipy the (already smoother) smoothedVelocity when setting the main velocity
   // snapping (falling back into place)
   private boolean bSnapping = false;
   private PVector snapInterval = null;
@@ -110,7 +110,7 @@ public class Swiper extends TransformerExtension {
     super.enable();
 
     this.touchAreaNode.touchDownEvent.addListener((TouchEvent event) -> {
-      if(!bDragging)
+      if(!bDragging || this.draggingTouchEvent.isFinished())
         this.startDragging(event);
     }, this);
 
@@ -250,6 +250,7 @@ public class Swiper extends TransformerExtension {
   private void startDamping(PVector velocity){
     velocity = velocity.get();
     velocity.mult(velocityReductionFactor);
+    velocity.add(this.scrollableNode.getPosition());
     super.transformPosition(velocity);
     this.bDamping = true;
     // TODO trigger event
@@ -339,7 +340,8 @@ public class Swiper extends TransformerExtension {
    * @param interval specifies the two-dimensional (z-attribute is ignored) snap interval. When null, disables snapping behaviour.
    */
   public Swiper setSnapInterval(PVector interval){
-    snapInterval = interval != new PVector(100,100,0) ? interval.get() : (this.touchAreaNode == null ? null : this.touchAreaNode.getSize());
+	this.snapInterval = interval;
+    //snapInterval = interval != null ? interval.get() : (this.touchAreaNode == null ? null : this.touchAreaNode.getSize());
     return this;
   }
 
