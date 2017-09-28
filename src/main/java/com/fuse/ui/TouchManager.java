@@ -59,12 +59,12 @@ public class TouchManager extends TouchReceiver {
     if(previousFrameMillis == null)
     previousFrameMillis = System.currentTimeMillis();
     Long newMillis = System.currentTimeMillis();
-    this.update((float)((newMillis - previousFrameMillis)/1000.0f));
+    this.update(newMillis - previousFrameMillis);
     previousFrameMillis = newMillis;
   }
 
-  public void update(float dt){
-    time += dt * 1000.0f;
+  public void update(long dtMs){
+    time += dtMs;
 
     for(TouchEvent evt : activeTouchEvents.values()){
       evt.velocitySmoothed.mult(velocityDump);
@@ -77,6 +77,11 @@ public class TouchManager extends TouchReceiver {
     }
 
     //finalizeIdleTouchEvents();
+  }
+  
+  @Deprecated
+  public void update(float dt){
+	  this.update((long)(1000l * dt));
   }
 
   /**
