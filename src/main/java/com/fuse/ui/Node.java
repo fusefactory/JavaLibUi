@@ -165,6 +165,7 @@ public class Node extends TouchReceiver {
 
     pg.noStroke();
     pg.fill(clr);
+    pg.textSize(12.0f);
     pg.text(getName(), 0.0f, 15.0f);
 
     if(extensions!=null)
