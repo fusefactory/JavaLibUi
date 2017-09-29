@@ -83,11 +83,11 @@ public class Constrain extends TransformerExtension {
     	sizeScaled.y = sizeScaled.y * scaler.y; 
     	sizeScaled.z = sizeScaled.z * scaler.z; 
 
-        if(sizeScaled.x > parentNode.getSize().x){ // can only fill if bigger
+        if(sizeScaled.x >= parentNode.getSize().x){ // can only fill if bigger
           result.x = Math.min(0.0f, Math.max((parentNode.getSize().x-sizeScaled.x), result.x));
         }
 
-        if(sizeScaled.y > parentNode.getSize().y){
+        if(sizeScaled.y >= parentNode.getSize().y){
           result.y = Math.min(0.0f, Math.max((parentNode.getSize().y-sizeScaled.y), result.y));
         }
       }
@@ -103,11 +103,11 @@ public class Constrain extends TransformerExtension {
       	sizeScaled.y = sizeScaled.y * scaler.y; 
       	sizeScaled.z = sizeScaled.z * scaler.z;
 
-        if(sizeScaled.x < parentNode.getSize().x){
+        if(sizeScaled.x <= parentNode.getSize().x){
           result.x = (parentNode.getSize().x - sizeScaled.x) * 0.5f;
         }
 
-        if(sizeScaled.y < parentNode.getSize().y){
+        if(sizeScaled.y <= parentNode.getSize().y){
           result.y = (parentNode.getSize().y - sizeScaled.y) * 0.5f;
         }
       }
