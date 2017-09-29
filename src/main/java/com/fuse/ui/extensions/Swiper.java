@@ -115,7 +115,7 @@ public class Swiper extends TransformerExtension {
     }, this);
 
     this.touchAreaNode.touchUpEvent.addListener((TouchEvent event) -> {
-      if(bDragging && this.draggingTouchEvent == event)
+      if(bDragging && this.draggingTouchEvent == event || this.draggingTouchEvent.isFinished())
         this.endDragging();
     }, this);
 

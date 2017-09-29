@@ -279,7 +279,7 @@ public class TouchManagerTest {
 
     // touch too long for a click
     man.touchDown(0, new PVector(10f, 10f, 0f));
-    man.update(5); // move 5 seconds into the future
+    man.update(5000l); // move 5 seconds into the future
     man.touchUp(0, new PVector(10f, 10f, 0f));
 
     // click
