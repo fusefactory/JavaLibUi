@@ -106,6 +106,7 @@ public class Node extends TouchReceiver {
     setName(nodeName);
   }
 
+  @Override
   public void destroy(){
     newParentEvent.destroy();
     newOffspringEvent.destroy();
@@ -137,6 +138,8 @@ public class Node extends TouchReceiver {
         ext.destroy();
       }
     }
+    
+    super.destroy();
   }
 
   public void update(float dt){

@@ -35,6 +35,17 @@ public class TouchReceiver {
     touchClickEvent = new Event<TouchEvent>();
     touchDoubleClickEvent = new Event<TouchEvent>();
   }
+  
+  public void destroy() {
+	  touchEvent.destroy();
+	  touchDownEvent.destroy();
+	  touchUpEvent.destroy();
+	  touchMoveEvent.destroy();
+	  touchEnterEvent.destroy();
+	  touchExitEvent.destroy();
+	  touchClickEvent.destroy();
+	  touchDoubleClickEvent.destroy();
+  }
 
   // virtual
   public void submitTouchEvent(TouchEvent event){}
