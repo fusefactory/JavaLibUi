@@ -67,7 +67,9 @@ public class TouchManager extends TouchReceiver {
     time += dtMs;
 
     for(TouchEvent evt : activeTouchEvents.values()){
-      evt.velocitySmoothed.mult(velocityDump);
+    	PVector vel = evt.velocitySmoothed;
+    	if(vel != null)
+    		vel.mult(velocityDump);
     }
 
     if(dispatchOnUpdate){
