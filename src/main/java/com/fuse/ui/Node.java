@@ -47,7 +47,7 @@ public class Node extends TouchReceiver {
   private PMatrix3D localTransformMatrix;
   /** Makes sure all offspring Nodes only render within this node's boundaries */
   private Node clippingNode;
-  private List<ExtensionBase> extensions = null;
+  private List<ExtensionBase> extensions = null; // TODO; make ConcurrentLinkedDeque, like childNodes
 
   /** Float-based z-level attribute used for re-ordering Nodes in the render-queue;
    * a higher plane value will put the Node later in the queue, which means
