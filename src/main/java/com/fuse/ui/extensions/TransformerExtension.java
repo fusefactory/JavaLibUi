@@ -168,7 +168,7 @@ public class TransformerExtension extends ExtensionBase {
 
         if(vec.mag() < doneSizeDeltaMag){
           // finalize
-          this.node.setRotation(targetSize);
+          this.node.setSize(targetSize);
           targetSize = null;
         } else {
           // apply delta to current node value
@@ -227,7 +227,7 @@ public class TransformerExtension extends ExtensionBase {
     return vec;
   }
 
-  protected void transformPosition(PVector vec){
+  public void transformPosition(PVector vec){
     if(vec == null){
       targetPosition = null;
       return;
@@ -255,7 +255,7 @@ public class TransformerExtension extends ExtensionBase {
     this.transformationsThisUpdate++;
   }
 
-  protected void transformPositionGlobal(PVector vec){
+  public void transformPositionGlobal(PVector vec){
     Node parentNode = this.node.getParent();
     PVector localized;
     if(parentNode == null) {
@@ -267,7 +267,7 @@ public class TransformerExtension extends ExtensionBase {
     this.transformPosition(localized);
   }
 
-  protected void transformRotation(PVector vec){
+  public void transformRotation(PVector vec){
     if(bOnlyWhenNotTouched && this.node.isTouched())
       return;
 
@@ -287,7 +287,7 @@ public class TransformerExtension extends ExtensionBase {
     this.transformationsThisUpdate++;
   }
 
-  protected void transformScale(PVector vec){
+  public void transformScale(PVector vec){
     if(bOnlyWhenNotTouched && this.node.isTouched())
       return;
 
@@ -310,7 +310,7 @@ public class TransformerExtension extends ExtensionBase {
     this.transformationsThisUpdate++;
   }
 
-  protected void transformSize(PVector vec){
+  public void transformSize(PVector vec){
     if(bOnlyWhenNotTouched && this.node.isTouched())
       return;
 
@@ -332,15 +332,15 @@ public class TransformerExtension extends ExtensionBase {
     this.node.setSize(vec);
     this.transformationsThisUpdate++;
   }
-  
-  protected void transformWidth(float newValue) {
+
+  public void transformWidth(float newValue) {
 	  // consider active resize transformation that might be going on
 	  PVector vec = this.targetSize != null ? this.targetSize.get() : this.node.getSize();
 	  vec.x = newValue;
 	  this.transformSize(vec);
   }
 
-  protected void transformHeight(float newValue) {
+  public void transformHeight(float newValue) {
 	  // consider active resize transformation that might be going on
 	  PVector vec = this.targetSize != null ? this.targetSize.get() : this.node.getSize();
 	  vec.y = newValue;
@@ -413,6 +413,10 @@ public class TransformerExtension extends ExtensionBase {
 
   public PVector getTargetScale() {
 	  return this.targetScale == null ? null : this.targetScale.get();
+  }
+  
+  public boolean isTransformingSize(){
+	  return this.targetSize != null;
   }
 
   // configuration methods // // // // //

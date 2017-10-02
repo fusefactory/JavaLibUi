@@ -44,19 +44,19 @@ public class Constrain extends TransformerExtension {
     super.update(dt);
   }
 
-  @Override protected void transformPosition(PVector vec){
+  @Override public void transformPosition(PVector vec){
     //bLock = true;
     super.transformPosition(vec);
     bLock = false;
   }
 
-  @Override protected void transformRotation(PVector vec){
+  @Override public void transformRotation(PVector vec){
     //bLock = true;
     super.transformRotation(vec);
     bLock = false;
   }
 
-  @Override protected void transformScale(PVector vec){
+  @Override public void transformScale(PVector vec){
     //bLock = true;
     super.transformScale(vec);
     bLock = false;
