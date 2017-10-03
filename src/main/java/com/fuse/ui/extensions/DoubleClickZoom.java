@@ -14,7 +14,7 @@ public class DoubleClickZoom extends TransformerExtension {
   private PVector originalScale, originalPosition;
   private Long lastClickTime = null;
   // configurables
-  private Long doubleClickMaxIntervalMillis = 850l; // TODO; make configurable (and refactor to TouchManager)
+  private long doubleClickMaxIntervalMillis = 850l; // TODO; make configurable (and refactor to TouchManager)
   private PVector scaleFactor = new PVector(2.0f, 2.0f, 1.0f);
 
   @Override public void enable(){
@@ -91,6 +91,14 @@ public class DoubleClickZoom extends TransformerExtension {
 
   public void setScaleFactor(PVector factor){
     this.scaleFactor.set(factor);
+  }
+
+  public long getDoubleClickMaxInterval(){
+    return this.doubleClickMaxIntervalMillis;
+  }
+
+  public void setDoubleClickMaxInterval(long interval){
+    this.doubleClickMaxIntervalMillis = interval;
   }
 
   // static factory methods // // // // //

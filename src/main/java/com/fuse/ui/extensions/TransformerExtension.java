@@ -12,16 +12,16 @@ import com.fuse.ui.Node;
  * op the Node's position, scale and rotation attributes.
  */
 public class TransformerExtension extends ExtensionBase {
-  private static float doneScaleDeltaMag = 0.01f;
-  private static float donePositionDeltaMag = 0.1f;
-  private static float doneRotationDeltaMag = 0.1f;
-  private static float doneSizeDeltaMag = 0.1f;
+  private float doneScaleDeltaMag = 0.0032f;
+  private float donePositionDeltaMag = 0.1f;
+  private float doneRotationDeltaMag = 0.1f;
+  private float doneSizeDeltaMag = 0.1f;
   // smoothing
   private PVector targetPosition, targetRotation, targetScale, targetSize;
   private float smoothValue = 7.0f;
   private Float smoothValueScale = null; // when null, smoothValue is used for scaling as well
   // time-based transformation expiration
-  private Float maxTransformationTime = 3.0f;
+  private Float maxTransformationTime = 5.0f;
   private float positionTimer;
   private float scaleTimer;
   private float sizeTimer;
@@ -414,7 +414,7 @@ public class TransformerExtension extends ExtensionBase {
   public PVector getTargetScale() {
 	  return this.targetScale == null ? null : this.targetScale.get();
   }
-  
+
   public boolean isTransformingSize(){
 	  return this.targetSize != null;
   }
@@ -512,4 +512,9 @@ public class TransformerExtension extends ExtensionBase {
   public boolean getStopOnTouch(){
     return bStopOnTouch;
   }
+
+  public void setDoneScaleDeltaMag(float mag){ doneScaleDeltaMag = mag; }
+  public void setDonePositionDeltaMag(float mag){ donePositionDeltaMag = mag; }
+  public void setDoneRotationDeltaMag(float mag){ doneRotationDeltaMag = mag; }
+  public void setDoneSizeDeltaMag(float mag){ doneSizeDeltaMag = mag; }
 }
