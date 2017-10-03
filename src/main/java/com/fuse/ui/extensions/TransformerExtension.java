@@ -12,7 +12,7 @@ import com.fuse.ui.Node;
  * op the Node's position, scale and rotation attributes.
  */
 public class TransformerExtension extends ExtensionBase {
-  private float doneScaleDeltaMag = 0.0032f;
+  private float doneScaleDeltaMag = 0.0002f;
   private float donePositionDeltaMag = 0.1f;
   private float doneRotationDeltaMag = 0.1f;
   private float doneSizeDeltaMag = 0.1f;
