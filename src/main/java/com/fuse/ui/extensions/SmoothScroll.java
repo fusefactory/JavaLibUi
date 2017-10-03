@@ -25,7 +25,7 @@ public class SmoothScroll extends ExtensionBase {
   private PVector snapInterval = null;
   private float snapVelocityMag = 75.0f; // when velocity reaches this value (or lower), we start snapping
   private PVector snapPosition = null;
-  private float snapFactor = 0.95f;
+  private float snapFactor = (1.0f/7.0f);
   private float snapThrowFactor = 1.0f; // multiplier for the smoothed 'throwing' velocity after dragging
   private final static float snapDoneDist = 0.9f;
   // offset limits
@@ -196,10 +196,10 @@ public class SmoothScroll extends ExtensionBase {
     globPos.add(globalDragOffset);
     scrollableNode.setGlobalPosition(globPos);
     scrollableNode.setY(localPosBefore.y); // Y-axis locked HACK
-    
+
 //    PVector offset = this.getCurrentOffset();
 //    if(this.minOffset != null && offset.x < this.minOffset.x) {
-//    	float diff = offset.x - this.minOffset.x; 
+//    	float diff = offset.x - this.minOffset.x;
 //    	offset.x = PApplet.lerp(
 //    			offset.x,
 //    			this.minOffset.x-this.offsetLimitDragSlack,
@@ -208,9 +208,9 @@ public class SmoothScroll extends ExtensionBase {
 //    	offset.add(originalNodePosition.get());
 //    	this.scrollableNode.setPosition(offset);
 //    }
-//    
+//
 //    if(this.maxOffset != null && offset.x > this.maxOffset.x) {
-//    	float diff = this.minOffset.x - offset.x; 
+//    	float diff = this.minOffset.x - offset.x;
 //    	offset.x = PApplet.lerp(
 //    			offset.x,
 //    			this.maxOffset.x+this.offsetLimitDragSlack,
@@ -291,20 +291,24 @@ public class SmoothScroll extends ExtensionBase {
 
   private void updateSnapping(float dt){
     PVector curPos = scrollableNode.getPosition();
-    float local_dt = dt;
+    // float local_dt = dt;
 
-    while(local_dt > 1.0f){
-      PVector delta = snapPosition.get();
-      delta.sub(curPos);
-      delta.mult(snapFactor);
-      curPos.add(delta);
-      local_dt -= 1.0f;
-    }
-
+    // while(local_dt > 1.0f){
+    //   PVector delta = snapPosition.get();
+    //   delta.sub(curPos);
+    //   delta.mult(snapFactor);
+    //   curPos.add(delta);
+    //   local_dt -= 1.0f;
+    // }
+    //
+    // PVector delta = snapPosition.get();
+    // delta.sub(curPos);
+    // delta.mult(snapFactor);
+    // delta.lerp(new PVector(0,0,0), 1.0f-local_dt);
+    // curPos.add(delta);
     PVector delta = snapPosition.get();
     delta.sub(curPos);
     delta.mult(snapFactor);
-    delta.lerp(new PVector(0,0,0), 1.0f-local_dt);
     curPos.add(delta);
 
     scrollableNode.setPosition(curPos);
