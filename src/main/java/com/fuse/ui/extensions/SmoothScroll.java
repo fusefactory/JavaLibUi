@@ -31,7 +31,8 @@ public class SmoothScroll extends ExtensionBase {
   // offset limits
   private PVector minOffset = null;
   private PVector maxOffset = null;
-  private float offsetLimitDragSlack = 200.0f;
+  private float offsetLimitSlack = 70.0f;  // how much beyond the offset limit can be scrolled
+  private float offsetLimitSlackDistance = 700.0f; // how much beyond the scroll limit needs to be dragged to reach max slack
 
   // events
   public Event<PVector> newSnapPositionEvent;
@@ -197,28 +198,20 @@ public class SmoothScroll extends ExtensionBase {
     scrollableNode.setGlobalPosition(globPos);
     scrollableNode.setY(localPosBefore.y); // Y-axis locked HACK
 
-//    PVector offset = this.getCurrentOffset();
-//    if(this.minOffset != null && offset.x < this.minOffset.x) {
-//    	float diff = offset.x - this.minOffset.x;
-//    	offset.x = PApplet.lerp(
-//    			offset.x,
-//    			this.minOffset.x-this.offsetLimitDragSlack,
-//    			(float)Math.sin(Math.PI - Math.PI * 0.5f * Math.min(1.0f, Math.abs(diff) / this.offsetLimitDragSlack)) );
-//
-//    	offset.add(originalNodePosition.get());
-//    	this.scrollableNode.setPosition(offset);
-//    }
-//
-//    if(this.maxOffset != null && offset.x > this.maxOffset.x) {
-//    	float diff = this.minOffset.x - offset.x;
-//    	offset.x = PApplet.lerp(
-//    			offset.x,
-//    			this.maxOffset.x+this.offsetLimitDragSlack,
-//    			1.0f-(float)Math.cos(Math.PI - Math.PI * 0.5f * Math.min(1.0f, Math.abs(diff) / this.offsetLimitDragSlack)) );
-//
-//    	offset.add(originalNodePosition.get());
-//    	this.scrollableNode.setPosition(offset);
-//    }
+   PVector offset = this.getCurrentOffset();
+   if(this.minOffset != null && offset.x < this.minOffset.x) {
+	   float diff = offset.x - this.minOffset.x;
+	   float f = (float)Math.sin( Math.max(-1.0f, Math.min(0.0f, diff / this.offsetLimitSlackDistance)) * (float)Math.PI * 0.5f );
+	   offset.x = this.minOffset.x + this.offsetLimitSlack * f;
+	   offset.add(originalNodePosition.get());
+	   this.scrollableNode.setPosition(offset);
+   } else if(this.maxOffset != null && offset.x > this.maxOffset.x) {
+	   float diff = offset.x - this.maxOffset.x;
+	   float f = (float)Math.sin( Math.max(0.0f, Math.min(1.0f, diff / this.offsetLimitSlackDistance)) * (float)Math.PI * 0.5f );
+	   offset.x = this.maxOffset.x + this.offsetLimitSlack * f;
+   	   offset.add(originalNodePosition.get());
+   	   this.scrollableNode.setPosition(offset);
+   }
   }
 
   public boolean isDragging(){

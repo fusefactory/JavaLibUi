@@ -11,7 +11,6 @@ public class Swiper extends TransformerExtension {
   // attributes
   private Node scrollableNode;
   private Node touchAreaNode;
-  // restore
   private PVector originalNodePosition = null;
   // dragging
   private boolean bDragging = false;
@@ -33,6 +32,8 @@ public class Swiper extends TransformerExtension {
   // offset limits
   private PVector minOffset = null;
   private PVector maxOffset = null;
+  private float offsetLimitSlack = 70.0f;  // how much beyond the offset limit can be scrolled
+  private float offsetLimitSlackDistance = 700.0f; // how much beyond the scroll limit needs to be dragged to reach max slack
 
   // events
   public Event<TouchEvent> startDraggingEvent;
@@ -244,6 +245,53 @@ public class Swiper extends TransformerExtension {
     globPos.add(this.draggingTouchEvent.offset());
     // use TransformationExtension's smoothing options
     super.transformPositionGlobal(globPos);
+
+    PVector localpos = super.isSmoothing() ? this.getTargetPosition() : this.node.getPosition();
+
+    // apply offset restrictins with slack
+    PVector offset = localpos.get();
+    offset.sub(this.originalNodePosition);
+    boolean needCorrection = false;
+
+    if(this.minOffset != null){
+      if(offset.x < this.minOffset.x){
+        float diff = offset.x - this.minOffset.x;
+        float f = (float)Math.sin( Math.max(-1.0f, Math.min(0.0f, diff / this.offsetLimitSlackDistance)) * (float)Math.PI * 0.5f );
+        localpos.x = this.minOffset.x + this.offsetLimitSlack * f;
+        localpos.x += originalNodePosition.x;
+        needCorrection = true;
+      }
+
+      if(offset.y < this.minOffset.y){
+        float diff = offset.y - this.minOffset.y;
+        float f = (float)Math.sin( Math.max(-1.0f, Math.min(0.0f, diff / this.offsetLimitSlackDistance)) * (float)Math.PI * 0.5f );
+        localpos.y = this.minOffset.y + this.offsetLimitSlack * f;
+        localpos.y += originalNodePosition.y;
+        needCorrection = true;
+      }
+    }
+
+    if(this.maxOffset != null){
+      if(offset.x > this.maxOffset.x) {
+        float diff = offset.x - this.maxOffset.x;
+        float f = (float)Math.sin( Math.max(0.0f, Math.min(1.0f, diff / this.offsetLimitSlackDistance)) * (float)Math.PI * 0.5f );
+        localpos.x = this.maxOffset.x + this.offsetLimitSlack * f;
+        localpos.x += originalNodePosition.x;
+        needCorrection = true;
+      }
+
+      if(offset.y > this.maxOffset.y) {
+        float diff = offset.y - this.maxOffset.y;
+        float f = (float)Math.sin( Math.max(0.0f, Math.min(1.0f, diff / this.offsetLimitSlackDistance)) * (float)Math.PI * 0.5f );
+        localpos.y = this.maxOffset.y + this.offsetLimitSlack * f;
+        localpos.y += originalNodePosition.y;
+        needCorrection = true;
+      }
+    }
+
+    if(needCorrection){
+      this.transformPosition(localpos);
+    }
   }
 
   public boolean isDragging(){
@@ -345,7 +393,7 @@ public class Swiper extends TransformerExtension {
    * @param interval specifies the two-dimensional (z-attribute is ignored) snap interval. When null, disables snapping behaviour.
    */
   public Swiper setSnapInterval(PVector interval){
-	this.snapInterval = interval;
+    this.snapInterval = interval;
     //snapInterval = interval != null ? interval.get() : (this.touchAreaNode == null ? null : this.touchAreaNode.getSize());
     return this;
   }
@@ -393,7 +441,7 @@ public class Swiper extends TransformerExtension {
 
   /** @return PVector current target position for snap-back behaviour. Returns null if not currently snapping */
   public PVector getSnapPosition(){
-	return bSnapping && super.getTargetPosition() != null ? super.getTargetPosition() : this.getCurrentOffset();
+    return bSnapping && super.getTargetPosition() != null ? super.getTargetPosition() : this.getCurrentOffset();
   }
 
   /**
