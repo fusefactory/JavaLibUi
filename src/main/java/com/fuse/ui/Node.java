@@ -47,7 +47,7 @@ public class Node extends TouchReceiver {
   private PMatrix3D localTransformMatrix;
   /** Makes sure all offspring Nodes only render within this node's boundaries */
   private Node clippingNode;
-  private List<ExtensionBase> extensions = null; // TODO; make ConcurrentLinkedDeque, like childNodes
+  private ConcurrentLinkedDeque<ExtensionBase> extensions = null; // TODO; make ConcurrentLinkedDeque, like childNodes
 
   /** Float-based z-level attribute used for re-ordering Nodes in the render-queue;
    * a higher plane value will put the Node later in the queue, which means
@@ -132,26 +132,26 @@ public class Node extends TouchReceiver {
 
     // cleanup this node's extensions
     if(extensions != null){
-      while(extensions != null && !extensions.isEmpty()){
-        ExtensionBase ext = extensions.get(0);
+      while(true){
+        ExtensionBase ext = extensions.poll();
+        if(ext == null)
+          break;
         this.stopUsing(ext);
         ext.destroy();
       }
+
+      this.extensions = null;
     }
-    
+
     super.destroy();
   }
 
   public void update(float dt){
     if(extensions!=null){
-      // Copy all extension into a temporary collection before iteration,
-      // because extensions might be added/removed while iterating
-      List<ExtensionBase> tmpExtensions = new ArrayList<>();
-      tmpExtensions.addAll(extensions);
-
-      for(ExtensionBase ext : tmpExtensions)
-        if(ext.isEnabled())
-          ext.update(dt);
+    	for(ExtensionBase ext : this.extensions) {
+    		if(ext.isEnabled())
+    	          ext.update(dt); 		
+    	}
     }
   }
 
@@ -749,31 +749,21 @@ public class Node extends TouchReceiver {
     // lazy create so extensions attribute doesn't use any memory
     // unless this Node actually gets extensions
     if(extensions == null)
-      extensions = new ArrayList<>();
+      extensions = new ConcurrentLinkedDeque<>();
 
     extensions.add(ext);
   }
 
   public void stopUsing(ExtensionBase ext){
-    if(extensions == null)
+    if(this.extensions == null)
       return;
 
-    if(extensions.remove(ext))
+    if(this.extensions.remove(ext))
       ext.disable();
-
-    if(extensions == null){
-      System.err.println("Node.stopUsing extensions suddenly null");
-      return;
-    }
-
-    if(extensions.isEmpty())
-      extensions = null; // cleanup
   }
 
-  public List<ExtensionBase> getExtensions(){
-    if(extensions == null)
-      return new ArrayList<>();
-    return extensions;
+  public ExtensionBase[] getExtensions(){
+    return this.extensions == null ? new ExtensionBase[0] : extensions.toArray(new ExtensionBase[0]);
   }
 
   public Node enable(boolean _enable){

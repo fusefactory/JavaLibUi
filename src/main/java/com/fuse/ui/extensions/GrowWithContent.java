@@ -87,18 +87,17 @@ public class GrowWithContent extends TransformerExtension {
     return ext;
   }
 
-  public static void disableFor(Node n){
-    for(int i=n.getExtensions().size()-1; i>=0; i--){
-      if(GrowWithContent.class.isInstance(n.getExtensions().get(i))){
-        n.stopUsing(n.getExtensions().get(i));
-      }
-    }
-  }
-
   public static GrowWithContent getFor(Node n){
     for(ExtensionBase ext : n.getExtensions())
       if(GrowWithContent.class.isInstance(ext))
         return (GrowWithContent)ext;
     return null;
+  }
+
+  public static void disableFor(Node n){
+    for(ExtensionBase ext : n.getExtensions()) {
+      if(GrowWithContent.class.isInstance(ext))
+          n.stopUsing(ext);
+    }
   }
 }

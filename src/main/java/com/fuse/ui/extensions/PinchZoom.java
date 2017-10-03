@@ -231,19 +231,21 @@ public class PinchZoom extends TransformerExtension {
     return d;
   }
 
-  public static void disableFor(Node n){
-    for(int i=n.getExtensions().size()-1; i>=0; i--)
-      if(PinchZoom.class.isInstance(n.getExtensions().get(i))){
-        n.stopUsing(n.getExtensions().get(i));
-      }
-  }
-
   public static PinchZoom getFor(Node n){
     for(ExtensionBase ext : n.getExtensions())
       if(PinchZoom.class.isInstance(ext))
         return (PinchZoom)ext;
     return null;
   }
+
+  public static void disableFor(Node n){
+    for(ExtensionBase ext : n.getExtensions()) {
+      if(PinchZoom.class.isInstance(ext))
+          n.stopUsing(ext);
+    }
+  }
+
+  // dev-only methods // // // // //
 
   @Override
   public void drawDebug(){

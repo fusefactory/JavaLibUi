@@ -88,18 +88,17 @@ public class ShrinkToContent extends TransformerExtension {
     return ext;
   }
 
-  public static void disableFor(Node n){
-    for(int i=n.getExtensions().size()-1; i>=0; i--){
-      if(ShrinkToContent.class.isInstance(n.getExtensions().get(i))){
-        n.stopUsing(n.getExtensions().get(i));
-      }
-    }
-  }
-
   public static ShrinkToContent getFor(Node n){
     for(ExtensionBase ext : n.getExtensions())
       if(ShrinkToContent.class.isInstance(ext))
         return (ShrinkToContent)ext;
     return null;
+  }
+
+  public static void disableFor(Node n){
+    for(ExtensionBase ext : n.getExtensions()) {
+      if(ShrinkToContent.class.isInstance(ext))
+          n.stopUsing(ext);
+    }
   }
 }

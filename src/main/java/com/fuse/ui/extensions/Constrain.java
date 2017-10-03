@@ -275,9 +275,9 @@ public class Constrain extends TransformerExtension {
   }
 
   public static void disableFor(Node n){
-    for(int i=n.getExtensions().size()-1; i>=0; i--)
-      if(Constrain.class.isInstance(n.getExtensions().get(i))){
-        n.stopUsing(n.getExtensions().get(i));
-      }
+	for(ExtensionBase ext : n.getExtensions()) {
+		if(Constrain.class.isInstance(ext))
+				n.stopUsing(ext);
+	}
   }
 }
