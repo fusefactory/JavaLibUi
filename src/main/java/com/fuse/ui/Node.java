@@ -383,7 +383,7 @@ public class Node extends TouchReceiver {
 
     // try to invert the matrix
     if(!mat.invert()){
-      // System.out.println("could not invert Model's globalTransformMatrix");
+      System.err.println("could not invert Model's globalTransformMatrix");
       return pos;
     }
 
@@ -394,7 +394,7 @@ public class Node extends TouchReceiver {
     // return localised position
     return localized;
   }
-
+  
   public PVector toGlobal(PVector pos){
     // get and copy our global transformation matrix
     PMatrix3D mat = this.getGlobalTransformMatrix().get();
@@ -425,7 +425,7 @@ public class Node extends TouchReceiver {
 
     // try to invert the matrix
     if(!mat.invert()){
-      // System.out.println("could not invert Model's globalTransformMatrix");
+      System.err.println("could not invert Model's globalTransformMatrix");
       return vec;
     }
 
