@@ -22,7 +22,7 @@ public class Swiper extends TransformerExtension {
   private PVector velocity = null;
   private PVector smoothedVelocity = null;
   private final static float velocitySmoothCoeff = 0.1f;
-  private float dampingFactor = 0.001f;
+  private float dampingFactor = (1.0f/7.0f);
   private final static float minVelocityMag = 1.0f; // when velocity reaches this value (or lower), we finalize the movement
   private float velocityReductionFactor = 1.0f; // factor to multipy the (already smoother) smoothedVelocity when setting the main velocity
   // snapping (falling back into place)
