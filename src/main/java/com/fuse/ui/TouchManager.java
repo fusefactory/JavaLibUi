@@ -24,7 +24,7 @@ public class TouchManager extends TouchReceiver {
   /// the maximum amount of time (in seconds) between a touch-down and a touch-up for it to be considered a click
   private long clickMaxInterval = 200l;
   private float clickMaxDistance = 15.0f;
-  //private long doubleClickMaxInterval = 600l;
+  private long doubleClickMaxInterval = 850l; // milliseconds; NOTE double-click not implemented yet!
   // private long doubleClickMinDelay = 500l;
   /// the maximum distance (in pixels) between the position of touch-down and the position of touch-up for it to be considered a click
 
@@ -33,7 +33,7 @@ public class TouchManager extends TouchReceiver {
   private final static float velocitySmoothCoeff = 0.25f;
   private final static float velocityDump = 0.6f;
 
-  
+
   private ConcurrentLinkedQueue<TouchEvent> touchEventQueue;
   private Map<Integer, TouchEvent> activeTouchEvents;
   private final static int MAX_CLICK_HISTORY_SIZE = 10; // no need to remember more; only remembering for double-click events, but have to consider multiple simultanous users
@@ -80,7 +80,7 @@ public class TouchManager extends TouchReceiver {
 
     //finalizeIdleTouchEvents();
   }
-  
+
   @Deprecated
   public void update(float dt){
 	  this.update((long)(1000l * dt));
@@ -115,7 +115,7 @@ public class TouchManager extends TouchReceiver {
    */
   @Override public void submitTouchEvent(TouchEvent event){
     if(event.time == null)
-      event.time = this.getTime();
+      event.time = this.time;
 
     if(dispatchOnUpdate){
       this.touchEventQueue.add(event);
@@ -436,13 +436,13 @@ public class TouchManager extends TouchReceiver {
     clickMaxInterval = interval;
   }
 
-  // public long getDoubleClickMaxInterval() {
-	//   return doubleClickMaxInterval;
-  // }
-  //
-  // public void setDoubleClickMaxInterval(long interval){
-	// this.doubleClickMaxInterval = interval;
-  // }
+  public long getDoubleClickMaxInterval() {
+	  return doubleClickMaxInterval;
+  }
+
+  public void setDoubleClickMaxInterval(long interval){
+	this.doubleClickMaxInterval = interval;
+  }
 
   public void setClickMaxDistance(float distance){
     clickMaxDistance = distance;
@@ -484,16 +484,12 @@ public class TouchManager extends TouchReceiver {
       pg.ellipse(event.position.x, event.position.y, 25, 25);
   }
 
-  private long getTime(){
-      return this.time;
-  }
-
   // TouchManager doesn't keep active touch events (like this)
   @Override public void addActiveTouchEvent(TouchEvent evt){}
 
   /*private void finalizeIdleTouchEvents(){
     List<TouchEvent> events = super.getActiveTouchEvents();
-    long limit = this.getTime() - super.IDLE_DURATION;
+    long limit = this.time - super.IDLE_DURATION;
 
     for(int i=events.size()-1; i>=0; i--){
       TouchEvent event = activeTouchEvents.get(i);
