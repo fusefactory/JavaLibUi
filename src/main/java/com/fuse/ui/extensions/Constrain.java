@@ -2,11 +2,12 @@ package com.fuse.ui.extensions;
 
 import processing.core.PApplet;
 import processing.core.PVector;
-
 import com.fuse.ui.Node;
-import com.fuse.ui.TouchEvent;
 
 public class Constrain extends TransformerExtension {
+  private static float scaleIgnoreLimit = 0.001f;
+  private static float positionIgnoreLimit = 0.01f;
+
   // constrain parameter attributes
   private Float[] axisMinValues = {null, null, null}; // position, TODO: rename
   private Float[] axisMaxValues = {null, null, null}; // position, TODO: rename
@@ -73,7 +74,7 @@ public class Constrain extends TransformerExtension {
     if(axisMaxValues[1] != null && axisMaxValues[1] < result.y) result.y = axisMaxValues[1];
     if(axisMaxValues[2] != null && axisMaxValues[2] < result.z) result.z = axisMaxValues[2];
 
-    if(bFillParent && this.getTargetScale() == null){ // not while scaling
+    if(bFillParent){
       Node parentNode = node.getParent();
       if(parentNode != null){
         //PVector sizeScaled = node.getSizeScaled();
@@ -135,14 +136,12 @@ public class Constrain extends TransformerExtension {
       return;
 
     PVector vec = this.getConstrainedScale();
-    if(vec.dist(node.getScale()) > 0.01f){ // negligable
+    if(vec.dist(node.getScale()) > scaleIgnoreLimit){
       super.transformScale(vec);
     }
 
     vec = this.getConstrainedPosition();
-    // logger.info("Constrained pos:"+pos.toString()+", cur pos: "+node.getPosition());
-    if(vec.dist(node.getPosition()) > 0.1f){ // negligable
-      // logger.info("constrain transforming to: "+pos.toString());
+    if(vec.dist(node.getPosition()) > positionIgnoreLimit){
       super.transformPosition(vec);
     }
 
