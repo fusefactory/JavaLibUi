@@ -1,11 +1,6 @@
 package com.fuse.ui.extensions;
 
-import java.util.List;
-
 import processing.core.PVector;
-import processing.core.PGraphics;
-
-import com.fuse.utils.Event;
 import com.fuse.ui.Node;
 import com.fuse.ui.TouchEvent;
 
@@ -17,6 +12,14 @@ public class DoubleClickZoom extends TransformerExtension {
   private long doubleClickMaxIntervalMillis = 850l; // TODO; make configurable (and refactor to TouchManager)
   private PVector scaleFactor = new PVector(2.0f, 2.0f, 1.0f);
 
+  public DoubleClickZoom() {
+	super();
+	// by default this extension aborts all TransformerExtension-based transformations
+	// when its node receives a touch event. This default behaviour can be changed by
+	// call setStopOnTouch again with a different value.
+	super.setStopOnTouch(true);
+  }
+  
   @Override public void enable(){
     if(this.isEnabled() || this.node == null) return;
     super.enable();
