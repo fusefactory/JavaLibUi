@@ -31,6 +31,7 @@ public class SmoothScroll extends ExtensionBase {
   // offset limits
   private PVector minOffset = null;
   private PVector maxOffset = null;
+  private float offsetLimitDragSlack = 200.0f;
 
   // events
   public Event<PVector> newSnapPositionEvent;
@@ -195,6 +196,29 @@ public class SmoothScroll extends ExtensionBase {
     globPos.add(globalDragOffset);
     scrollableNode.setGlobalPosition(globPos);
     scrollableNode.setY(localPosBefore.y); // Y-axis locked HACK
+    
+//    PVector offset = this.getCurrentOffset();
+//    if(this.minOffset != null && offset.x < this.minOffset.x) {
+//    	float diff = offset.x - this.minOffset.x; 
+//    	offset.x = PApplet.lerp(
+//    			offset.x,
+//    			this.minOffset.x-this.offsetLimitDragSlack,
+//    			(float)Math.sin(Math.PI - Math.PI * 0.5f * Math.min(1.0f, Math.abs(diff) / this.offsetLimitDragSlack)) );
+//
+//    	offset.add(originalNodePosition.get());
+//    	this.scrollableNode.setPosition(offset);
+//    }
+//    
+//    if(this.maxOffset != null && offset.x > this.maxOffset.x) {
+//    	float diff = this.minOffset.x - offset.x; 
+//    	offset.x = PApplet.lerp(
+//    			offset.x,
+//    			this.maxOffset.x+this.offsetLimitDragSlack,
+//    			1.0f-(float)Math.cos(Math.PI - Math.PI * 0.5f * Math.min(1.0f, Math.abs(diff) / this.offsetLimitDragSlack)) );
+//
+//    	offset.add(originalNodePosition.get());
+//    	this.scrollableNode.setPosition(offset);
+//    }
   }
 
   public boolean isDragging(){
