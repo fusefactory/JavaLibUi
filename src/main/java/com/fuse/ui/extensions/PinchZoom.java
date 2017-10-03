@@ -17,8 +17,6 @@ public class PinchZoom extends TransformerExtension {
   private PVector originalScale, originalPosition;
   // configurables
   private boolean bRestore = false;
-  private Long lastClickTime = null;
-  private Long doubleClickMaxInterval = 850l; // TODO; make configurable (and refactor to TouchManager)
 
   // events
   public Event<Node> startPinchEvent, endPinchEvent;
