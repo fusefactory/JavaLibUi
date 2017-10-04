@@ -22,12 +22,12 @@ public class SmoothScroll extends ExtensionBase {
   private final static float minVelocityMag = 1.0f; // when velocity reaches this value (or lower), we finalize the movement
   private float velocityReductionFactor = 0.2f; // factor to multipy the (already smoother) smoothedVelocity when setting the main velocity
   // snapping (falling back into place)
-  private PVector snapInterval = null;
+  private PVector snapInterval = null; // the size of a single "cell" in the snapping grid
   private float snapVelocityMag = 75.0f; // when velocity reaches this value (or lower), we start snapping
-  private PVector snapPosition = null;
-  private float snapFactor = (1.0f/7.0f);
-  private float snapThrowFactor = 1.0f; // multiplier for the smoothed 'throwing' velocity after dragging
-  private final static float snapDoneDist = 0.9f;
+  private PVector snapPosition = null; // scroll position to "snap to"
+  private float snapFactor = (1.0f/7.0f); // multiplication factor for smoothed snapping motion
+  private float snapThrowFactor = 0.5f; // multiplier for 'throwing' after dragging
+  private final static float snapDoneDist = 0.9f; // distance at which snapping is considered finished (whebn smoothing motion is finalized)
   // offset limits
   private PVector minOffset = null;
   private PVector maxOffset = null;
@@ -144,7 +144,8 @@ public class SmoothScroll extends ExtensionBase {
       // when snapping-behaviour is enabled we don't use velocity/damping;
       // instead, we calculate a target position to snap to
       if(this.isSnapEnabled()){
-        PVector throwTarget = this.smoothedVelocity.get();
+        //PVector throwTarget = this.smoothedVelocity.get();
+        PVector throwTarget = localEvent.offset();
         throwTarget.mult(this.snapThrowFactor);
         throwTarget.add(this.scrollableNode.getPosition());
         this.setSnapPosition(this.toClosestSnapPosition(throwTarget));

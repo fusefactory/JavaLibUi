@@ -26,9 +26,9 @@ public class Swiper extends TransformerExtension {
   private float velocityReductionFactor = 1.0f; // factor to multipy the (already smoother) smoothedVelocity when setting the main velocity
   // snapping (falling back into place)
   private boolean bSnapping = false;
-  private PVector snapInterval = null;
+  private PVector snapInterval = null; // size of a single "cell" in the snapping grid
   private float snapVelocityMag = 75.0f; // when velocity reaches this value (or lower), we start snapping
-  private float snapThrowFactor = 1.0f; // multiplier for the smoothed 'throwing' velocity after dragging
+  private float snapThrowFactor = 0.5f; // multiplier for the smoothed 'throwing' velocity after dragging
   // offset limits
   private PVector minOffset = null;
   private PVector maxOffset = null;
@@ -217,7 +217,8 @@ public class Swiper extends TransformerExtension {
     // when snapping-behaviour is enabled we don't use velocity/damping;
     // instead, we calculate a target position to snap to
     if(this.isSnapEnabled()){
-      PVector throwTarget = this.smoothedVelocity.get();
+      //PVector throwTarget = this.smoothedVelocity.get();
+      PVector throwTarget = localEvent.offset();
       throwTarget.mult(this.snapThrowFactor);
       throwTarget.add(this.scrollableNode.getPosition());
       throwTarget = this.toClosestSnapPosition(throwTarget);
