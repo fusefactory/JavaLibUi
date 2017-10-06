@@ -150,7 +150,7 @@ public class Node extends TouchReceiver {
     if(extensions!=null){
     	for(ExtensionBase ext : this.extensions) {
     		if(ext.isEnabled())
-    	          ext.update(dt); 		
+    	          ext.update(dt);
     	}
     }
   }
@@ -394,7 +394,7 @@ public class Node extends TouchReceiver {
     // return localised position
     return localized;
   }
-  
+
   public PVector toGlobal(PVector pos){
     // get and copy our global transformation matrix
     PMatrix3D mat = this.getGlobalTransformMatrix().get();
@@ -811,54 +811,66 @@ public class Node extends TouchReceiver {
   // layout methods
 
   public Node placeLeft(Node subject){
-    return this.placeLeft(subject, false);
+    return this.placeLeft(subject, 0.0f, false);
   }
 
-  public Node placeLeft(Node subject, boolean active){
+  public Node placeLeft(Node subject, float spacing){
+    return this.placeLeft(subject, spacing, false);
+  }
+
+  public Node placeLeft(Node subject, float spacing, boolean active){
     if(active){
       logger.warning("active layouting in Node not yet implemented");
     }
 
-    subject.setX(this.position.x - subject.getSizeScaled().x);
+    subject.setX(this.position.x - subject.getSizeScaled().x - spacing);
     return this;
   }
 
   public Node placeRight(Node subject){
-    return this.placeRight(subject, false);
+    return this.placeRight(subject, 0.0f, false);
   }
 
-  public Node placeRight(Node subject, boolean active){
+  public Node placeRight(Node subject, float spacing) {
+	  return this.placeRight(subject, spacing, false);
+  }
+
+  public Node placeRight(Node subject, float spacing, boolean active){
     if(active){
       logger.warning("active layouting in Node not yet implemented");
     }
 
-    subject.setX(this.getRightScaled());
+    subject.setX(this.getRightScaled() + spacing);
     return this;
   }
 
   public Node placeAbove(Node subject){
-    return this.placeAbove(subject, false);
+    return this.placeAbove(subject, 0.0f, false);
   }
 
-  public Node placeAbove(Node subject, boolean active){
+  public Node placeAbove(Node subject, float spacing, boolean active){
     if(active){
       logger.warning("active layouting in Node not yet implemented");
     }
 
-    subject.setY(this.position.y - subject.getSizeScaled().y);
+    subject.setY(this.position.y - subject.getSizeScaled().y - spacing);
     return this;
   }
 
   public Node placeBelow(Node subject){
-    return this.placeBelow(subject, false);
+    return this.placeBelow(subject, 0.0f, false);
   }
 
-  public Node placeBelow(Node subject, boolean active){
+  public Node placeBelow(Node subject, float spacing) {
+	  return this.placeBelow(subject, spacing, false);
+  }
+
+  public Node placeBelow(Node subject, float spacing, boolean active){
     if(active){
       logger.warning("active layouting in Node not yet implemented");
     }
 
-    subject.setY(this.getBottomScaled());
+    subject.setY(this.getBottomScaled() + spacing);
     return this;
   }
 }
