@@ -454,15 +454,23 @@ public class Swiper extends TransformerExtension {
     this.setSnapPosition(new PVector(x,y));
   }
 
+  public void setSnapPosition(PVector pos) {
+	  this.setSnapPosition(pos, false);
+  }
+
   /**
    * Configures the current snapping-target-position (starts snap-back)
    * @param pos the snapping target-position
    */
-  public void setSnapPosition(PVector pos){
+  public void setSnapPosition(PVector pos, boolean instant){
     if(pos == null){ // abort snapping?
       // abort current snapping operation (if any) and apply
       // offset-limit exceeded snap position if necessary
-      super.transformPosition(this.getOffsetLimitSnapPosition());
+    	  if(instant)
+    		  this.node.setPosition(this.getOffsetLimitSnapPosition());
+    	  else
+    		  super.transformPosition(this.getOffsetLimitSnapPosition());
+
       return;
     }
 
@@ -471,9 +479,15 @@ public class Swiper extends TransformerExtension {
     // apply offset limit correction (if necessary). TODO: too rigid? make this optional?
     PVector correctedPos = this.getOffsetLimitsCorrection(pos);
     correctedPos = correctedPos == null ? pos.get() : correctedPos;
-    this.transformPosition(correctedPos);
-    this.bSnapping = true;
-    // trigger notification
+
+    if(instant) {
+		this.node.setPosition(pos);
+	} else {
+		this.transformPosition(correctedPos);
+		this.bSnapping = true;
+	}
+
+    // trigger notifications
     newSnapPositionEvent.trigger(correctedPos);
 
     PVector stepValue = this.toStepPosition(correctedPos);
@@ -542,13 +556,21 @@ public class Swiper extends TransformerExtension {
   }
 
   public void setStepPosition(float x, float y){
-    this.setStepPosition(new PVector(x,y,0));
+	  this.setStepPosition(x,y,false);
   }
 
-  public void setStepPosition(PVector pos){
+  public void setStepPosition(float x, float y, boolean instant){
+    this.setStepPosition(new PVector(x,y,0), instant);
+  }
+
+  public void setStepPosition(PVector pos) {
+	  this.setStepPosition(pos, false);
+  }
+
+  public void setStepPosition(PVector pos, boolean instant){
     pos = this.stepPositionToNodePosition(pos);
     pos = this.toClosestSnapPosition(pos);
-    this.setSnapPosition(pos);
+    this.setSnapPosition(pos, instant);
   }
 
   public Swiper step(float x, float y){
