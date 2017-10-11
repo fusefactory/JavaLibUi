@@ -11,6 +11,8 @@ public class TextNode extends Node {
   private PVector textOffset;
   private PFont font;
   private int alignX, alignY;
+  private Integer frameColor = null;
+  private PVector framePadding = new PVector(3.0f, 3.0f, 0.0f);
 
   private void _init(){
     text = "";
@@ -54,6 +56,12 @@ public class TextNode extends Node {
   public TextNode setAlignY(int align){ alignY = align; return this; }
   public int getAlignY(int align){ return alignY; }
 
+  public void setFrameColor(Integer clr) { this.frameColor = clr; }
+  public Integer getFrameColor() { return this.frameColor; }
+
+  public void setFramePadding(PVector vec) { this.framePadding = vec == null ? new PVector(3.0f,3.0f,0.0f) : vec; }
+  public PVector getFramePadding() { return this.framePadding.get(); }
+
   @Override
   public void draw(){
     super.draw();
@@ -64,10 +72,34 @@ public class TextNode extends Node {
     if(this.font != null)
       pg.textFont(this.font);
 
-    pg.noStroke();
-    pg.fill(textColor);
     pg.textSize(textSize);
     pg.textAlign(alignX, alignY);
+    pg.noStroke();
+
+    if(this.frameColor != null) {
+    		float x=textOffset.x, y=textOffset.y, w = pg.textWidth(text);
+    		pg.fill(this.frameColor);
+
+        switch(this.alignX){
+          case PApplet.LEFT: x -= this.framePadding.x; break;
+          case PApplet.RIGHT: x += this.getSize().x - w - this.framePadding.x; break;
+          case PApplet.CENTER: x += this.getSize().x/2.0f - w/2.0f - this.framePadding.x;
+        }
+
+        // TODO
+        switch(this.alignY){
+          case PApplet.BASELINE:
+          case PApplet.TOP: y -= this.framePadding.y; break;
+          case PApplet.BOTTOM: y += this.getSize().y - this.textSize - this.framePadding.y; break;
+          case PApplet.CENTER: y += this.getSize().y/2.0f - this.textSize/2.0f - this.framePadding.y; break;
+        }
+
+    		pg.rect(x, y,
+    				Math.min(w+this.framePadding.x*2, this.getSize().x),
+    				Math.min(this.textSize+this.framePadding.y*2, this.getSize().y));
+    }
+
+    pg.fill(textColor);
     pg.text(text, textOffset.x, textOffset.y, getSize().x, getSize().y);
   }
 
