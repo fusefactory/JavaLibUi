@@ -19,6 +19,8 @@ public class Swiper extends TransformerExtension {
   // velocity / damping
   private boolean bDamping = false;
   private PVector velocity = null;
+  private long minTouchDurationToDamp = 250l; // TODO make configurable
+  private float maxDampVelocity = 100.0f; // TODO make bigger number and configurable
   private PVector smoothedVelocity = null;
   private final static float velocitySmoothCoeff = 0.1f;
   private float dampingFactor = (1.0f/7.0f);
@@ -226,11 +228,16 @@ public class Swiper extends TransformerExtension {
       return;
     }
 
-    // TODO damping doesn't work (well) yet...
-    PVector vel = localEvent.offset().mult(1.0f / ((float)localEvent.getDuration()/1000.f));
-    // PVector vel = this.smoothedVelocity.get();
-    vel.mult(velocityReductionFactor);
-    this.startDamping(vel);
+    if(localEvent.getDuration() > minTouchDurationToDamp){
+      // TODO damping doesn't work (well) yet...
+      PVector vel = localEvent.offset().mult(1.0f / ((float)localEvent.getDuration()/1000.f));
+      // PVector vel = this.smoothedVelocity.get();
+      vel.mult(velocityReductionFactor);
+      if(vel.mag() > this.maxDampVelocity)
+    	  	vel.mult(this.maxDampVelocity / vel.mag());
+
+      this.startDamping(vel);
+    }
   }
 
   /** should only be called when it is already verified that we're dragging (this.draggingTouchEvent can't be null) */
