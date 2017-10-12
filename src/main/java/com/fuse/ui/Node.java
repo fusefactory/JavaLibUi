@@ -810,13 +810,8 @@ public class Node extends TouchReceiver {
 
   // layout methods
 
-  public Node placeLeft(Node subject){
-    return this.placeLeft(subject, 0.0f, false);
-  }
-
-  public Node placeLeft(Node subject, float spacing){
-    return this.placeLeft(subject, spacing, false);
-  }
+  public Node placeLeft(Node subject){  return this.placeLeft(subject, 0.0f, false); }
+  public Node placeLeft(Node subject, float spacing){ return this.placeLeft(subject, spacing, false); }
 
   public Node placeLeft(Node subject, float spacing, boolean active){
     if(active){
@@ -827,13 +822,8 @@ public class Node extends TouchReceiver {
     return this;
   }
 
-  public Node placeRight(Node subject){
-    return this.placeRight(subject, 0.0f, false);
-  }
-
-  public Node placeRight(Node subject, float spacing) {
-	  return this.placeRight(subject, spacing, false);
-  }
+  public Node placeRight(Node subject){ return this.placeRight(subject, 0.0f, false); }
+  public Node placeRight(Node subject, float spacing) { return this.placeRight(subject, spacing, false);  }
 
   public Node placeRight(Node subject, float spacing, boolean active){
     if(active){
@@ -844,9 +834,7 @@ public class Node extends TouchReceiver {
     return this;
   }
 
-  public Node placeAbove(Node subject){
-    return this.placeAbove(subject, 0.0f, false);
-  }
+  public Node placeAbove(Node subject){ return this.placeAbove(subject, 0.0f, false); }
 
   public Node placeAbove(Node subject, float spacing, boolean active){
     if(active){
@@ -857,13 +845,8 @@ public class Node extends TouchReceiver {
     return this;
   }
 
-  public Node placeBelow(Node subject){
-    return this.placeBelow(subject, 0.0f, false);
-  }
-
-  public Node placeBelow(Node subject, float spacing) {
-	  return this.placeBelow(subject, spacing, false);
-  }
+  public Node placeBelow(Node subject){ return this.placeBelow(subject, 0.0f, false); }
+  public Node placeBelow(Node subject, float spacing) { return this.placeBelow(subject, spacing, false); }
 
   public Node placeBelow(Node subject, float spacing, boolean active){
     if(active){
@@ -871,6 +854,11 @@ public class Node extends TouchReceiver {
     }
 
     subject.setY(this.getBottomScaled() + spacing);
+    return this;
+  }
+
+  public Node placeCenteredHorizontally(Node subject){
+    subject.setX(this.getSizeScaled().x/2.0f - subject.getSizeScaled().x/2.0f);
     return this;
   }
 }

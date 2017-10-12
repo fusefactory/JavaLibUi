@@ -3,6 +3,7 @@ package com.fuse.ui.extensions;
 import processing.core.PVector;
 import processing.core.PGraphics;
 
+import com.fuse.utils.Event;
 import com.fuse.ui.Node;
 
 
@@ -38,7 +39,20 @@ public class TransformerExtension extends ExtensionBase {
   private static int maxTransformationsPerUpdate = 9;
   private int transformationsThisUpdate = 0;
 
+  // events
+  public Event<TransformerExtension> idleEvent;
+
   // lifecycle methods // // // // //
+
+  public TransformerExtension(){
+    idleEvent = new Event<>();
+  }
+
+  @Override
+  public void destroy(){
+    idleEvent.destroy();
+    super.destroy();
+  }
 
   @Override public void disable(){
     super.disable();
@@ -517,4 +531,26 @@ public class TransformerExtension extends ExtensionBase {
   public void setDonePositionDeltaMag(float mag){ donePositionDeltaMag = mag; }
   public void setDoneRotationDeltaMag(float mag){ doneRotationDeltaMag = mag; }
   public void setDoneSizeDeltaMag(float mag){ doneSizeDeltaMag = mag; }
+
+  // static factory methods
+
+  public static TransformerExtension resizeTo(Node n, float w, float h){
+	  return resizeTo(n, new PVector(w,h,0.0f));
+  }
+
+  public static TransformerExtension resizeTo(Node n, PVector size){
+    // create extension and add to specified node
+    TransformerExtension ext = new TransformerExtension();
+    n.use(ext);
+
+    // when done cleanup this mess
+    ext.idleEvent.whenTriggered(() -> {
+        n.stopUsing(ext);
+        ext.destroy();
+    });
+
+    // start resize transformation
+    ext.transformSize(size);
+    return ext;
+  }
 }
