@@ -227,7 +227,8 @@ public class Swiper extends TransformerExtension {
     }
 
     // TODO damping doesn't work (well) yet...
-    PVector vel = this.smoothedVelocity.get();
+    PVector vel = localEvent.offset().mult(1.0f / ((float)localEvent.getDuration()/1000.f));
+    // PVector vel = this.smoothedVelocity.get();
     vel.mult(velocityReductionFactor);
     this.startDamping(vel);
   }
