@@ -15,8 +15,9 @@ For more info on jitpack see;
 * https://github.com/jitpack/maven-simple
 * https://jitpack.io/docs/?#building-with-jitpack
 
-## JavaDocs
-* https://fusefactory.github.io/JavaLibUi/site/apidocs/index.html
+## Documentation
+* javadocs: https://fusefactory.github.io/JavaLibUi/site/apidocs/index.html
+* to run unit tests: ```mvn test```
 
 ## Main Classes
 * com.fuse.ui.Node
@@ -28,13 +29,18 @@ For more info on jitpack see;
  * com.fuse.ui.EventNode
 * com.fuse.ui.TouchManager
 * com.fuse.ui.TouchEvent
-
+* com.fuse.ui.extensions.ExtensionBase
+ * com.fuse.ui.extensions.Draggable
+ * com.fuse.ui.extensions.PinchZoom
+ * com.fuse.ui.extensions.DoubleClickZoom
+ * com.fuse.ui.extensions.Swiper
+ * com.fuse.ui.extensions.TouchEventForwarder
 
 ### Dependencies
 This repo uses [maven](https://maven.apache.org/guides/getting-started/maven-in-five-minutes.html) for dependency management (see the pom.xml file).
 
-Runtime Dependencies are:
-* [Processing](https://processing.org/) core [(mvn)](https://mvnrepository.com/artifact/org.processing/core)
+Compile Dependencies are:
+* [Processing](https://processing.org/) core (2.2.1 currently) [(mvn)](https://mvnrepository.com/artifact/org.processing/core)
 * [fusefactory](http://fuseinteractive.it/)'s [JavaLibEvent package](https://github.com/fusefactory/JavaLibEvent) [(jitpack)](https://jitpack.io/#fusefactory/event/1.0)
 
 ### USAGE: Creating and rendering a simple scene
@@ -157,4 +163,34 @@ public void mouseDragged(){
 public void mouseReleased(){
     touchManager.touchUp(0, new PVector(mouseX, mouseY, 0f));
 }
+```
+
+
+### USAGE: Using extensions for more advanced behaviours
+_See also the example applications, like [example-pinchzoom](https://github.com/fusefactory/JavaLibUi/tree/master/example-pinchzoom) and [example-swiper](https://github.com/fusefactory/JavaLibUi/tree/master/example-swiper)_
+
+The Node class has a "plugin system" which lets you add extensions to Nodes. This package includes a bunch of Extensions for common behaviours, but you can also create you own extensions by simply inheriting from the ```com.fuse.ui.extensions.ExtensionBase``` class.
+
+Extensions can be attached to a node using the ```use``` method, and removed with the ```stopUsing``` method. Once attached to a Node, this Node will be responsible for updating all of its extensions (which by default all Nodes should do in their update method).
+
+```java
+    MyCustomExtension ext = new MyCustomExtension();
+    Node someNode = new Node();
+    someNode.use(ext);
+    // some time later
+    someNode.stopUsing(ext);
+```
+
+Most included extensions have static factory method which will take care of this for you though;
+```java
+    Node myNode = new Node();
+
+    // returns null when this behaviour is not yet activated
+    Draggable existingDrag = Draggable.getFor(myNode);
+
+    // Activates the behaviour, only when not already active. always returns an active instance
+    Draggable drag = Draggable.enableFor(myNode);
+
+    // Disables the draggable behaviour on this node (if active)
+    Draggable.disableFor(myNode);
 ```
