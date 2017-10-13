@@ -9,6 +9,7 @@ import java.util.Iterator;
 
 import java.util.logging.*;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 import processing.core.PGraphics;
@@ -23,7 +24,7 @@ public class TouchManager extends TouchReceiver {
   /// the maximum amount of time (in seconds) between a touch-down and a touch-up for it to be considered a click
   private long clickMaxInterval = 200l;
   private float clickMaxDistance = 15.0f;
-  //private long doubleClickMaxInterval = 600l;
+  private long doubleClickMaxInterval = 850l; // milliseconds; NOTE double-click not implemented yet!
   // private long doubleClickMinDelay = 500l;
   /// the maximum distance (in pixels) between the position of touch-down and the position of touch-up for it to be considered a click
 
@@ -32,14 +33,15 @@ public class TouchManager extends TouchReceiver {
   private final static float velocitySmoothCoeff = 0.25f;
   private final static float velocityDump = 0.6f;
 
-  private List<TouchEvent> touchEventQueue;
+
+  private ConcurrentLinkedQueue<TouchEvent> touchEventQueue;
   private Map<Integer, TouchEvent> activeTouchEvents;
   private final static int MAX_CLICK_HISTORY_SIZE = 10; // no need to remember more; only remembering for double-click events, but have to consider multiple simultanous users
   private ConcurrentLinkedDeque<TouchEvent> clickHistory;
 
   private void _init(){
     logger = Logger.getLogger(TouchManager.class.getName());
-    touchEventQueue = new ArrayList<TouchEvent>();
+    touchEventQueue = new ConcurrentLinkedQueue<TouchEvent>();
     activeTouchEvents = new HashMap<Integer, TouchEvent>();
     //clickHistory = new ConcurrentLinkedDeque<>();
   }
@@ -57,28 +59,31 @@ public class TouchManager extends TouchReceiver {
     if(previousFrameMillis == null)
     previousFrameMillis = System.currentTimeMillis();
     Long newMillis = System.currentTimeMillis();
-    this.update((float)((newMillis - previousFrameMillis)/1000.0f));
+    this.update(newMillis - previousFrameMillis);
     previousFrameMillis = newMillis;
   }
 
-  public void update(float dt){
-    time += dt * 1000.0f;
+  public void update(long dtMs){
+    time += dtMs;
 
     for(TouchEvent evt : activeTouchEvents.values()){
-      evt.velocitySmoothed.mult(velocityDump);
+    	PVector vel = evt.velocitySmoothed;
+    	if(vel != null)
+    		vel.mult(velocityDump);
     }
 
     if(dispatchOnUpdate){
-      List<TouchEvent> queueCopy = new ArrayList<>();
-      queueCopy.addAll(touchEventQueue);
-
-      for(TouchEvent e : queueCopy){
-        processTouchEvent(e);
-        touchEventQueue.remove(e);
+      while(!this.touchEventQueue.isEmpty()) {
+    	  processTouchEvent(this.touchEventQueue.poll());
       }
     }
 
     //finalizeIdleTouchEvents();
+  }
+
+  @Deprecated
+  public void update(float dt){
+	  this.update((long)(1000l * dt));
   }
 
   /**
@@ -110,10 +115,10 @@ public class TouchManager extends TouchReceiver {
    */
   @Override public void submitTouchEvent(TouchEvent event){
     if(event.time == null)
-      event.time = this.getTime();
+      event.time = this.time;
 
     if(dispatchOnUpdate){
-      touchEventQueue.add(event);
+      this.touchEventQueue.add(event);
       return;
     }
 
@@ -431,13 +436,13 @@ public class TouchManager extends TouchReceiver {
     clickMaxInterval = interval;
   }
 
-  // public long getDoubleClickMaxInterval() {
-	//   return doubleClickMaxInterval;
-  // }
-  //
-  // public void setDoubleClickMaxInterval(long interval){
-	// this.doubleClickMaxInterval = interval;
-  // }
+  public long getDoubleClickMaxInterval() {
+	  return doubleClickMaxInterval;
+  }
+
+  public void setDoubleClickMaxInterval(long interval){
+	this.doubleClickMaxInterval = interval;
+  }
 
   public void setClickMaxDistance(float distance){
     clickMaxDistance = distance;
@@ -479,16 +484,12 @@ public class TouchManager extends TouchReceiver {
       pg.ellipse(event.position.x, event.position.y, 25, 25);
   }
 
-  private long getTime(){
-      return this.time;
-  }
-
   // TouchManager doesn't keep active touch events (like this)
   @Override public void addActiveTouchEvent(TouchEvent evt){}
 
   /*private void finalizeIdleTouchEvents(){
     List<TouchEvent> events = super.getActiveTouchEvents();
-    long limit = this.getTime() - super.IDLE_DURATION;
+    long limit = this.time - super.IDLE_DURATION;
 
     for(int i=events.size()-1; i>=0; i--){
       TouchEvent event = activeTouchEvents.get(i);

@@ -29,12 +29,22 @@ public class TouchEventForwarder extends ExtensionBase {
     }
 
     source.touchEvent.addListener((TouchEvent evt) -> {
-      TouchEvent newEvent = evt.copy();
+      //TouchEvent newEvent = evt.copy();
+      Node originalNode = evt.node;
+      Node originalMostRecentNode = evt.mostRecentNode;
+      
+      // change event so it seems to belong to our subject
       if(evt.node == source)
-        newEvent.node = this.node;
+        evt.node = this.node;
       if(evt.mostRecentNode == source)
-        newEvent.mostRecentNode = this.node;
-      node.receiveTouchEvent(newEvent);
+        evt.mostRecentNode = this.node;
+
+      // forward event
+      node.receiveTouchEvent(evt);
+      
+      // restore event
+      evt.node = originalNode;
+      evt.mostRecentNode = originalMostRecentNode;
     }, this);
   }
 
@@ -65,15 +75,12 @@ public class TouchEventForwarder extends ExtensionBase {
   }
 
   public static ExtensionBase disableFromTo(TouchReceiver from, Node to){
-    for(int i=to.getExtensions().size()-1; i>=0; i--){
-      ExtensionBase ext = to.getExtensions().get(i);
-      if(TouchEventForwarder.class.isInstance(ext)){
-        to.stopUsing(ext);
-        return ext;
-      }
-    }
+	ExtensionBase ext = getForFromTo(from, to);
 
-    return null;
+	if(ext != null)
+		to.stopUsing(ext);
+
+	return ext;
   }
 
   public static TouchEventForwarder getForFromTo(TouchReceiver from, Node to){

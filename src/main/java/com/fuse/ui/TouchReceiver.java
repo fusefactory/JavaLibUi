@@ -20,7 +20,7 @@ public class TouchReceiver {
     touchClickEvent,
     touchDoubleClickEvent;
 
-  private Logger logger;
+  protected Logger logger;
   private List<TouchEvent> activeTouchEvents = null;
 
   public TouchReceiver(){
@@ -34,6 +34,17 @@ public class TouchReceiver {
     touchExitEvent = new Event<TouchEvent>();
     touchClickEvent = new Event<TouchEvent>();
     touchDoubleClickEvent = new Event<TouchEvent>();
+  }
+  
+  public void destroy() {
+	  touchEvent.destroy();
+	  touchDownEvent.destroy();
+	  touchUpEvent.destroy();
+	  touchMoveEvent.destroy();
+	  touchEnterEvent.destroy();
+	  touchExitEvent.destroy();
+	  touchClickEvent.destroy();
+	  touchDoubleClickEvent.destroy();
   }
 
   // virtual
@@ -69,7 +80,7 @@ public class TouchReceiver {
           if(this != event.node) { // for original touch target enter/exit doesn't affect the touch activeness
             addActiveTouchEvent(event);
           }
-          
+
           touchEnterEvent.trigger(event);
           break;
         }

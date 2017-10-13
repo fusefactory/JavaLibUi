@@ -2,11 +2,12 @@ package com.fuse.ui.extensions;
 
 import processing.core.PApplet;
 import processing.core.PVector;
-
 import com.fuse.ui.Node;
-import com.fuse.ui.TouchEvent;
 
 public class Constrain extends TransformerExtension {
+  private static float scaleIgnoreLimit = 0.001f;
+  private static float positionIgnoreLimit = 0.01f;
+
   // constrain parameter attributes
   private Float[] axisMinValues = {null, null, null}; // position, TODO: rename
   private Float[] axisMaxValues = {null, null, null}; // position, TODO: rename
@@ -44,19 +45,19 @@ public class Constrain extends TransformerExtension {
     super.update(dt);
   }
 
-  @Override protected void transformPosition(PVector vec){
+  @Override public void transformPosition(PVector vec){
     //bLock = true;
     super.transformPosition(vec);
     bLock = false;
   }
 
-  @Override protected void transformRotation(PVector vec){
+  @Override public void transformRotation(PVector vec){
     //bLock = true;
     super.transformRotation(vec);
     bLock = false;
   }
 
-  @Override protected void transformScale(PVector vec){
+  @Override public void transformScale(PVector vec){
     //bLock = true;
     super.transformScale(vec);
     bLock = false;
@@ -64,6 +65,29 @@ public class Constrain extends TransformerExtension {
 
   private PVector getConstrainedPosition(){
     PVector result = node.getPosition();
+    PVector targetScale = this.getTargetScale();
+
+    // currently aplying scale constrain? then we'll probably want to apply
+    // translation so scaling doesn't warp to top left
+    if(targetScale != null){
+      PVector curSize = this.node.getSize();
+      PVector curscale = this.node.getScale();
+      curSize.x = curSize.x * curscale.x;
+      curSize.y = curSize.y * curscale.y;
+      curSize.z = curSize.z * curscale.z;
+
+      PVector targetSize = this.node.getSize();
+      targetSize.x = targetSize.x * targetScale.x;
+      targetSize.y = targetSize.y * targetScale.y;
+      targetSize.z = targetSize.z * targetScale.z;
+
+      PVector deltaSize = targetSize.get();
+      deltaSize.sub(curSize);
+
+      // apply position correction to constrainedPosition result
+      deltaSize.mult(0.5f);
+      result.sub(deltaSize);
+    }
 
     if(axisMinValues[0] != null && axisMinValues[0] > result.x) result.x = axisMinValues[0];
     if(axisMinValues[1] != null && axisMinValues[1] > result.y) result.y = axisMinValues[1];
@@ -73,21 +97,21 @@ public class Constrain extends TransformerExtension {
     if(axisMaxValues[1] != null && axisMaxValues[1] < result.y) result.y = axisMaxValues[1];
     if(axisMaxValues[2] != null && axisMaxValues[2] < result.z) result.z = axisMaxValues[2];
 
-    if(bFillParent && this.getTargetScale() == null){ // not while scaling
+    if(bFillParent){
       Node parentNode = node.getParent();
       if(parentNode != null){
         //PVector sizeScaled = node.getSizeScaled();
-    	PVector sizeScaled = node.getSize();
-    	PVector scaler = (this.getTargetScale() != null ? this.getTargetScale() : this.node.getScale());
-    	sizeScaled.x = sizeScaled.x * scaler.x;
-    	sizeScaled.y = sizeScaled.y * scaler.y; 
-    	sizeScaled.z = sizeScaled.z * scaler.z; 
+        PVector sizeScaled = node.getSize();
+        PVector scaler = (targetScale != null ? targetScale : this.node.getScale());
+        sizeScaled.x = sizeScaled.x * scaler.x;
+        sizeScaled.y = sizeScaled.y * scaler.y;
+        sizeScaled.z = sizeScaled.z * scaler.z;
 
-        if(sizeScaled.x > parentNode.getSize().x){ // can only fill if bigger
+        if(sizeScaled.x >= parentNode.getSize().x){ // can only fill if bigger
           result.x = Math.min(0.0f, Math.max((parentNode.getSize().x-sizeScaled.x), result.x));
         }
 
-        if(sizeScaled.y > parentNode.getSize().y){
+        if(sizeScaled.y >= parentNode.getSize().y){
           result.y = Math.min(0.0f, Math.max((parentNode.getSize().y-sizeScaled.y), result.y));
         }
       }
@@ -98,16 +122,16 @@ public class Constrain extends TransformerExtension {
       if(parentNode != null){
           //PVector sizeScaled = node.getSizeScaled();
       	PVector sizeScaled = node.getSize();
-      	PVector scaler = (this.getTargetScale() != null ? this.getTargetScale() : this.node.getScale());
+      	PVector scaler = (targetScale != null ? targetScale : this.node.getScale());
       	sizeScaled.x = sizeScaled.x * scaler.x;
-      	sizeScaled.y = sizeScaled.y * scaler.y; 
+      	sizeScaled.y = sizeScaled.y * scaler.y;
       	sizeScaled.z = sizeScaled.z * scaler.z;
 
-        if(sizeScaled.x < parentNode.getSize().x){
+        if(sizeScaled.x <= parentNode.getSize().x){
           result.x = (parentNode.getSize().x - sizeScaled.x) * 0.5f;
         }
 
-        if(sizeScaled.y < parentNode.getSize().y){
+        if(sizeScaled.y <= parentNode.getSize().y){
           result.y = (parentNode.getSize().y - sizeScaled.y) * 0.5f;
         }
       }
@@ -135,14 +159,12 @@ public class Constrain extends TransformerExtension {
       return;
 
     PVector vec = this.getConstrainedScale();
-    if(vec.dist(node.getScale()) > 0.01f){ // negligable
+    if(vec.dist(node.getScale()) > scaleIgnoreLimit){
       super.transformScale(vec);
     }
 
     vec = this.getConstrainedPosition();
-    // logger.info("Constrained pos:"+pos.toString()+", cur pos: "+node.getPosition());
-    if(vec.dist(node.getPosition()) > 0.1f){ // negligable
-      // logger.info("constrain transforming to: "+pos.toString());
+    if(vec.dist(node.getPosition()) > positionIgnoreLimit){
       super.transformPosition(vec);
     }
 
@@ -236,7 +258,7 @@ public class Constrain extends TransformerExtension {
 
   @Override
   public void setFillParent(boolean enable){
-    bFillParent = true;
+    bFillParent = enable;
     applyConstrains();
   }
 
@@ -275,9 +297,9 @@ public class Constrain extends TransformerExtension {
   }
 
   public static void disableFor(Node n){
-    for(int i=n.getExtensions().size()-1; i>=0; i--)
-      if(Constrain.class.isInstance(n.getExtensions().get(i))){
-        n.stopUsing(n.getExtensions().get(i));
-      }
+	for(ExtensionBase ext : n.getExtensions()) {
+		if(Constrain.class.isInstance(ext))
+				n.stopUsing(ext);
+	}
   }
 }
