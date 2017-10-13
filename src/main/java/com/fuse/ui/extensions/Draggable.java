@@ -12,6 +12,7 @@ public class Draggable extends TransformerExtension {
   private PVector originalNodePosition = null;
   private PVector originalNodePositionGlobal = null;
   private boolean bDragging = false;
+  private boolean bAbortOnSecondTouch = true;
   private TouchEvent dragEvent = null;
   // configurables
   private boolean bRestore = false;
@@ -37,8 +38,14 @@ public class Draggable extends TransformerExtension {
     super.enable();
 
     node.touchDownEvent.addListener((TouchEvent event) -> {
-      if(bDragging)
-        return;
+      if(bDragging) {
+    	  if(bAbortOnSecondTouch) {
+    		  stop();
+    	  }
+
+    	  return;
+      }
+
 
       Node ourNode = this.getNode();
 
@@ -98,7 +105,7 @@ public class Draggable extends TransformerExtension {
 	  if(bDragging || dragEvent != null) {
 		  bDragging = false;
 		  dragEvent = null;
-      super.stopActiveTransformations();
+		  super.stopActiveTransformations();
 		  endEvent.trigger(this);
 	  }
   }
@@ -177,18 +184,34 @@ public class Draggable extends TransformerExtension {
   // static factory methods // // // // //
 
   public static Draggable enableFor(Node n){
-    for(ExtensionBase ext : n.getExtensions())
-      if(Draggable.class.isInstance(ext))
-        return (Draggable)ext;
-    Draggable d = new Draggable();
-    n.use(d);
+    Draggable d = getFor(n);
+
+    if(d == null){
+      d = new Draggable();
+      n.use(d);
+    }
     return d;
   }
 
+  public static Draggable getFor(Node n){
+    for(ExtensionBase ext : n.getExtensions())
+      if(Draggable.class.isInstance(ext))
+        return (Draggable)ext;
+    return null;
+  }
+
   public static void disableFor(Node n){
-    for(int i=n.getExtensions().size()-1; i>=0; i--)
-      if(Draggable.class.isInstance(n.getExtensions().get(i))){
-        n.stopUsing(n.getExtensions().get(i));
-      }
+    for(ExtensionBase ext : n.getExtensions()) {
+      if(Draggable.class.isInstance(ext))
+          n.stopUsing(ext);
+    }
+  }
+
+  public void setAbortOnSecondTouch(boolean enable) {
+	  this.bAbortOnSecondTouch = enable;
+  }
+
+  public boolean getAbortOnSecondTouch() {
+	  return bAbortOnSecondTouch;
   }
 }

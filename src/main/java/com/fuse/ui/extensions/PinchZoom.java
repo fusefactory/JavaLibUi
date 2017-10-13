@@ -12,6 +12,8 @@ import com.fuse.ui.TouchEvent;
 public class PinchZoom extends TransformerExtension {
   // attributes
   private PinchMath math = null;
+  private PVector initScale = null;
+  private PVector initPosition = null;
   private PVector originalScale, originalPosition;
   // configurables
   private boolean bRestore = false;
@@ -43,6 +45,9 @@ public class PinchZoom extends TransformerExtension {
     if(this.isEnabled() || this.node == null) return;
     super.enable();
 
+    this.initScale = this.node.getScale();
+    this.initPosition = this.node.getPosition();
+
     this.node.touchDownEvent.addListener((TouchEvent event) -> {
       if(!this.isPinching()){
         TouchEvent[] events = this.getPinchZoomTouchEvents();
@@ -52,7 +57,7 @@ public class PinchZoom extends TransformerExtension {
 
         return;
       }
-    });
+    }, this);
 
     this.node.touchUpEvent.addListener((TouchEvent event) -> {
       if(this.isPinching()){
@@ -61,7 +66,7 @@ public class PinchZoom extends TransformerExtension {
         if(events[0] == event || events[1] == event)
           stopPinching(); // remove this.math, making this.isPinching() == true
       }
-    });
+    }, this);
   }
 
   @Override public void disable(){
@@ -171,19 +176,21 @@ public class PinchZoom extends TransformerExtension {
     return d;
   }
 
-  public static void disableFor(Node n){
-    for(int i=n.getExtensions().size()-1; i>=0; i--)
-      if(PinchZoom.class.isInstance(n.getExtensions().get(i))){
-        n.stopUsing(n.getExtensions().get(i));
-      }
-  }
-
   public static PinchZoom getFor(Node n){
     for(ExtensionBase ext : n.getExtensions())
       if(PinchZoom.class.isInstance(ext))
         return (PinchZoom)ext;
     return null;
   }
+
+  public static void disableFor(Node n){
+    for(ExtensionBase ext : n.getExtensions()) {
+      if(PinchZoom.class.isInstance(ext))
+          n.stopUsing(ext);
+    }
+  }
+
+  // dev-only methods // // // // //
 
   @Override
   public void drawDebug(){

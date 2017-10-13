@@ -82,6 +82,17 @@ public class TouchGenerator {
     return this;
   }
 
+  public void doubleclick(float x, float y){
+    TouchManager touchManager = new TouchManager();
+    touchManager.setNode(rootNode);
+
+    touchManager.touchDown(1, new PVector(x, y, 0.0f));
+    touchManager.touchUp(1, new PVector(x, y, 0.0f));
+    touchManager.update(touchManager.getDoubleClickMaxInterval() / 2);
+    touchManager.touchDown(1, new PVector(x, y, 0.0f));
+    touchManager.touchUp(1, new PVector(x, y, 0.0f));
+  }
+
   /** Gets ordered list of events and executes them all */
   public void go(){
     TouchManager touchManager = new TouchManager();

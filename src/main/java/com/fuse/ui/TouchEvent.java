@@ -84,12 +84,13 @@ public class TouchEvent {
     TouchEvent touchEvent = new TouchEvent();
     touchEvent.touchId = touchId;
     touchEvent.eventType = eventType;
-    touchEvent.position = position;
-    touchEvent.startPosition = startPosition;
+    touchEvent.position = position == null ? null :position.get();
+    touchEvent.startPosition = startPosition == null ? null : startPosition.get();
     touchEvent.node = node;
     touchEvent.mostRecentNode = mostRecentNode;
-    touchEvent.time = time;
-    touchEvent.velocity = velocity;
+    touchEvent.time = time == null ? null : (long) time;
+    touchEvent.startTime = startTime == null ? null : (long) startTime;
+    touchEvent.velocity = velocity == null ? null : velocity.get();
     return touchEvent;
   }
 

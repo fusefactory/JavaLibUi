@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.function.Consumer;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 import processing.core.PGraphics;
 import processing.core.PVector;
@@ -26,7 +27,7 @@ public class Node extends TouchReceiver {
   public static void setPGraphics(PGraphics newPg){ pg = newPg; }
   public static PGraphics getPGraphics(){ return pg; }
 
-  private List<Node> childNodes;
+  private ConcurrentLinkedDeque<Node> childNodes;
   private Node parentNode;
   /** The name of this node, which can be used to find specific child-nodes */
   private String name;
@@ -46,7 +47,7 @@ public class Node extends TouchReceiver {
   private PMatrix3D localTransformMatrix;
   /** Makes sure all offspring Nodes only render within this node's boundaries */
   private Node clippingNode;
-  private List<ExtensionBase> extensions = null;
+  private ConcurrentLinkedDeque<ExtensionBase> extensions = null; // TODO; make ConcurrentLinkedDeque, like childNodes
 
   /** Float-based z-level attribute used for re-ordering Nodes in the render-queue;
    * a higher plane value will put the Node later in the queue, which means
@@ -57,9 +58,10 @@ public class Node extends TouchReceiver {
   public Event<Node> newParentEvent;
   /** Triggered when a -direct- child is added to this node */
   public Event<Node> newChildEvent;
+  public Event<Node> childRemovedEvent;
   /** Triggered when a child is added to this node, or any of its offspring */
   public Event<Node> newOffspringEvent;
-  public Event<Node> positionChangeEvent, sizeChangeEvent;
+  public Event<Node> positionChangeEvent, sizeChangeEvent, scaleChangeEvent, rotationChangeEvent;
 
   /** Comparator for ordering a list of Nodes from lower plane to higher plane (used for rendering) */
   static public Comparator<Node> bottomPlaneFirst = (a,b) -> {
@@ -73,7 +75,7 @@ public class Node extends TouchReceiver {
 
   /** The private _init method is only used in constructor (to keep them DRY) */
   private void _init(){
-    childNodes = new ArrayList<Node>();
+    childNodes = new ConcurrentLinkedDeque<Node>();
     parentNode = null;
     bVisible = true;
     bInteractive = true;
@@ -85,9 +87,12 @@ public class Node extends TouchReceiver {
     name = "";
     newParentEvent = new Event<>();
     newChildEvent = new Event<>();
+    childRemovedEvent = new Event<>();
     newOffspringEvent = new Event<>();
     positionChangeEvent = new Event<>();
     sizeChangeEvent = new Event<>();
+    rotationChangeEvent = new Event<>();
+    scaleChangeEvent = new Event<>();
   }
 
   /** Default constructor; intializes default value (visible, interactive, empty name, position zero, size zero) */
@@ -101,41 +106,52 @@ public class Node extends TouchReceiver {
     setName(nodeName);
   }
 
+  @Override
   public void destroy(){
-    if(getParent() != null)
-      getParent().removeChild(this);
-
-    if(extensions != null){
-      while(extensions != null && !extensions.isEmpty()){
-        ExtensionBase ext = extensions.get(0);
-        this.stopUsing(ext);
-        ext.destroy();
-      }
-    }
-
-    while(!childNodes.isEmpty()){
-      Node childNode = childNodes.get(0);
-      this.removeChild(childNode);
-      childNode.destroy();
-    }
-
     newParentEvent.destroy();
     newOffspringEvent.destroy();
     newChildEvent.destroy();
+    childRemovedEvent.destroy();
     positionChangeEvent.destroy();
     sizeChangeEvent.destroy();
+    rotationChangeEvent.destroy();
+    scaleChangeEvent.destroy();
+
+    // detach from scenegraph if still connected
+    if(getParent() != null)
+      getParent().removeChild(this);
+
+    // recursively destroy this node's subtree
+    while(!childNodes.isEmpty()){
+      Node childNode = childNodes.pollFirst();
+      if(childNode != null) {
+    	this.removeChild(childNode);
+      	childNode.destroy();
+      }
+    }
+
+    // cleanup this node's extensions
+    if(extensions != null){
+      while(true){
+        ExtensionBase ext = extensions.poll();
+        if(ext == null)
+          break;
+        this.stopUsing(ext);
+        ext.destroy();
+      }
+
+      this.extensions = null;
+    }
+
+    super.destroy();
   }
 
   public void update(float dt){
     if(extensions!=null){
-      // Copy all extension into a temporary collection before iteration,
-      // because extensions might be added/removed while iterating
-      List<ExtensionBase> tmpExtensions = new ArrayList<>();
-      tmpExtensions.addAll(extensions);
-
-      for(ExtensionBase ext : tmpExtensions)
-        if(ext.isEnabled())
-          ext.update(dt);
+    	for(ExtensionBase ext : this.extensions) {
+    		if(ext.isEnabled())
+    	          ext.update(dt);
+    	}
     }
   }
 
@@ -152,6 +168,7 @@ public class Node extends TouchReceiver {
 
     pg.noStroke();
     pg.fill(clr);
+    pg.textSize(12.0f);
     pg.text(getName(), 0.0f, 15.0f);
 
     if(extensions!=null)
@@ -174,8 +191,9 @@ public class Node extends TouchReceiver {
   }
 
   /// set interactive state (if it responds to touch events)
-  public void setInteractive(boolean newValue){
+  public Node setInteractive(boolean newValue){
     bInteractive = newValue;
+    return this;
   }
 
   /// returns this node's plane value
@@ -183,13 +201,18 @@ public class Node extends TouchReceiver {
     return plane;
   }
 
-  public void setPlane(float newPlane){
+  public Node setPlane(float newPlane){
     plane = newPlane;
+    return this;
   }
 
-  public String getName(){ return new String(name); }
-  public void setName(String newName){
+  public String getName(){
+    return new String(name);
+  }
+
+  public Node setName(String newName){
     name = newName;
+    return this;
   }
 
   public PVector getPosition(){
@@ -209,33 +232,36 @@ public class Node extends TouchReceiver {
     return toGlobal(size);
   }
 
-  public void setX(float newX){
-    setPosition(newX, position.y, position.z);
+  public Node setX(float newX){
+    return setPosition(newX, position.y, position.z);
   }
 
-  public void setY(float newY){
-    setPosition(position.x, newY, position.z);
+  public Node setY(float newY){
+    return setPosition(position.x, newY, position.z);
   }
 
-  public void setZ(float newZ){
-    setPosition(position.x, position.y, newZ);
+  public Node setZ(float newZ){
+    return setPosition(position.x, position.y, newZ);
   }
 
-  public void setPosition(PVector newPos){
-    setPosition(newPos.x, newPos.y, newPos.z);
+  public Node setPosition(PVector newPos){
+    return setPosition(newPos.x, newPos.y, newPos.z);
   }
 
-  public void setPosition(float x, float y){
-    this.setPosition(x,y,0f);
+  public Node setPosition(float x, float y){
+    return this.setPosition(x,y,0f);
   }
 
-  public void setPosition(float x, float y, float z){
+  public Node setPosition(float x, float y, float z){
     boolean change = position.x != x || position.y != y || position.z != z;
+
     if(change){
       position.set(x,y,z);
       updateLocalTransformMatrix();
       positionChangeEvent.trigger(this);
     }
+
+    return this;
   }
 
   public PVector getSize(){
@@ -250,34 +276,38 @@ public class Node extends TouchReceiver {
     return result;
   }
 
-  public void setWidth(float newWidth){
-    size.x = newWidth;
+  public Node setWidth(float newWidth){
+    return this.setSize(newWidth, size.y);
   }
 
-  public void setHeight(float newHeight){
-    size.y = newHeight;
+  public Node setHeight(float newHeight){
+    return this.setSize(size.x, newHeight);
   }
 
-  public void setSize(PVector newSize){
+  public Node setSize(PVector newSize){
     size = newSize.get();
     sizeChangeEvent.trigger(this);
+    return this;
   }
 
-  public void setSize(float newWidth, float newHeight){
+  public Node setSize(float newWidth, float newHeight){
     setSize(new PVector(newWidth, newHeight, 0.0f));
+    return this;
   }
 
   public PVector getScale(){
     return scale.get();
   }
 
-  public void setScale(float newScale){
-    setScale(new PVector(newScale, newScale, 1.0f));
+  public Node setScale(float newScale){
+    return setScale(new PVector(newScale, newScale, 1.0f));
   }
 
-  public void setScale(PVector newScale){
+  public Node setScale(PVector newScale){
     scale = newScale;
     updateLocalTransformMatrix();
+    this.scaleChangeEvent.trigger(this);
+    return this;
   }
 
   private void updateLocalTransformMatrix(){
@@ -293,18 +323,21 @@ public class Node extends TouchReceiver {
     return this.rotation.get();
   }
 
-  public void setRotation(PVector newRot){
+  public Node setRotation(PVector newRot){
     this.rotation = newRot.get();
     updateLocalTransformMatrix();
+    this.rotationChangeEvent.trigger(this);
+    return this;
   }
 
-  public void rotate(float amount){
-    this.rotateZ(amount);
+  public Node rotate(float amount){
+    return this.rotateZ(amount);
   }
 
-  public void rotateZ(float amount){
+  public Node rotateZ(float amount){
     this.rotation.z += amount;
     localTransformMatrix.rotateZ(amount);
+    return this;
   }
 
   public float getRight(){
@@ -323,15 +356,16 @@ public class Node extends TouchReceiver {
     return position.y + size.y * scale.y;
   }
 
-  public void setGlobalPosition(PVector globalPos){
+  public Node setGlobalPosition(PVector globalPos){
     Node parentNode = getParent();
 
     if(parentNode == null){
       setPosition(globalPos);
-      return;
+      return this;
     }
 
     setPosition(parentNode.toLocal(globalPos));
+    return this;
   }
 
   public boolean isInside(PVector pos){
@@ -349,7 +383,7 @@ public class Node extends TouchReceiver {
 
     // try to invert the matrix
     if(!mat.invert()){
-      // System.out.println("could not invert Model's globalTransformMatrix");
+      System.err.println("could not invert Model's globalTransformMatrix");
       return pos;
     }
 
@@ -378,6 +412,10 @@ public class Node extends TouchReceiver {
     TouchEvent newEvent = event.copy();
     newEvent.position = toLocal(event.position);
     newEvent.startPosition = toLocal(event.startPosition);
+    if(event.velocity != null)
+    	newEvent.velocity = toLocal(event.velocity);
+    if(event.velocitySmoothed != null)
+    	newEvent.velocitySmoothed = toLocal(event.velocitySmoothed);
     return newEvent;
   }
 
@@ -387,7 +425,7 @@ public class Node extends TouchReceiver {
 
     // try to invert the matrix
     if(!mat.invert()){
-      // System.out.println("could not invert Model's globalTransformMatrix");
+      System.err.println("could not invert Model's globalTransformMatrix");
       return vec;
     }
 
@@ -415,11 +453,12 @@ public class Node extends TouchReceiver {
   public void removeChild(Node n){
     childNodes.remove(n);
     newOffspringEvent.stopForward(n.newOffspringEvent);
+    childRemovedEvent.trigger(n);
   }
 
   public void removeAllChildren(){
     while(!childNodes.isEmpty())
-    removeChild(childNodes.get(0));
+    	this.removeChild(childNodes.pollFirst());
   }
 
   public Node getChildWithName(String name){
@@ -518,7 +557,8 @@ public class Node extends TouchReceiver {
         // TODO this size conversion from local to global space, only really works
         // if the node is rotated to multiples of 90 degrees (or not rotated at all of course).
         PVector bottomRight = clipNode.getGlobalBottomRight();
-        pg.clip(scrPos.x, scrPos.y, bottomRight.x-scrPos.x, bottomRight.y-scrPos.y);
+        pg.imageMode(PGraphics.CORNERS);
+        pg.clip(scrPos.x, scrPos.y, bottomRight.x, bottomRight.y);
       }
 
       pg.pushMatrix();
@@ -700,46 +740,40 @@ public class Node extends TouchReceiver {
   }
 
   public void use(ExtensionBase newExtension){
+    newExtension.setNode(this);
+    newExtension.enable();
+    this.addExtension(newExtension);
+  }
+
+  public void addExtension(ExtensionBase ext){
     // lazy create so extensions attribute doesn't use any memory
     // unless this Node actually gets extensions
     if(extensions == null)
-      extensions = new ArrayList<>();
+      extensions = new ConcurrentLinkedDeque<>();
 
-    newExtension.setNode(this);
-    newExtension.enable();
-
-    extensions.add(newExtension);
+    extensions.add(ext);
   }
 
   public void stopUsing(ExtensionBase ext){
-    if(extensions == null)
+    if(this.extensions == null)
       return;
 
-    if(extensions.remove(ext))
+    if(this.extensions.remove(ext))
       ext.disable();
-
-    if(extensions == null){
-      System.err.println("Node.stopUsing extensions suddenly null");
-      return;
-    }
-
-    if(extensions.isEmpty())
-      extensions = null; // cleanup
   }
 
-  public List<ExtensionBase> getExtensions(){
-    if(extensions == null)
-      return new ArrayList<>();
-    return extensions;
+  public ExtensionBase[] getExtensions(){
+    return this.extensions == null ? new ExtensionBase[0] : extensions.toArray(new ExtensionBase[0]);
   }
 
-  public void enable(boolean _enable){
+  public Node enable(boolean _enable){
     this.setVisible(_enable);
     this.setInteractive(_enable);
+    return this;
   }
 
-  public void enable(){ this.enable(true); }
-  public void disable(){ this.enable(false); }
+  public Node enable(){ return this.enable(true); }
+  public Node disable(){ return this.enable(false); }
 
   public void withChild(String name, Consumer<Node> func){
     withChild(name, -1, func);
@@ -772,5 +806,59 @@ public class Node extends TouchReceiver {
 
   public ExtensionBase stopCopyingAllTouchEventsFrom(TouchReceiver source){
     return TouchEventForwarder.disableFromTo(source, this);
+  }
+
+  // layout methods
+
+  public Node placeLeft(Node subject){  return this.placeLeft(subject, 0.0f, false); }
+  public Node placeLeft(Node subject, float spacing){ return this.placeLeft(subject, spacing, false); }
+
+  public Node placeLeft(Node subject, float spacing, boolean active){
+    if(active){
+      logger.warning("active layouting in Node not yet implemented");
+    }
+
+    subject.setX(this.position.x - subject.getSizeScaled().x - spacing);
+    return this;
+  }
+
+  public Node placeRight(Node subject){ return this.placeRight(subject, 0.0f, false); }
+  public Node placeRight(Node subject, float spacing) { return this.placeRight(subject, spacing, false);  }
+
+  public Node placeRight(Node subject, float spacing, boolean active){
+    if(active){
+      logger.warning("active layouting in Node not yet implemented");
+    }
+
+    subject.setX(this.getRightScaled() + spacing);
+    return this;
+  }
+
+  public Node placeAbove(Node subject){ return this.placeAbove(subject, 0.0f, false); }
+
+  public Node placeAbove(Node subject, float spacing, boolean active){
+    if(active){
+      logger.warning("active layouting in Node not yet implemented");
+    }
+
+    subject.setY(this.position.y - subject.getSizeScaled().y - spacing);
+    return this;
+  }
+
+  public Node placeBelow(Node subject){ return this.placeBelow(subject, 0.0f, false); }
+  public Node placeBelow(Node subject, float spacing) { return this.placeBelow(subject, spacing, false); }
+
+  public Node placeBelow(Node subject, float spacing, boolean active){
+    if(active){
+      logger.warning("active layouting in Node not yet implemented");
+    }
+
+    subject.setY(this.getBottomScaled() + spacing);
+    return this;
+  }
+
+  public Node placeCenteredHorizontally(Node subject){
+    subject.setX(this.getSizeScaled().x/2.0f - subject.getSizeScaled().x/2.0f);
+    return this;
   }
 }
