@@ -230,7 +230,8 @@ public class Swiper extends TransformerExtension {
 
     if(localEvent.getDuration() > minTouchDurationToDamp){
       // TODO damping doesn't work (well) yet...
-      PVector vel = localEvent.offset().mult(1.0f / ((float)localEvent.getDuration()/1000.f));
+      PVector vel = localEvent.offset();
+      vel.mult(1.0f / ((float)localEvent.getDuration()/1000.f));
       // PVector vel = this.smoothedVelocity.get();
       vel.mult(velocityReductionFactor);
       if(vel.mag() > this.maxDampVelocity)
