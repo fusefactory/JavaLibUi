@@ -36,7 +36,7 @@ public class TransformerExtension extends ExtensionBase {
   private boolean bOnlyWhenNotTouched = false;
   private boolean bStopOnTouch = false;
   // endless recursion detection
-  private static int maxTransformationsPerUpdate = 9;
+  protected int maxTransformationsPerUpdate = 9;
   private int transformationsThisUpdate = 0;
 
   // events
@@ -48,20 +48,19 @@ public class TransformerExtension extends ExtensionBase {
     idleEvent = new Event<>();
   }
 
-  @Override
-  public void destroy(){
+  @Override public void destroy(){
     idleEvent.destroy();
     super.destroy();
   }
 
-  @Override public void disable(){
-    super.disable();
+  @Override public void teardown(){
     targetPosition = null;
     targetScale = null;
     targetRotation = null;
   }
 
   @Override public void update(float dt){
+    // System.out.println("ext update");
     transformationsThisUpdate = 0; // reset endless recursion detection counter
 
     if(this.node.isTouched()){
@@ -247,6 +246,9 @@ public class TransformerExtension extends ExtensionBase {
       return;
     }
 
+    if(this.node.getPosition().equals(vec))
+      return;
+
     if(bOnlyWhenNotTouched && this.node.isTouched())
       return;
 
@@ -282,6 +284,11 @@ public class TransformerExtension extends ExtensionBase {
   }
 
   public void transformRotation(PVector vec){
+    if(vec == null){
+      targetRotation = null;
+      return;
+    }
+
     if(bOnlyWhenNotTouched && this.node.isTouched())
       return;
 
@@ -302,6 +309,14 @@ public class TransformerExtension extends ExtensionBase {
   }
 
   public void transformScale(PVector vec){
+    if(vec == null){
+      targetScale = null;
+      return;
+    }
+
+    if(this.node.getScale().equals(vec))
+      return;
+
     if(bOnlyWhenNotTouched && this.node.isTouched())
       return;
 
@@ -325,6 +340,9 @@ public class TransformerExtension extends ExtensionBase {
   }
 
   public void transformSize(PVector vec){
+    if(this.node.getSize().equals(vec))
+      return;
+
     if(bOnlyWhenNotTouched && this.node.isTouched())
       return;
 
@@ -427,6 +445,14 @@ public class TransformerExtension extends ExtensionBase {
 
   public PVector getTargetScale() {
 	  return this.targetScale == null ? null : this.targetScale.get();
+  }
+
+  public PVector getTargetSize() {
+    return this.targetSize == null ? null : this.targetSize.get();
+  }
+
+  public PVector getTargetRotation() {
+    return this.targetRotation == null ? null : this.targetRotation.get();
   }
 
   public boolean isTransformingSize(){

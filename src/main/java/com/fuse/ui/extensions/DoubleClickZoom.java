@@ -13,17 +13,14 @@ public class DoubleClickZoom extends TransformerExtension {
   private PVector scaleFactor = new PVector(2.0f, 2.0f, 1.0f);
 
   public DoubleClickZoom() {
-	super();
-	// by default this extension aborts all TransformerExtension-based transformations
-	// when its node receives a touch event. This default behaviour can be changed by
-	// call setStopOnTouch again with a different value.
-	super.setStopOnTouch(true);
+    super();
+    // by default this extension aborts all TransformerExtension-based transformations
+    // when its node receives a touch event. This default behaviour can be changed by
+    // call setStopOnTouch again with a different value.
+    super.setStopOnTouch(true);
   }
-  
-  @Override public void enable(){
-    if(this.isEnabled() || this.node == null) return;
-    super.enable();
 
+  @Override public void setup(){
     this.originalScale = this.node.getScale();
     this.originalPosition = this.node.getPosition();
 
@@ -48,11 +45,9 @@ public class DoubleClickZoom extends TransformerExtension {
     }, this);
   }
 
-  @Override public void disable(){
-    System.out.println("222");
+  @Override public void teardown(){
     if(this.node != null)
       this.node.touchClickEvent.removeListeners(this);
-    super.disable();
   }
 
   private void onDoubleClick(TouchEvent event) {

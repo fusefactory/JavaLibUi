@@ -54,48 +54,15 @@ public class SmoothScroll extends ExtensionBase {
   }
 
   @Override public void destroy(){
+    newSnapPositionEvent.destroy();
+    newStepPositionEvent.destroy();
+    restEvent.destroy();
     super.destroy();
     // scrollableNode = null;
   }
 
   @Override
-  public void update(float dt){
-    if(isSnapping()){
-      this.updateSnapping(dt);
-      return;
-    }
-
-    if(isDamping())
-      this.updateDamping(dt);
-  }
-
-  @Override
-  public void drawDebug(){
-    float deltaX = node.getSize().x * 0.1f;
-    float deltaY = node.getSize().y * 0.1f;
-    float offsetX = 0.0f;
-    float offsetY = 0.0f;
-
-    if(originalNodePosition != null){
-      PVector curOffset = this.getCurrentOffset();
-      offsetX = curOffset.x % deltaX;
-      offsetY = curOffset.y % deltaY;
-    }
-
-    PGraphics pg = Node.getPGraphics();
-    pg.stroke(255,0,0, 150);
-    pg.strokeWeight(1.0f);
-
-    for(float x = offsetX; x < node.getSize().x; x += deltaX)
-      pg.line(x, 0, x, node.getSize().y);
-
-    for(float y = offsetY; y < node.getSize().y; y += deltaY)
-      pg.line(0, y, node.getSize().x, y);
-  }
-
-  public void enable(){
-    super.enable();
-
+  public void setup(){
     node.touchMoveEvent.addListener((TouchEvent event) -> {
       if(scrollableNode == null || event.node != this.node)
         return; // touch didn't start on our node
@@ -158,14 +125,48 @@ public class SmoothScroll extends ExtensionBase {
     }, this);
   }
 
-  public void disable(){
-    super.disable();
-
+  @Override
+  public void teardown(){
     node.touchMoveEvent.removeListeners(this);
     node.touchUpEvent.removeListeners(this);
 
     velocity = null; // isDamping() = false
     dragStartNodePositionGlobal = null; // isDragging() = false
+  }
+
+  @Override
+  public void update(float dt){
+    if(isSnapping()){
+      this.updateSnapping(dt);
+      return;
+    }
+
+    if(isDamping())
+      this.updateDamping(dt);
+  }
+
+  @Override
+  public void drawDebug(){
+    float deltaX = node.getSize().x * 0.1f;
+    float deltaY = node.getSize().y * 0.1f;
+    float offsetX = 0.0f;
+    float offsetY = 0.0f;
+
+    if(originalNodePosition != null){
+      PVector curOffset = this.getCurrentOffset();
+      offsetX = curOffset.x % deltaX;
+      offsetY = curOffset.y % deltaY;
+    }
+
+    PGraphics pg = Node.getPGraphics();
+    pg.stroke(255,0,0, 150);
+    pg.strokeWeight(1.0f);
+
+    for(float x = offsetX; x < node.getSize().x; x += deltaX)
+      pg.line(x, 0, x, node.getSize().y);
+
+    for(float y = offsetY; y < node.getSize().y; y += deltaY)
+      pg.line(0, y, node.getSize().x, y);
   }
 
   public Node getScrollableNode(){

@@ -77,8 +77,8 @@ public class Node extends TouchReceiver {
     return Float.valueOf(b.getPlane()).compareTo(a.getPlane());
   };
 
-  /** The private _init method is only used in constructor (to keep them DRY) */
-  private void _init(){
+  /** Default constructor; intializes default value (visible, interactive, empty name, position zero, size zero) */
+  public Node(){
     childNodes = new ConcurrentLinkedDeque<Node>();
     parentNode = null;
     bVisible = true;
@@ -95,14 +95,9 @@ public class Node extends TouchReceiver {
     newOffspringEvent = new Event<>();
   }
 
-  /** Default constructor; intializes default value (visible, interactive, empty name, position zero, size zero) */
-  public Node(){
-    _init();
-  }
-
   /** Constructor which initializes default values but lets caller specify the node's name */
   public Node(String nodeName){
-    _init();
+    this();
     setName(nodeName);
   }
 
@@ -148,11 +143,18 @@ public class Node extends TouchReceiver {
   }
 
   public void update(float dt){
+    // virtual method, overwrite in CustomNode types
+  }
+
+  public void _update(float dt){
+
+    this.update(dt);
+
     if(extensions!=null){
-    	for(ExtensionBase ext : this.extensions) {
-    		if(ext.isEnabled())
-    	          ext.update(dt);
-    	}
+      for(ExtensionBase ext : this.extensions) {
+        if(ext.isEnabled())
+          ext.update(dt);
+        }
     }
   }
 
@@ -287,9 +289,12 @@ public class Node extends TouchReceiver {
   }
 
   public Node setSize(PVector newSize){
-    size = newSize.get();
-    sizeChangeEvent.trigger(this);
-    this.transformationEvent.trigger(this);
+    if(!size.equals(newSize)){
+      size = newSize.get();
+      sizeChangeEvent.trigger(this);
+      this.transformationEvent.trigger(this);
+    }
+
     return this;
   }
 
@@ -307,10 +312,13 @@ public class Node extends TouchReceiver {
   }
 
   public Node setScale(PVector newScale){
-    scale = newScale;
-    updateLocalTransformMatrix();
-    this.scaleChangeEvent.trigger(this);
-    this.transformationEvent.trigger(this);
+    if(!scale.equals(newScale)){
+      scale = newScale.get();
+      updateLocalTransformMatrix();
+      this.scaleChangeEvent.trigger(this);
+      this.transformationEvent.trigger(this);
+    }
+
     return this;
   }
 
@@ -328,10 +336,13 @@ public class Node extends TouchReceiver {
   }
 
   public Node setRotation(PVector newRot){
-    this.rotation = newRot.get();
-    updateLocalTransformMatrix();
-    this.rotationChangeEvent.trigger(this);
-    this.transformationEvent.trigger(this);
+    if(!this.rotation.equals(newRot)){
+      this.rotation = newRot.get();
+      updateLocalTransformMatrix();
+      this.rotationChangeEvent.trigger(this);
+      this.transformationEvent.trigger(this);
+    }
+
     return this;
   }
 
@@ -605,7 +616,7 @@ public class Node extends TouchReceiver {
 
   public void updateSubtree(float dt, boolean forceAll){
     // update self
-    update(dt);
+    this._update(dt);
 
     // loop over all of our direct children
     for(Node node : getChildNodes()){
@@ -748,6 +759,7 @@ public class Node extends TouchReceiver {
     newExtension.setNode(this);
     newExtension.enable();
     this.addExtension(newExtension);
+    // System.out.println("Number of extension for "+name+": "+Integer.toString(this.extensions.size()));
   }
 
   public void addExtension(ExtensionBase ext){

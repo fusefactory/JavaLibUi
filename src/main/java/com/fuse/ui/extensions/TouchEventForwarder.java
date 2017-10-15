@@ -20,9 +20,7 @@ public class TouchEventForwarder extends ExtensionBase {
     source = null;
   }
 
-  @Override public void enable(){
-    super.enable();
-
+  @Override public void setup(){
     if(this.source == null){
       logger.warning("no source");
       return;
@@ -32,7 +30,7 @@ public class TouchEventForwarder extends ExtensionBase {
       //TouchEvent newEvent = evt.copy();
       Node originalNode = evt.node;
       Node originalMostRecentNode = evt.mostRecentNode;
-      
+
       // change event so it seems to belong to our subject
       if(evt.node == source)
         evt.node = this.node;
@@ -41,16 +39,14 @@ public class TouchEventForwarder extends ExtensionBase {
 
       // forward event
       node.receiveTouchEvent(evt);
-      
+
       // restore event
       evt.node = originalNode;
       evt.mostRecentNode = originalMostRecentNode;
     }, this);
   }
 
-  @Override public void disable(){
-    super.disable();
-
+  @Override public void teardown(){
     if(this.source == null){
       logger.warning("no source");
       return;

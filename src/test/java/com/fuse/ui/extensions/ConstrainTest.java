@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import org.junit.Test;
+import org.junit.Ignore;
+
 
 import java.util.List;
 import java.util.ArrayList;
@@ -138,7 +140,7 @@ public class ConstrainTest {
     assertEquals(child.getPosition(), new PVector(-50,-50,0));
   }
 
-  @Test public void isEnabled(){
+  @Ignore @Test public void isEnabled(){
     Constrain c = new Constrain();
     assertFalse(c.isEnabled());
     Node n = new Node();

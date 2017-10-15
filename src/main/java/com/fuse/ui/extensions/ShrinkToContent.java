@@ -15,7 +15,7 @@ public class ShrinkToContent extends TransformerExtension {
   }
 
   @Override
-  public void enable() {
+  public void setup() {
 	  // all future children
 	  this.node.newChildEvent.addListener((Node newChild) -> {
 		  registerChild(newChild);
@@ -32,7 +32,7 @@ public class ShrinkToContent extends TransformerExtension {
   }
 
   @Override
-  public void disable() {
+  public void teardown() {
 	  this.node.newChildEvent.removeListeners(this);
     this.node.childRemovedEvent.removeListeners(this);
     for(Node child : this.node.getChildNodes()) {
