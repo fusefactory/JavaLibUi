@@ -20,7 +20,7 @@ public class DoubleClickZoom extends TransformerExtension {
     super.setStopOnTouch(true);
   }
 
-  @Override public void setup(){
+  @Override protected void setup(){
     this.originalScale = this.node.getScale();
     this.originalPosition = this.node.getPosition();
 

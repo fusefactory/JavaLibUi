@@ -12,11 +12,11 @@ public class ExtensionBase {
     logger = Logger.getLogger(ExtensionBase.class.getName());
   }
 
-  public void setup(){
+  protected void setup(){
     // virtual
   }
 
-  public void teardown(){
+  protected void teardown(){
     // virtual
   }
 

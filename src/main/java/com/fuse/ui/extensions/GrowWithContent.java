@@ -13,8 +13,7 @@ public class GrowWithContent extends TransformerExtension {
     this.disableSmoothing(); // by default doesn't smooth
   }
 
-  @Override
-  public void setup() {
+  @Override protected void setup() {
 	  // all future children
 	  this.node.newChildEvent.addListener((Node newChild) -> {
 		  registerChild(newChild);
@@ -30,8 +29,7 @@ public class GrowWithContent extends TransformerExtension {
 	  }
   }
 
-  @Override
-  public void teardown() {
+  @Override protected void teardown() {
 	  this.node.newChildEvent.removeListeners(this);
     this.node.childRemovedEvent.removeListeners(this);
     for(Node child : this.node.getChildNodes()) {

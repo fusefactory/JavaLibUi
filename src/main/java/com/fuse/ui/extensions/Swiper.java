@@ -67,7 +67,7 @@ public class Swiper extends TransformerExtension {
     // scrollableNode = null;
   }
 
-  @Override public void setup(){
+  @Override protected void setup(){
     super.enable();
 
     this.touchAreaNode.touchDownEvent.addListener((TouchEvent event) -> {
@@ -88,7 +88,7 @@ public class Swiper extends TransformerExtension {
     super.enable();
   }
 
-  @Override public void teardown(){
+  @Override protected void teardown(){
     super.disable();
 
     this.touchAreaNode.touchDownEvent.removeListeners(this);

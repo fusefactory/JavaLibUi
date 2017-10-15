@@ -20,7 +20,7 @@ public class TouchEventForwarder extends ExtensionBase {
     source = null;
   }
 
-  @Override public void setup(){
+  @Override protected void setup(){
     if(this.source == null){
       logger.warning("no source");
       return;
@@ -46,7 +46,7 @@ public class TouchEventForwarder extends ExtensionBase {
     }, this);
   }
 
-  @Override public void teardown(){
+  @Override protected void teardown(){
     if(this.source == null){
       logger.warning("no source");
       return;

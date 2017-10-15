@@ -61,8 +61,7 @@ public class SmoothScroll extends ExtensionBase {
     // scrollableNode = null;
   }
 
-  @Override
-  public void setup(){
+  @Override protected void setup(){
     node.touchMoveEvent.addListener((TouchEvent event) -> {
       if(scrollableNode == null || event.node != this.node)
         return; // touch didn't start on our node
@@ -125,8 +124,7 @@ public class SmoothScroll extends ExtensionBase {
     }, this);
   }
 
-  @Override
-  public void teardown(){
+  @Override protected void teardown(){
     node.touchMoveEvent.removeListeners(this);
     node.touchUpEvent.removeListeners(this);
 

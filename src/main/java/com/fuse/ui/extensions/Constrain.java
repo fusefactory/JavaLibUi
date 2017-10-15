@@ -23,14 +23,14 @@ public class Constrain extends TransformerExtension {
     super.setMaxTransformationTime(10.0f); /// by default Constrain extension is very persistant
   }
 
-  @Override public void setup(){
+  @Override protected void setup(){
     node.positionChangeEvent.whenTriggered(() -> { this.applyConstrains(); }, this);
     node.sizeChangeEvent.whenTriggered(() -> { this.applyConstrains(); }, this);
     //node.touchMoveEvent.whenTriggered(()->{ this.onNodeChange(); }, this);
     //node.touchUpEvent.whenTriggered(()->{ this.onNodeChange(); }, this);
   }
 
-  @Override public void teardown(){
+  @Override protected void teardown(){
     node.positionChangeEvent.stopWhenTriggeredCallbacks(this);
     node.sizeChangeEvent.stopWhenTriggeredCallbacks(this);
     //node.touchMoveEvent.stopWhenTriggeredCallbacks(this);

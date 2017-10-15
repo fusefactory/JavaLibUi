@@ -140,7 +140,7 @@ public class ConstrainTest {
     assertEquals(child.getPosition(), new PVector(-50,-50,0));
   }
 
-  @Ignore @Test public void isEnabled(){
+  @Test public void isEnabled(){
     Constrain c = new Constrain();
     assertFalse(c.isEnabled());
     Node n = new Node();

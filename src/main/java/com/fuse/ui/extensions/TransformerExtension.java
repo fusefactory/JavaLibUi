@@ -53,7 +53,7 @@ public class TransformerExtension extends ExtensionBase {
     super.destroy();
   }
 
-  @Override public void teardown(){
+  @Override protected void teardown(){
     targetPosition = null;
     targetScale = null;
     targetRotation = null;

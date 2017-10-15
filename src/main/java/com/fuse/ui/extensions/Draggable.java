@@ -34,7 +34,7 @@ public class Draggable extends TransformerExtension {
     super.destroy();
   }
 
-  @Override public void setup(){
+  @Override protected void setup(){
     node.touchDownEvent.addListener((TouchEvent event) -> {
       if(bDragging) {
         if(bAbortOnSecondTouch) {
