@@ -61,7 +61,11 @@ public class Node extends TouchReceiver {
   public Event<Node> childRemovedEvent;
   /** Triggered when a child is added to this node, or any of its offspring */
   public Event<Node> newOffspringEvent;
-  public Event<Node> positionChangeEvent, sizeChangeEvent, scaleChangeEvent, rotationChangeEvent;
+  public Event<Node> positionChangeEvent = new Event<>(),
+    sizeChangeEvent = new Event<>(),
+    scaleChangeEvent = new Event<>(),
+    rotationChangeEvent = new Event<>(),
+    transformationEvent = new Event<>();
 
   /** Comparator for ordering a list of Nodes from lower plane to higher plane (used for rendering) */
   static public Comparator<Node> bottomPlaneFirst = (a,b) -> {
@@ -89,10 +93,6 @@ public class Node extends TouchReceiver {
     newChildEvent = new Event<>();
     childRemovedEvent = new Event<>();
     newOffspringEvent = new Event<>();
-    positionChangeEvent = new Event<>();
-    sizeChangeEvent = new Event<>();
-    rotationChangeEvent = new Event<>();
-    scaleChangeEvent = new Event<>();
   }
 
   /** Default constructor; intializes default value (visible, interactive, empty name, position zero, size zero) */
@@ -116,6 +116,7 @@ public class Node extends TouchReceiver {
     sizeChangeEvent.destroy();
     rotationChangeEvent.destroy();
     scaleChangeEvent.destroy();
+    transformationEvent.destroy();
 
     // detach from scenegraph if still connected
     if(getParent() != null)
@@ -259,6 +260,7 @@ public class Node extends TouchReceiver {
       position.set(x,y,z);
       updateLocalTransformMatrix();
       positionChangeEvent.trigger(this);
+      this.transformationEvent.trigger(this);
     }
 
     return this;
@@ -287,6 +289,7 @@ public class Node extends TouchReceiver {
   public Node setSize(PVector newSize){
     size = newSize.get();
     sizeChangeEvent.trigger(this);
+    this.transformationEvent.trigger(this);
     return this;
   }
 
@@ -307,6 +310,7 @@ public class Node extends TouchReceiver {
     scale = newScale;
     updateLocalTransformMatrix();
     this.scaleChangeEvent.trigger(this);
+    this.transformationEvent.trigger(this);
     return this;
   }
 
@@ -327,6 +331,7 @@ public class Node extends TouchReceiver {
     this.rotation = newRot.get();
     updateLocalTransformMatrix();
     this.rotationChangeEvent.trigger(this);
+    this.transformationEvent.trigger(this);
     return this;
   }
 
