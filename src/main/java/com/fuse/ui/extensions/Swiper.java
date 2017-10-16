@@ -256,7 +256,8 @@ public class Swiper extends TransformerExtension {
     // use TransformationExtension's smoothing options
     super.transformPositionGlobal(globPos);
 
-    PVector localpos = super.isSmoothing() ? this.getTargetPosition() : this.node.getPosition();
+    PVector localpos = this.getTargetPosition();
+    if(localpos == null) localpos = this.node.getPosition();
 
     // apply offset restrictins with slack
     PVector offset = localpos.get();
