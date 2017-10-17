@@ -466,7 +466,7 @@ public class Node extends TouchReceiver {
       pg.red(color),
       pg.green(color),
       pg.blue(color),
-        alpha * 255.0f);
+      ((float)pg.alpha(color)/255.0f) * alpha * 255.0f);
   }
   // hierarchy methods
 
