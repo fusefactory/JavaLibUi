@@ -453,6 +453,33 @@ public class Node extends TouchReceiver {
     return localized;
   }
 
+  public void addOnTop(Node newChildNode){
+    this.addOnTop(newChildNode, 1.0f);
+  }
+
+  public void addOnTop(Node newChildNode, float raiseWith){
+    List<Node> list = new ArrayList<Node>();
+    loadSubtreeList(list, false /* not only visible */);
+
+    // sort nodes by plane value
+    Collections.sort(list, topPlaneFirst);
+
+    float maxPlane = list.isEmpty() ? 0.0f : list.get(0).getPlane();
+    maxPlane += raiseWith;
+
+    list.clear();
+    newChildNode.loadSubtreeList(list, false);
+    Collections.sort(list, bottomPlaneFirst);
+    float minPlane = list.isEmpty() ? 0.0f : list.get(0).getPlane();
+
+    float delta = maxPlane - minPlane;
+
+    for(Node n : list)
+      n.setPlane(n.getPlane() + delta);
+
+    this.addChild(newChildNode);
+  }
+
   public void addChild(Node newChildNode){
     childNodes.add(newChildNode);
     newChildNode.setParent(this);
