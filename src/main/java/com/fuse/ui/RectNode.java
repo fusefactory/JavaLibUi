@@ -5,28 +5,26 @@ import processing.core.PVector;
 public class RectNode extends Node {
 
   private Integer rectFillColor = null;
- 
+
   private Integer rectStrokeColor = null;
   private Float rectStrokeWeight = null;
 
   private Float fillAlpha = null;
   private Integer fillAlphaColor = null;
 
-  private void _init(){
+  /** Default constructor; intialized with default values: image=null and mode=NORMAL */
+  public RectNode(){
     if(pg != null){
       pg.colorMode(pg.RGB, 255);
       rectFillColor = pg.color(255);
     }
-  }
 
-  /** Default constructor; intialized with default values: image=null and mode=NORMAL */
-  public RectNode(){
-    _init();
+    this.alphaState.push((Float v) -> this.updateAlpha());
   }
 
   public RectNode(String nodeName){
-    super(nodeName);
-    _init();
+    this();
+    super.setName(nodeName);
   }
 
   /** Draw this node's image at this Node's position */
@@ -50,34 +48,29 @@ public class RectNode extends Node {
   }
 
   public Integer getRectColor(){ return rectFillColor; }
-  public RectNode setRectColor(Integer newRectColor){
-	  rectFillColor = newRectColor;
-	  if(this.fillAlpha != null) this.setFillAlpha(this.fillAlpha); // apply fill alpha
-	  return this;
-  }
+  public RectNode setRectColor(Integer newRectColor){ rectFillColor = newRectColor; this.updateAlpha(); return this; }
 
   public Integer getRectStrokeColor(){ return rectStrokeColor; }
   public RectNode setRectStrokeColor(Integer newColor){ rectStrokeColor = newColor; return this; }
 
   public Float getStrokeWeight(){ return rectStrokeWeight; }
   public RectNode setStrokeWeight(Float newWeight){ rectStrokeWeight = newWeight; return this; }
-  
+
   public Float getFillAlpha() { return this.fillAlpha; }
-  public RectNode setFillAlpha(Float alpha) {
-	  this.fillAlpha = alpha;
+  public RectNode setFillAlpha(Float alpha) { this.fillAlpha = alpha; this.updateAlpha(); return this; }
 
-	  if(this.fillAlpha == null) {
-		  this.fillAlphaColor = null;
-		  return this;
-	  }
+  private void updateAlpha(){
+    Integer baseColor = this.rectFillColor;
+    if(baseColor == null){
+      this.fillAlphaColor = null;
+      return;
+    }
 
-	  pg.colorMode(pg.RGB, 255);
-	  this.fillAlphaColor = pg.color(
-			  pg.red(this.rectFillColor),
-			  pg.green(this.rectFillColor),
-			  pg.blue(this.rectFillColor),
-			  alpha * 255.0f);
+    float alpha = this.alphaState.get();
 
-	  return this;
+    if(this.fillAlpha != null)
+      alpha *= this.fillAlpha;
+
+    this.fillAlphaColor = Node.alphaColor(baseColor, alpha);
   }
 }
