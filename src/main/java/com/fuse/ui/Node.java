@@ -391,6 +391,18 @@ public class Node extends TouchReceiver {
     return this;
   }
 
+  public Node setGlobalSize(PVector globsize){
+    Node parentNode = getParent();
+
+    if(parentNode == null){
+      setSize(globsize);
+      return this;
+    }
+
+    setSize(parentNode.toLocal(globsize));
+    return this;
+  }
+
   public boolean isInside(PVector pos){
     PVector localPos = toLocal(pos);
     // return pos.x >= position.x && pos.y >= position.y && pos.x < getRight() && pos.y < getBottom();
@@ -929,5 +941,13 @@ public class Node extends TouchReceiver {
   public Node placeCenteredHorizontally(Node subject){
     subject.setX(this.getSizeScaled().x/2.0f - subject.getSizeScaled().x/2.0f);
     return this;
+  }
+
+  public void setAlphaStateRecursive(float value){
+    List<Node> list = new ArrayList<Node>();
+    loadSubtreeList(list, false /* not only visible */);
+    for(Node n : list){
+      n.alphaState.set(value);
+    }
   }
 }

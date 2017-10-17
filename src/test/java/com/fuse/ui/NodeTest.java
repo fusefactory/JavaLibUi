@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import org.junit.Test;
+import org.junit.Ignore;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -698,5 +699,9 @@ public class NodeTest {
     assertEquals(layer2.getPlane(), 0.0f, 0.000001f);
     scene.addOnTop(layer2, 5.0f);
     assertEquals(layer2.getPlane(), 26.0f, 0.000001f);
+  }
+
+  @Ignore @Test public void setAlphaStateRecursive(){
+    // TODO
   }
 }
