@@ -19,24 +19,20 @@ public class ImageNode extends Node {
   protected Mode mode;
   private boolean autoResizeToImage = false;
   private boolean bClearImageOnDestroy = false;
-  protected Integer tintColor = null;
+  protected Integer tintColor = null, tintColorAlpha = null;
 
   // instance lifecycle methods // // // // //
 
-  private void _init(){
-    image = null;
-    mode = Mode.NORMAL;
-  }
-
   /** Default constructor; intialized with default values: image=null and mode=NORMAL */
   public ImageNode(){
-	super();
-    _init();
+    image = null;
+    mode = Mode.NORMAL;
+    this.alphaState.push((Float v) -> this.updateAlpha());
   }
 
   public ImageNode(String nodeName){
-    super(nodeName);
-    _init();
+    this();
+    super.setName(nodeName);
   }
 
   @Override
@@ -59,8 +55,8 @@ public class ImageNode extends Node {
     if(image == null)
       return;
 
-    if(tintColor != null)
-      pg.tint(tintColor);
+    if(this.tintColorAlpha != null)
+      pg.tint(this.tintColorAlpha);
 
     switch(mode){
       case NORMAL : {
@@ -127,7 +123,7 @@ public class ImageNode extends Node {
     }
   }
 
-  public ImageNode setTint(Integer clr){ tintColor = clr; return this; }
+  public ImageNode setTint(Integer clr){ tintColor = clr; this.updateAlpha(); return this; }
   public Integer getTint(){ return tintColor; }
 
   public ImageNode setClearImageOnDestroy(boolean enable){ this.bClearImageOnDestroy = enable; return this; }
@@ -151,4 +147,10 @@ public class ImageNode extends Node {
     return new PVector(factor * image.width, factor * image.height, 0.0f);
   }
 
+  private void updateAlpha(){
+    if(this.tintColor == null)
+        this.tintColorAlpha = pg.color(255,255,255, this.alphaState.get() * 255.0f);
+    else
+      this.tintColorAlpha = Node.alphaColor(this.tintColor, this.alphaState.get());
+  }
 }
