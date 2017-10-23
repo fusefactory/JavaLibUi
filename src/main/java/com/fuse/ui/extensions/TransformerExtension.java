@@ -275,9 +275,9 @@ public class TransformerExtension extends ExtensionBase {
     Node parentNode = this.node.getParent();
     PVector localized;
     if(parentNode == null) {
-    	localized = vec.get();
+      localized = vec.get();
     } else {
-    	localized = parentNode.toLocal(vec);
+      localized = parentNode.toLocal(vec);
     }
     // logger.info("transform ext: global: "+vec.toString()+" to "+localized.toString());
     this.transformPosition(localized);
@@ -366,17 +366,17 @@ public class TransformerExtension extends ExtensionBase {
   }
 
   public void transformWidth(float newValue) {
-	  // consider active resize transformation that might be going on
-	  PVector vec = this.targetSize != null ? this.targetSize.get() : this.node.getSize();
-	  vec.x = newValue;
-	  this.transformSize(vec);
+    // consider active resize transformation that might be going on
+    PVector vec = this.targetSize != null ? this.targetSize.get() : this.node.getSize();
+    vec.x = newValue;
+    this.transformSize(vec);
   }
 
   public void transformHeight(float newValue) {
-	  // consider active resize transformation that might be going on
-	  PVector vec = this.targetSize != null ? this.targetSize.get() : this.node.getSize();
-	  vec.y = newValue;
-	  this.transformSize(vec);
+    // consider active resize transformation that might be going on
+    PVector vec = this.targetSize != null ? this.targetSize.get() : this.node.getSize();
+    vec.y = newValue;
+    this.transformSize(vec);
   }
 
   protected PVector limitedPosition(PVector vec){
@@ -444,7 +444,7 @@ public class TransformerExtension extends ExtensionBase {
   }
 
   public PVector getTargetScale() {
-	  return this.targetScale == null ? null : this.targetScale.get();
+    return this.targetScale == null ? null : this.targetScale.get();
   }
 
   public PVector getTargetSize() {
@@ -456,7 +456,7 @@ public class TransformerExtension extends ExtensionBase {
   }
 
   public boolean isTransformingSize(){
-	  return this.targetSize != null;
+    return this.targetSize != null;
   }
 
   // configuration methods // // // // //
@@ -561,7 +561,7 @@ public class TransformerExtension extends ExtensionBase {
   // static factory methods
 
   public static TransformerExtension resizeTo(Node n, float w, float h){
-	  return resizeTo(n, new PVector(w,h,0.0f));
+    return resizeTo(n, new PVector(w,h,0.0f));
   }
 
   public static TransformerExtension resizeTo(Node n, PVector size){
@@ -577,6 +577,26 @@ public class TransformerExtension extends ExtensionBase {
 
     // start resize transformation
     ext.transformSize(size);
+    return ext;
+  }
+
+  public static TransformerExtension scaleTo(Node n, float w, float h) {
+    return scaleTo(n, new PVector(w,h,1.0f));
+  }
+
+  public static TransformerExtension scaleTo(Node n, PVector scale){
+    // create extension and add to specified node
+    TransformerExtension ext = new TransformerExtension();
+    n.use(ext);
+
+    // when done cleanup this mess
+    ext.idleEvent.whenTriggered(() -> {
+        n.stopUsing(ext);
+        ext.destroy();
+    });
+
+    // start resize transformation
+    ext.transformScale(scale);
     return ext;
   }
 }
