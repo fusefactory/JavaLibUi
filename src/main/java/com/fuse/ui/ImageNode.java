@@ -3,6 +3,7 @@ package com.fuse.ui;
 import processing.core.PApplet;
 import processing.core.PImage;
 import processing.core.PVector;
+import processing.opengl.PShader;
 import processing.opengl.Texture;
 
 public class ImageNode extends Node {
@@ -20,6 +21,9 @@ public class ImageNode extends Node {
   private boolean autoResizeToImage = false;
   private boolean bClearImageOnDestroy = false;
   protected Integer tintColor = null, tintColorAlpha = null;
+  // shader
+  private String shaderFragPath, shaderVertPath;
+  private PShader shader;
 
   // instance lifecycle methods // // // // //
 
@@ -48,6 +52,8 @@ public class ImageNode extends Node {
       pg.removeCache(image);
       this.image = null;
     }
+
+    super.destroy();
   }
 
   /** Draw this node's image at this Node's position */
@@ -57,6 +63,12 @@ public class ImageNode extends Node {
 
     if(this.tintColorAlpha != null)
       pg.tint(this.tintColorAlpha);
+
+    // if(this.shader == null && this.shaderFragPath != null)
+    // 		this.shader = pg.loadShader(shaderFragPath); //pg.loadShader("data/eventi/shaders/test.vert.glsl", "data/eventi/shaders/test.frag.glsl");
+
+    if(this.shader != null)
+      pg.shader(this.shader);
 
     switch(mode){
       case NORMAL : {
@@ -91,6 +103,9 @@ public class ImageNode extends Node {
         pg.imageMode(PApplet.CORNERS); // restore default
       }
     }
+
+    if(this.shader != null)
+    		pg.resetShader();
 
     if(tintColor != null)
       pg.noTint();
@@ -128,6 +143,27 @@ public class ImageNode extends Node {
 
   public ImageNode setClearImageOnDestroy(boolean enable){ this.bClearImageOnDestroy = enable; return this; }
   public boolean getClearImageOnDestroy(){ return this.bClearImageOnDestroy; }
+
+  public PShader getShader(){ return this.shader; }
+  public void setShader(PShader shader){ this.shader = shader; }
+
+  public void setShaderPath(String fragPath){
+    this.setShaderPath(fragPath, null);
+  }
+
+  public void setShaderPath(String fragPath, String vertPath){
+    this.shaderFragPath = fragPath;
+    this.shaderVertPath = vertPath;
+
+    if(this.shaderVertPath == null)
+      this.shader = pg.loadShader(this.shaderFragPath);
+    else
+      this.shader = pg.loadShader(this.shaderVertPath, this.shaderFragPath);
+  }
+
+  public String getShaderFragPath(){ return this.shaderFragPath; }
+  public String getShaderVertPath(){ return this.shaderVertPath; }
+
 
   // private helper methods // // // // //
 
