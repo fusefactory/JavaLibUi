@@ -526,8 +526,17 @@ public class Node extends TouchReceiver {
   }
 
   public void addOnTop(Node newChildNode, float raiseWith){
+    newChildNode.riseAbove(this, raiseWith);
+    this.addChild(newChildNode);
+  }
+
+  public void riseAbove(Node root){
+    this.riseAbove(root, 1.0f);
+  }
+
+  public void riseAbove(Node root, float raiseWith){
     List<Node> list = new ArrayList<Node>();
-    loadSubtreeList(list, false /* not only visible */);
+    root.loadSubtreeList(list, false /* not only visible */);
 
     // sort nodes by plane value
     Collections.sort(list, topPlaneFirst);
@@ -536,7 +545,7 @@ public class Node extends TouchReceiver {
     maxPlane += raiseWith;
 
     list.clear();
-    newChildNode.loadSubtreeList(list, false);
+    this.loadSubtreeList(list, false);
     Collections.sort(list, bottomPlaneFirst);
     float minPlane = list.isEmpty() ? 0.0f : list.get(0).getPlane();
 
@@ -544,8 +553,6 @@ public class Node extends TouchReceiver {
 
     for(Node n : list)
       n.setPlane(n.getPlane() + delta);
-
-    this.addChild(newChildNode);
   }
 
   public boolean hasChild(Node child){
