@@ -45,9 +45,9 @@ public class ImageNode extends Node {
       // only processing2?
       Object cache = pg.getCache(image);
       if(cache instanceof Texture) {
-    	  Texture tex = (Texture)cache;
-    	  tex.unbind();
-    	  tex.disposeSourceBuffer();
+        Texture tex = (Texture)cache;
+        tex.unbind();
+        tex.disposeSourceBuffer();
       }
       pg.removeCache(image);
       this.image = null;
