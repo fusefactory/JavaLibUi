@@ -23,6 +23,9 @@ public class ExtensionBase {
   public void destroy(){
     if(isEnabled())
       this.disable();
+
+    if(this.node != null)
+      this.node.stopUsing(this);
   }
 
   public void enable(){
