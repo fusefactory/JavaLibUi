@@ -42,7 +42,9 @@ public class Swiper extends TransformerExtension {
   public Event<TouchEvent> endDraggingEvent;
   public Event<PVector> newSnapPositionEvent;
   public Event<PVector> newStepPositionEvent;
+  public Event<PVector> throwEvent = new Event<>();
   public Event<Node> restEvent;
+  
 
   // lifecycle methods
 
@@ -175,7 +177,7 @@ public class Swiper extends TransformerExtension {
 
     touchAreaNode = n;
     if(touchAreaNode != null && this.snapInterval == null) {
-    	this.snapInterval = touchAreaNode.getSize();
+      this.snapInterval = touchAreaNode.getSize();
     }
 
     if(wasEnabled)
@@ -216,13 +218,14 @@ public class Swiper extends TransformerExtension {
     else
       smoothedVelocity.lerp(localEvent.velocity, velocitySmoothCoeff); // apply our own smoothing
 
+    // PVector throwTarget = this.smoothedVelocity.get();
+    PVector throwTarget = localEvent.offset();
+    throwTarget.mult(this.snapThrowFactor);
+    throwTarget.add(this.scrollableNode.getPosition());
+
     // when snapping-behaviour is enabled we don't use velocity/damping;
     // instead, we calculate a target position to snap to
     if(this.isSnapEnabled()){
-      //PVector throwTarget = this.smoothedVelocity.get();
-      PVector throwTarget = localEvent.offset();
-      throwTarget.mult(this.snapThrowFactor);
-      throwTarget.add(this.scrollableNode.getPosition());
       throwTarget = this.toClosestSnapPosition(throwTarget);
       this.setSnapPosition(throwTarget);
       return;
@@ -239,6 +242,8 @@ public class Swiper extends TransformerExtension {
 
       this.startDamping(vel);
     }
+
+    this.throwEvent.trigger(throwTarget);
   }
 
   /** should only be called when it is already verified that we're dragging (this.draggingTouchEvent can't be null) */
@@ -376,13 +381,17 @@ public class Swiper extends TransformerExtension {
 
   private void updateSnapping(float dt){
     if(!super.isTransformingPosition()){ // done?
+      // chec if we've snapped beyond offset limit bounds
       PVector p = this.getOffsetLimitSnapPosition();
       if(p != null){
+        // snap to closest position within offset limit bounds
         this.setSnapPosition(p);
       } else {
+        // done snapping, we've finally found some peace
         restEvent.trigger(scrollableNode);
       }
 
+      // TODO: only when we're not doing an offset-limit follow-up snap?
       bSnapping = false;
     }
   }
@@ -480,7 +489,6 @@ public class Swiper extends TransformerExtension {
     		  this.node.setPosition(this.getOffsetLimitSnapPosition());
     	  else
     		  super.transformPosition(this.getOffsetLimitSnapPosition());
-
       return;
     }
 
@@ -491,11 +499,11 @@ public class Swiper extends TransformerExtension {
     correctedPos = correctedPos == null ? pos.get() : correctedPos;
 
     if(instant) {
-		this.node.setPosition(pos);
-	} else {
-		this.transformPosition(correctedPos);
-		this.bSnapping = true;
-	}
+      this.node.setPosition(pos);
+    } else {
+      this.transformPosition(correctedPos);
+      this.bSnapping = true;
+    }
 
     // trigger notifications
     newSnapPositionEvent.trigger(correctedPos);
