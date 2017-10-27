@@ -16,8 +16,6 @@ public class Draggable extends TransformerExtension {
   private TouchEvent dragEvent = null;
   // configurables
   private boolean bRestore = false;
-  private boolean bVertical = true;
-  private boolean bHorizontal = true;
 
   // events
   public Event<Draggable> startEvent;
@@ -145,8 +143,6 @@ public class Draggable extends TransformerExtension {
     	return;
 
     PVector globPos = globalDragOffset.get();
-    if(!this.bVertical) globPos.y = 0.0f;
-    if(!this.bHorizontal) globPos.x = 0.0f;
     globPos.add(originalNodePositionGlobal);
     super.transformPositionGlobal(globPos);
   }
@@ -180,22 +176,6 @@ public class Draggable extends TransformerExtension {
     bRestore = enableRestore;
   }
 
-  public boolean getVerticalEnabled(){
-    return this.bVertical;
-  }
-
-  public void setVerticalEnabled(boolean enable){
-    this.bVertical = enable;
-  }
-
-  public boolean getHorizontalEnabled(){
-    return this.bHorizontal;
-  }
-
-  public void setHorizontalEnabled(boolean enable){
-    this.bHorizontal = enable;
-
-  }
   // static factory methods // // // // //
 
   public static Draggable enableFor(Node n){

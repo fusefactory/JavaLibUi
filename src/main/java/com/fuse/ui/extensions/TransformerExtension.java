@@ -517,6 +517,36 @@ public class TransformerExtension extends ExtensionBase {
     this.maxPos[2] = value;
   }
 
+  public void setLockX(boolean enable) {
+	  if(enable) {
+		  this.setMinPosX(this.node.getPosition().x);
+		  this.setMaxPosX(this.node.getPosition().x);
+	  } else {
+		  this.setMinPosX(null);
+		  this.setMaxPosX(null);
+	  }
+  }
+
+  public void setLockY(boolean enable) {
+	  if(enable) {
+		  this.setMinPosY(this.node.getPosition().y);
+		  this.setMaxPosY(this.node.getPosition().y);
+	  } else {
+		  this.setMinPosY(null);
+		  this.setMaxPosY(null);
+	  }
+  }
+
+  public void setLockZ(boolean enable) {
+    if(enable) {
+      this.setMinPosZ(this.node.getPosition().z);
+      this.setMaxPosZ(this.node.getPosition().z);
+    } else {
+      this.setMinPosZ(null);
+      this.setMaxPosZ(null);
+    }
+  }
+
   public void setMinScale(Float value){
     this.minScale[0] = value;
     this.minScale[1] = value;
