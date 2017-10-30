@@ -1,4 +1,4 @@
-package com.fuse.ui;
+    package com.fuse.ui;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
+import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PVector;
 import processing.core.PMatrix3D;
@@ -24,6 +25,15 @@ public class Node extends TouchReceiver {
 
   /** PGraphics instance, accessible to all Node instances (and instances of its inheriting classes) */
   protected static PGraphics pg;
+
+  public static void initializeGraphics(PApplet papplet) {
+    if(getPGraphics() != null)
+      return;
+
+    System.out.println("Initializing Node UI PGraphics instance at: "+Integer.toString(papplet.width)+"x"+Integer.toString(papplet.height));
+    PGraphics pg = papplet.createGraphics((int)papplet.width, (int)papplet.height, PApplet.P3D);
+    setPGraphics(pg);
+  }
 
   public static void setPGraphics(PGraphics newPg){ pg = newPg; }
   public static PGraphics getPGraphics(){ return pg; }
