@@ -25,7 +25,7 @@ public class Swiper extends TransformerExtension {
   private boolean bSnapping = false;
   private PVector snapInterval = null; // size of a single "cell" in the snapping grid
   private float snapVelocityMag = 75.0f; // when velocity reaches this value (or lower), we start snapping
-  private float snapThrowFactor = 0.5f; // multiplier for the smoothed 'throwing' velocity after dragging
+  private float snapThrowFactor = 2.0f; // multiplier for the smoothed 'throwing' velocity after dragging
   // offset limits
   private PVector minOffset = null;
   private PVector maxOffset = null;
