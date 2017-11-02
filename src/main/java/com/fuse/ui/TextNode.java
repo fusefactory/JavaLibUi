@@ -6,39 +6,37 @@ import processing.core.PFont;
 
 public class TextNode extends Node {
   private String text;
-  private int textColor;
+  private int textColor, textColorAlpha;
   private float textSize;
   private PVector textOffset;
   private PFont font;
   private int alignX, alignY;
-  private Integer frameColor = null;
+  private Integer frameColor = null, frameColorAlpha = null;
   private PVector framePadding = new PVector(3.0f, 3.0f, 0.0f);
 
-  private void _init(){
+  public TextNode(){
     text = "";
     if(pg != null){
       pg.colorMode(pg.RGB, 255);
-      textColor = pg.color(255);
+      this.setTextColor(pg.color(255));
     }
     textSize = 20f;
     textOffset = new PVector(0.0f, 0.0f, 0.0f);
     alignX = PApplet.LEFT;
     alignY = PApplet.BASELINE;
-  }
 
-  public TextNode(){
-    _init();
+    this.alphaState.push((Float v) -> this.updateAlpha());
   }
 
   public TextNode(String nodeName){
-    super(nodeName);
-    _init();
+    this();
+    super.setName(nodeName);
   }
 
   public TextNode setText(String txt){ text = txt == null ? "" : txt; return this; }
   public String getText(){ return text; }
 
-  public TextNode setTextColor(int newColor){ this.textColor = newColor; return this; }
+  public TextNode setTextColor(int newColor){ this.textColor = newColor; this.updateAlpha(); return this; }
   public int getTextColor(){ return textColor; }
 
   public TextNode setTextSize(float newSize){ textSize = newSize; return this; }
@@ -56,7 +54,7 @@ public class TextNode extends Node {
   public TextNode setAlignY(int align){ alignY = align; return this; }
   public int getAlignY(int align){ return alignY; }
 
-  public void setFrameColor(Integer clr) { this.frameColor = clr; }
+  public void setFrameColor(Integer clr) { this.frameColor = clr; this.updateAlpha(); }
   public Integer getFrameColor() { return this.frameColor; }
 
   public void setFramePadding(PVector vec) { this.framePadding = vec == null ? new PVector(3.0f,3.0f,0.0f) : vec; }
@@ -76,9 +74,9 @@ public class TextNode extends Node {
     pg.textAlign(alignX, alignY);
     pg.noStroke();
 
-    if(this.frameColor != null) {
+    if(this.frameColorAlpha != null) {
     		float x=textOffset.x, y=textOffset.y, w = pg.textWidth(text);
-    		pg.fill(this.frameColor);
+    		pg.fill(this.frameColorAlpha);
 
         switch(this.alignX){
           case PApplet.LEFT: x -= this.framePadding.x; break;
@@ -99,7 +97,7 @@ public class TextNode extends Node {
     				Math.min(this.textSize+this.framePadding.y*2, this.getSize().y));
     }
 
-    pg.fill(textColor);
+    pg.fill(textColorAlpha);
     pg.text(text, textOffset.x, textOffset.y, getSize().x, getSize().y);
   }
 
@@ -115,5 +113,11 @@ public class TextNode extends Node {
 	  pg.textSize(textSize);
 	  pg.textAlign(alignX, alignY);
 	  return pg.textWidth(text);
+  }
+
+  private void updateAlpha(){
+    this.textColorAlpha = Node.alphaColor(this.textColor, this.alphaState.get());
+    if(this.frameColor != null)
+      this.frameColorAlpha = Node.alphaColor(this.frameColor, this.alphaState.get());
   }
 }

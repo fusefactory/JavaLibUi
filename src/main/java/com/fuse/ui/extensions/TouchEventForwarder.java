@@ -1,8 +1,6 @@
 package com.fuse.ui.extensions;
 
-import processing.core.PVector;
-
-import com.fuse.utils.Event;
+import java.util.function.Consumer;
 import com.fuse.ui.Node;
 import com.fuse.ui.TouchReceiver;
 import com.fuse.ui.TouchEvent;
@@ -20,9 +18,7 @@ public class TouchEventForwarder extends ExtensionBase {
     source = null;
   }
 
-  @Override public void enable(){
-    super.enable();
-
+  @Override protected void setup(){
     if(this.source == null){
       logger.warning("no source");
       return;
@@ -32,7 +28,7 @@ public class TouchEventForwarder extends ExtensionBase {
       //TouchEvent newEvent = evt.copy();
       Node originalNode = evt.node;
       Node originalMostRecentNode = evt.mostRecentNode;
-      
+
       // change event so it seems to belong to our subject
       if(evt.node == source)
         evt.node = this.node;
@@ -41,16 +37,14 @@ public class TouchEventForwarder extends ExtensionBase {
 
       // forward event
       node.receiveTouchEvent(evt);
-      
+
       // restore event
       evt.node = originalNode;
       evt.mostRecentNode = originalMostRecentNode;
     }, this);
   }
 
-  @Override public void disable(){
-    super.disable();
-
+  @Override protected void teardown(){
     if(this.source == null){
       logger.warning("no source");
       return;
@@ -95,4 +89,21 @@ public class TouchEventForwarder extends ExtensionBase {
     return null;
   }
 
+  public static void enableForChildNames(Node to, String[] childnames){
+    // create copy logic func
+    Consumer<Node> offspringProcessor = (Node childNode) -> {
+      // register listeners to copy events from all children in the childNames list
+      for(String name : childnames){
+        if(childNode.getName().equals(name.trim()) && !name.trim().equals("")){
+          enableFromTo(childNode, to);
+        }
+      }
+    };
+
+    for(Node n : to.getChildNodes())
+      offspringProcessor.accept(n);
+
+    // also register listener for when child (or more children with the same name) gets added later
+    to.newOffspringEvent.addListener(offspringProcessor, TouchEventForwarder.class); // TODO this never gets unregistered currently
+  }
 }

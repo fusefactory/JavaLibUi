@@ -58,13 +58,44 @@ public class Swiper extends TransformerExtension {
   }
 
   @Override public void destroy(){
-    super.destroy();
     startDraggingEvent.destroy();
     endDraggingEvent.destroy();
     newSnapPositionEvent.destroy();
     newStepPositionEvent.destroy();
     restEvent.destroy();
+    super.destroy();
     // scrollableNode = null;
+  }
+
+  @Override protected void setup(){
+    super.enable();
+
+    this.touchAreaNode.touchDownEvent.addListener((TouchEvent event) -> {
+      if(!bDragging || this.draggingTouchEvent.isFinished())
+        this.startDragging(event);
+    }, this);
+
+    this.touchAreaNode.touchUpEvent.addListener((TouchEvent event) -> {
+      TouchEvent dragEvent = this.draggingTouchEvent;
+      if(bDragging) {
+    	// threading issue double check
+    	if(dragEvent == null) return;
+    	if(dragEvent == event || dragEvent.isFinished())
+    		this.endDragging();
+      }
+    }, this);
+
+    super.enable();
+  }
+
+  @Override protected void teardown(){
+    super.disable();
+
+    this.touchAreaNode.touchDownEvent.removeListeners(this);
+    this.touchAreaNode.touchUpEvent.removeListeners(this);
+
+    velocity = null; // isDamping() = false
+    dragStartNodePositionGlobal = null; // isDragging() = false
   }
 
   @Override public void update(float dt){
@@ -107,37 +138,6 @@ public class Swiper extends TransformerExtension {
 
     for(float y = offsetY; y < this.touchAreaNode.getSize().y; y += deltaY)
       pg.line(0, y, this.touchAreaNode.getSize().x, y);
-  }
-
-  public void enable(){
-    super.enable();
-
-    this.touchAreaNode.touchDownEvent.addListener((TouchEvent event) -> {
-      if(!bDragging || this.draggingTouchEvent.isFinished())
-        this.startDragging(event);
-    }, this);
-
-    this.touchAreaNode.touchUpEvent.addListener((TouchEvent event) -> {
-      TouchEvent dragEvent = this.draggingTouchEvent;
-      if(bDragging) {
-    	// threading issue double check
-    	if(dragEvent == null) return;
-    	if(dragEvent == event || dragEvent.isFinished())
-    		this.endDragging();
-      }
-    }, this);
-
-    super.enable();
-  }
-
-  public void disable(){
-    super.disable();
-
-    this.touchAreaNode.touchDownEvent.removeListeners(this);
-    this.touchAreaNode.touchUpEvent.removeListeners(this);
-
-    velocity = null; // isDamping() = false
-    dragStartNodePositionGlobal = null; // isDragging() = false
   }
 
   // configuration methods // // // // //
@@ -256,7 +256,8 @@ public class Swiper extends TransformerExtension {
     // use TransformationExtension's smoothing options
     super.transformPositionGlobal(globPos);
 
-    PVector localpos = super.isSmoothing() ? this.getTargetPosition() : this.node.getPosition();
+    PVector localpos = this.getTargetPosition();
+    if(localpos == null) localpos = this.node.getPosition();
 
     // apply offset restrictins with slack
     PVector offset = localpos.get();
