@@ -146,10 +146,12 @@ public class TouchManager extends TouchReceiver {
       existing.velocity = event.velocity;
     }
 
-    if(event.velocitySmoothed == null)
+    if(event.velocitySmoothed == null){
       existing.velocitySmoothed.lerp(existing.velocity, velocitySmoothCoeff);
-    else
+    } else {
+      // we got a pre-smoothed event?
       existing.velocitySmoothed = event.velocitySmoothed;
+    }
 
     existing.time = event.time;
     existing.position = event.position;
@@ -174,7 +176,7 @@ public class TouchManager extends TouchReceiver {
         if(event.velocity == null)
           event.velocity = new PVector(0.0f, 0.0f, 0.0f);
         if(event.velocitySmoothed == null)
-          event.velocitySmoothed = new PVector(0.0f, 0.0f, 0.0f);
+          event.velocitySmoothed = event.velocity.get(); //new PVector(0.0f, 0.0f, 0.0f);
         // init target
         event.node = getNodeForTouchPosition(event.position);
         event.startPosition = event.position;

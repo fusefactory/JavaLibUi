@@ -10,6 +10,7 @@ import com.fuse.ui.TouchManager;
 import com.fuse.ui.TouchEvent;
 import com.fuse.ui.Node;
 import com.fuse.ui.TextNode;
+import com.fuse.ui.extensions.Swiper;
 
 public class App extends PApplet {
   private static int TUIO_PORT = 3333;
@@ -54,6 +55,12 @@ public class App extends PApplet {
     sceneNode = new Node();
     sceneNode.setSize(papplet.width, papplet.height);
     sceneNode.touchEvent.addListener((TouchEvent e) -> this.activeTouchEvent = e);
+    // we're not swiping anything, but the swiper shows a nice reference grid in debug mode
+    Swiper
+      .enableFor(sceneNode)
+      .setDampThrowFactor(2.0f)
+      .setSnapEnabled(false)
+      .setSmoothValue(10.0f);
 
     {
       HistNode histNode = new HistNode(this.hist1);
