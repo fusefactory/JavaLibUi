@@ -9,6 +9,7 @@ import com.fuse.ui.example.utils.TuioInput;
 import com.fuse.ui.TouchManager;
 import com.fuse.ui.TouchEvent;
 import com.fuse.ui.Node;
+import com.fuse.ui.TextNode;
 
 public class App extends PApplet {
   private static int TUIO_PORT = 3333;
@@ -66,6 +67,15 @@ public class App extends PApplet {
       histNode.setPosition(0,sceneNode.getSize().y);
       histNode.setFillColor(pg.color(100,255,100,100));
       sceneNode.addChild(histNode);
+    }
+
+    {
+      sceneNode.addChild(
+        new TextNode()
+        .setText("drag to see velocity information...")
+        .setAlignX(CENTER)
+        .noCrop()
+        .setPosition(sceneNode.getSize().mult(0.5f)));
     }
 
     touchManager = new TouchManager();
