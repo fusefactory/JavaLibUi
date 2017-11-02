@@ -20,7 +20,7 @@ public class Swiper extends TransformerExtension {
   private boolean bDamping = false;
   private long minTouchDurationToDamp = 50l;
   private float maxDampVelocity = 1000.0f;
-  private float dampThrowFactor = 2.0f;
+  private float dampThrowFactor = 1.0f;
   // snapping (falling back into place)
   private boolean bSnapping = false;
   private PVector snapInterval = null; // size of a single "cell" in the snapping grid
@@ -224,9 +224,9 @@ public class Swiper extends TransformerExtension {
 
     if(localEvent.getDuration() > minTouchDurationToDamp){
       // TODO damping doesn't work (well) yet...
-      PVector vel = localEvent.offset();
+      // PVector vel = localEvent.offset();
       // vel.mult(1.0f / ((float)localEvent.getDuration()/1000.f));
-      this.startDamping(vel);
+      this.startDamping(localEvent.getSmoothedVelocity());
     }
 
     this.throwEvent.trigger(throwTarget);
@@ -303,6 +303,7 @@ public class Swiper extends TransformerExtension {
       velocity.mult(this.maxDampVelocity / velocity.mag());
 
     velocity.add(this.scrollableNode.getPosition());
+    velocity = this.getOffsetLimitsCorrection(velocity);
     super.transformPosition(velocity);
     this.bDamping = true;
   }
