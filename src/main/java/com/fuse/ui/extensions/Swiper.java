@@ -44,7 +44,7 @@ public class Swiper extends TransformerExtension {
   public Event<PVector> newStepPositionEvent;
   public Event<PVector> throwEvent = new Event<>();
   public Event<Node> restEvent;
-  
+
 
   // lifecycle methods
 
@@ -70,8 +70,6 @@ public class Swiper extends TransformerExtension {
   }
 
   @Override protected void setup(){
-    super.enable();
-
     this.touchAreaNode.touchDownEvent.addListener((TouchEvent event) -> {
       if(!bDragging || this.draggingTouchEvent.isFinished())
         this.startDragging(event);
@@ -96,8 +94,9 @@ public class Swiper extends TransformerExtension {
     this.touchAreaNode.touchDownEvent.removeListeners(this);
     this.touchAreaNode.touchUpEvent.removeListeners(this);
 
-    velocity = null; // isDamping() = false
-    dragStartNodePositionGlobal = null; // isDragging() = false
+    bSnapping = false;
+    bDamping = false;
+    bDragging = false;
   }
 
   @Override public void update(float dt){
@@ -235,11 +234,6 @@ public class Swiper extends TransformerExtension {
       // TODO damping doesn't work (well) yet...
       PVector vel = localEvent.offset();
       vel.mult(1.0f / ((float)localEvent.getDuration()/1000.f));
-      // PVector vel = this.smoothedVelocity.get();
-      vel.mult(velocityReductionFactor);
-      if(vel.mag() > this.maxDampVelocity)
-    	  	vel.mult(this.maxDampVelocity / vel.mag());
-
       this.startDamping(vel);
     }
 
@@ -319,10 +313,12 @@ public class Swiper extends TransformerExtension {
   private void startDamping(PVector velocity){
     velocity = velocity.get();
     velocity.mult(velocityReductionFactor);
+    if(velocity.mag() > this.maxDampVelocity)
+      velocity.mult(this.maxDampVelocity / velocity.mag());
+
     velocity.add(this.scrollableNode.getPosition());
     super.transformPosition(velocity);
     this.bDamping = true;
-    // TODO trigger event
   }
 
   private void updateDamping(float dt){
@@ -377,6 +373,20 @@ public class Swiper extends TransformerExtension {
     velocityReductionFactor = factor;
   }
 
+  public Swiper setMinTouchDurationToDamp(long ms){
+    this.minTouchDurationToDamp = ms;
+    return this;
+  }
+
+  public Swiper setMinTouchDurationToDamp(float seconds){
+    this.minTouchDurationToDamp = (long)seconds * 1000l;
+    return this;
+  }
+
+  public Swiper setMaxDampVelocity(float vel){
+    this.maxDampVelocity = vel;
+    return this;
+  }
   // 'snapping' methods // // // // //
 
   private void updateSnapping(float dt){
