@@ -422,15 +422,35 @@ public class Node extends TouchReceiver {
       && localPos.y < size.y;
   }
 
-  public PVector toLocal(PVector pos){
+  public PMatrix3D getToLocalMatrix() {
     // get and copy our global transformation matrix
     PMatrix3D mat = this.getGlobalTransformMatrix().get();
 
     // try to invert the matrix
     if(!mat.invert()){
       System.err.println("could not invert Model's globalTransformMatrix");
-      return pos;
+      mat.reset();
     }
+
+    return mat;
+  }
+
+  public PMatrix3D getToLocalWithoutTranslationsMatrix() {
+    // get and copy our global transformation matrix
+    PMatrix3D mat = this.getGlobalTransformMatrixWithoutTranslations().get();
+
+    // try to invert the matrix
+    if(!mat.invert()){
+      System.err.println("could not invert Model's globalTransformMatrix");
+      mat.reset();
+    }
+
+    return mat;
+  }
+
+  public PVector toLocal(PVector pos){
+    // get and copy our global transformation matrix
+    PMatrix3D mat = this.getToLocalMatrix();
 
     // apply inverted matrix to given position
     PVector localized = new PVector();
@@ -442,14 +462,7 @@ public class Node extends TouchReceiver {
 
   public PVector toLocalVelocity(PVector vel) {
     // get and copy our global transformation matrix
-    PMatrix3D mat = this.getGlobalTransformMatrixWithoutTranslations().get();
-
-    //math.translate(localTransformMatrix.translate(position.x, position.y, position.z);
-    // try to invert the matrix
-    if(!mat.invert()){
-      System.err.println("could not invert Model's globalTransformMatrix");
-      return vel;
-    }
+    PMatrix3D mat = this.getToLocalWithoutTranslationsMatrix();
 
     // apply inverted matrix to given position
     PVector localized = new PVector();
@@ -474,10 +487,20 @@ public class Node extends TouchReceiver {
 
   public TouchEvent toLocal(TouchEvent event){
     TouchEvent newEvent = event.copy();
-    if(event.position != null) newEvent.position = toLocal(event.position);
-    if(event.startPosition != null) newEvent.startPosition = toLocal(event.startPosition);
-    if(event.velocity != null) newEvent.velocity = this.toLocalVelocity(event.velocity);
-    if(event.velocitySmoothed != null) newEvent.velocitySmoothed = this.toLocalVelocity(event.velocitySmoothed);
+
+    // if(event.position != null) newEvent.position = toLocal(event.position);
+    // if(event.startPosition != null) newEvent.startPosition = toLocal(event.startPosition);
+    // if(event.velocity != null) newEvent.velocity = this.toLocalVelocity(event.velocity);
+    // if(event.velocitySmoothed != null) newEvent.velocitySmoothed = this.toLocalVelocity(event.velocitySmoothed);
+
+    // OPTIMIZED
+    PMatrix3D mat = this.getToLocalMatrix();
+    if(event.position != null) mat.mult(event.position, newEvent.position);
+    if(event.startPosition != null) mat.mult(event.position, newEvent.startPosition);
+    mat = this.getToLocalWithoutTranslationsMatrix();
+    if(event.velocity != null) mat.mult(event.velocity, newEvent.velocity);
+    if(event.velocitySmoothed != null) mat.mult(event.velocitySmoothed, newEvent.velocitySmoothed);
+
     return newEvent;
   }
 
