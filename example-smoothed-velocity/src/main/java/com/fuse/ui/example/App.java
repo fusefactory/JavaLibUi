@@ -17,13 +17,16 @@ public class App extends PApplet {
   private float timeBetweenFrames;
   private boolean bDrawDebug = true;
 
-  private ConcurrentLinkedQueue<PVector> hist1 = new ConcurrentLinkedQueue<PVector>();
-  private ConcurrentLinkedQueue<PVector> hist2 = new ConcurrentLinkedQueue<PVector>();
+  private ConcurrentLinkedQueue<Float> hist1 = new ConcurrentLinkedQueue<Float>();
+  private ConcurrentLinkedQueue<Float> hist2 = new ConcurrentLinkedQueue<Float>();
+  private ConcurrentLinkedQueue<Float> hist3 = new ConcurrentLinkedQueue<Float>();
+  private ConcurrentLinkedQueue<Float> hist4 = new ConcurrentLinkedQueue<Float>();
+  private ConcurrentLinkedQueue<Float> hist5 = new ConcurrentLinkedQueue<Float>();
   private int MAXHISTSIZE = 800;
   private TouchEvent activeTouchEvent;
   private PApplet papplet;
   private PGraphics pg;
-  private Node sceneNode;
+  private Node sceneNode,subjectNode;
 
   // input for processing Tuio (OSC-based touch protocol) events;
   // all TUIO events are converted and passed on to the TouchManager
@@ -46,7 +49,7 @@ public class App extends PApplet {
   }
 
   public void setup(){
-    papplet.frameRate(30.0f);
+    papplet.frameRate(60.0f);
     timeBetweenFrames = 1.0f / papplet.frameRate;
 
     pg = papplet.createGraphics(papplet.width, papplet.height, P3D);
@@ -54,26 +57,56 @@ public class App extends PApplet {
 
     sceneNode = new Node();
     sceneNode.setSize(papplet.width, papplet.height);
-    sceneNode.touchEvent.addListener((TouchEvent e) -> this.activeTouchEvent = e);
+
+    this.subjectNode = new Node();
+    subjectNode.setPosition(-1000,-1000);
+    subjectNode.touchEvent.addListener((TouchEvent e) -> this.activeTouchEvent = e);
+    subjectNode.setSize(sceneNode.getSize().sub(subjectNode.getPosition()));
+    sceneNode.addChild(subjectNode);
+
     // we're not swiping anything, but the swiper shows a nice reference grid in debug mode
     Swiper
-      .enableFor(sceneNode)
+      .enableFor(subjectNode)
       .setDampThrowFactor(2.0f)
       .setSnapEnabled(false)
       .setSmoothValue(10.0f);
 
     {
       HistNode histNode = new HistNode(this.hist1);
-      histNode.setPosition(0,sceneNode.getSize().y);
-      histNode.setFillColor(pg.color(255,100,100,100));
-      sceneNode.addChild(histNode);
+      subjectNode.addChild(histNode);
+      histNode.setGlobalPosition(new PVector(0,sceneNode.getSize().y));
+      histNode.setFillColor(pg.color(255,100,100,150));
     }
 
     {
       HistNode histNode = new HistNode(this.hist2);
-      histNode.setPosition(0,sceneNode.getSize().y);
-      histNode.setFillColor(pg.color(100,255,100,100));
-      sceneNode.addChild(histNode);
+      subjectNode.addChild(histNode);
+      histNode.setGlobalPosition(new PVector(0,sceneNode.getSize().y));
+      histNode.setFillColor(pg.color(0,255,100,150));
+    }
+
+    {
+      HistNode histNode = new HistNode(this.hist3);
+      subjectNode.addChild(histNode);
+      histNode.setGlobalPosition(new PVector(0,sceneNode.getSize().y*0.25f));
+      histNode.setScale(new PVector(1.0f, 0.3f, 1.0f));
+      histNode.setFillColor(pg.color(255,0,0,200));
+    }
+
+    {
+      HistNode histNode = new HistNode(this.hist4);
+      subjectNode.addChild(histNode);
+      histNode.setGlobalPosition(new PVector(0,sceneNode.getSize().y*0.5f));
+      histNode.setScale(new PVector(1.0f, 0.3f, 1.0f));
+      histNode.setFillColor(pg.color(0,255,0,200));
+    }
+
+    {
+      HistNode histNode = new HistNode(this.hist5);
+      subjectNode.addChild(histNode);
+      histNode.setGlobalPosition(new PVector(0,sceneNode.getSize().y*0.75f));
+      histNode.setScale(new PVector(1.0f, 0.3f, 1.0f));
+      histNode.setFillColor(pg.color(0,0,255,200));
     }
 
     {
@@ -95,15 +128,32 @@ public class App extends PApplet {
   }
 
   private void update(float dt){
-    if(this.activeTouchEvent != null && !this.activeTouchEvent.isFinished()){
-      this.hist1.add(this.activeTouchEvent.velocity.copy());
+    if(this.activeTouchEvent != null){ //} && !this.activeTouchEvent.isFinished()){
+      TouchEvent e = this.subjectNode.toLocal(this.activeTouchEvent);
+
+      this.hist1.add(e.velocity.mag());
       while(this.hist1.size() > MAXHISTSIZE){
         hist1.poll();
       }
 
-      this.hist2.add(this.activeTouchEvent.velocitySmoothed.copy());
+      this.hist2.add(e.velocitySmoothed.mag());
       while(this.hist2.size() > MAXHISTSIZE){
         hist2.poll();
+      }
+
+      this.hist3.add(e.velocitySmoothed.x);
+      while(this.hist3.size() > MAXHISTSIZE){
+        hist3.poll();
+      }
+
+      this.hist4.add(e.velocitySmoothed.y);
+      while(this.hist4.size() > MAXHISTSIZE){
+        hist4.poll();
+      }
+
+      this.hist5.add(e.velocitySmoothed.z);
+      while(this.hist5.size() > MAXHISTSIZE){
+        hist5.poll();
       }
     }
 
@@ -115,7 +165,7 @@ public class App extends PApplet {
   public void draw(){
     // OF-style; first update all "data" before rendering
     update(timeBetweenFrames);
-
+    this.papplet.frame.setTitle(Integer.toString((int)this.papplet.frameRate)+" fps");
     papplet.background(0);
     papplet.clear();
 

@@ -6,20 +6,20 @@ import processing.core.PVector;
 import com.fuse.ui.ShapeNode;
 
 public class HistNode extends ShapeNode {
-  private ConcurrentLinkedQueue<PVector> queue;
+  private ConcurrentLinkedQueue<Float> queue;
   private float stepX = 1.0f;
 
-  public HistNode(ConcurrentLinkedQueue<PVector> queue){
+  public HistNode(ConcurrentLinkedQueue<Float> queue){
     this.queue = queue;
   }
 
   @Override public void draw(){
     super.draw(); // configured stroke and fill color for our draw actions
 
-    Iterator<PVector> it = this.queue.iterator();
+    Iterator<Float> it = this.queue.iterator();
 
     for(float x = 0.0f; it.hasNext(); x+=this.stepX){
-      float val = it.next().mag();
+      float val = it.next();
       pg.rect(x, -val, stepX, val);
     }
   }
