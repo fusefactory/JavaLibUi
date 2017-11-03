@@ -74,10 +74,10 @@ public class Swiper extends TransformerExtension {
     this.touchAreaNode.touchUpEvent.addListener((TouchEvent event) -> {
       TouchEvent dragEvent = this.draggingTouchEvent;
       if(bDragging) {
-    	// threading issue double check
-    	if(dragEvent == null) return;
-    	if(dragEvent == event || dragEvent.isFinished())
-    		this.endDragging();
+        // threading issue double check
+        if(dragEvent == null) return;
+        if(dragEvent == event || dragEvent.isFinished())
+          this.endDragging();
       }
     }, this);
 
@@ -299,11 +299,13 @@ public class Swiper extends TransformerExtension {
   private void startDamping(PVector velocity){
     velocity = velocity.get();
     velocity.mult(dampThrowFactor);
-    if(velocity.mag() > this.maxDampVelocity)
-      velocity.mult(this.maxDampVelocity / velocity.mag());
+    if(Math.abs(velocity.mag()) > this.maxDampVelocity)
+      velocity.mult(this.maxDampVelocity / Math.abs(velocity.mag()));
 
     velocity.add(this.scrollableNode.getPosition());
-    velocity = this.getOffsetLimitsCorrection(velocity);
+    PVector correction = this.getOffsetLimitsCorrection(velocity);
+    if(correction!=null) velocity = correction;
+
     super.transformPosition(velocity);
     this.bDamping = true;
   }
