@@ -3,6 +3,7 @@ package com.fuse.ui.extensions;
 import processing.core.PVector;
 import processing.core.PGraphics;
 
+import com.fuse.utils.State;
 import com.fuse.utils.Event;
 import com.fuse.ui.Node;
 import com.fuse.ui.TouchEvent;
@@ -33,32 +34,32 @@ public class Swiper extends TransformerExtension {
   private float offsetLimitSlackDistance = 700.0f; // how much beyond the scroll limit needs to be dragged to reach max slack
 
   // events
-  public Event<TouchEvent> startDraggingEvent;
-  public Event<TouchEvent> endDraggingEvent;
-  public Event<PVector> newSnapPositionEvent;
-  public Event<PVector> newStepPositionEvent;
+  public Event<TouchEvent> startDraggingEvent = new Event<>();
+  public Event<TouchEvent> endDraggingEvent = new Event<>();
+  @Deprecated
+  public Event<PVector> newSnapPositionEvent = new Event<>();
+  public State<PVector> snapPositionState = new State<>();
+  @Deprecated
+  public Event<PVector> newStepPositionEvent = new Event<>();
+  public State<PVector> stepPositionState = new State<>();
   public Event<PVector> throwEvent = new Event<>();
-  public Event<Node> restEvent;
+  public Event<Node> restEvent = new Event<>();
+  
 
 
   // lifecycle methods
 
   public Swiper(){
-    startDraggingEvent = new Event<>();
-    endDraggingEvent = new Event<>();
-    newSnapPositionEvent = new Event<>();
-    newStepPositionEvent = new Event<>();
-    restEvent = new Event<>();
-
     super.setMaxTransformationTime(6.0f);
     super.setSmoothValue(10.0f);
-
   }
 
   @Override public void destroy(){
     startDraggingEvent.destroy();
     endDraggingEvent.destroy();
+    snapPositionState.destroy();
     newSnapPositionEvent.destroy();
+    stepPositionState.destroy();
     newStepPositionEvent.destroy();
     restEvent.destroy();
     super.destroy();
@@ -462,10 +463,10 @@ public class Swiper extends TransformerExtension {
     if(pos == null){ // abort snapping?
       // abort current snapping operation (if any) and apply
       // offset-limit exceeded snap position if necessary
-    	  if(instant)
-    		  this.node.setPosition(this.getOffsetLimitSnapPosition());
-    	  else
-    		  super.transformPosition(this.getOffsetLimitSnapPosition());
+      if(instant)
+        this.node.setPosition(this.getOffsetLimitSnapPosition());
+      else
+        super.transformPosition(this.getOffsetLimitSnapPosition());
       return;
     }
 
@@ -483,11 +484,14 @@ public class Swiper extends TransformerExtension {
     }
 
     // trigger notifications
+    snapPositionState.set(correctedPos);
     newSnapPositionEvent.trigger(correctedPos);
 
     PVector stepValue = this.toStepPosition(correctedPos);
-    if(stepValue != null)
+    if(stepValue != null) {
+      this.stepPositionState.set(stepValue);
       newStepPositionEvent.trigger(stepValue);
+    }
   }
 
   public float getSnapThrowFactor(){
