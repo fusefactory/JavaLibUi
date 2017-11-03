@@ -490,7 +490,7 @@ public class TouchManager extends TouchReceiver {
     pg.strokeWeight(4.0f);
     pg.stroke(255,100,100,220);
     for(TouchEvent event : activeTouchEvents.values()){
-      PVector p = event.position.copy();
+      PVector p = event.position.get();
       PVector offset = event.velocity;
       if(offset != null){
         pg.line(p.x, p.y+2.0f, p.x+offset.x, p.y+offset.y+2.0f);
@@ -500,7 +500,7 @@ public class TouchManager extends TouchReceiver {
     // lines for all active touch smoothed velocities
     pg.stroke(100,255,100,220);
     for(TouchEvent event : activeTouchEvents.values()){
-      PVector p = event.position.copy();
+      PVector p = event.position.get();
       PVector offset = event.velocitySmoothed;
       if(offset != null){
         pg.line(p.x, p.y-2.0f, p.x+offset.x, p.y+offset.y-2.0f);

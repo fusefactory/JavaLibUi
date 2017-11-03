@@ -440,6 +440,25 @@ public class Node extends TouchReceiver {
     return localized;
   }
 
+  public PVector toLocalVelocity(PVector vel) {
+    // get and copy our global transformation matrix
+    PMatrix3D mat = this.getGlobalTransformMatrixWithoutTranslations().get();
+
+    //math.translate(localTransformMatrix.translate(position.x, position.y, position.z);
+    // try to invert the matrix
+    if(!mat.invert()){
+      System.err.println("could not invert Model's globalTransformMatrix");
+      return vel;
+    }
+
+    // apply inverted matrix to given position
+    PVector localized = new PVector();
+    mat.mult(vel, localized);
+
+    // return localised position
+    return localized;
+  }
+
   public PVector toGlobal(PVector pos){
     // get and copy our global transformation matrix
     PMatrix3D mat = this.getGlobalTransformMatrix().get();
@@ -457,8 +476,8 @@ public class Node extends TouchReceiver {
     TouchEvent newEvent = event.copy();
     if(event.position != null) newEvent.position = toLocal(event.position);
     if(event.startPosition != null) newEvent.startPosition = toLocal(event.startPosition);
-    if(event.velocity != null) newEvent.velocity = toLocal(event.velocity);
-    if(event.velocitySmoothed != null) newEvent.velocitySmoothed = toLocal(event.velocitySmoothed);
+    if(event.velocity != null) newEvent.velocity = this.toLocalVelocity(event.velocity);
+    if(event.velocitySmoothed != null) newEvent.velocitySmoothed = this.toLocalVelocity(event.velocitySmoothed);
     return newEvent;
   }
 
@@ -685,6 +704,16 @@ public class Node extends TouchReceiver {
     return localTransformMatrix;
   }
 
+  public PMatrix3D getLocalTransformMatrixWithoutTranslations(){
+    PMatrix3D mat = new PMatrix3D();
+    //mat.translate(position.x, position.y, position.z);
+    mat.rotateX(rotation.x);
+    mat.rotateY(rotation.y);
+    mat.rotateZ(rotation.z);
+    mat.scale(scale.x, scale.y, scale.z);
+    return mat;
+  }
+
   public PMatrix3D getGlobalTransformMatrix(){
     Node parent = getParent();
 
@@ -692,12 +721,27 @@ public class Node extends TouchReceiver {
     if(parent == null)
       return getLocalTransformMatrix();
 
-   // create copy of our local transform matrix so we don't modify the original
-   PMatrix3D localMat = getLocalTransformMatrix().get();
-   // get our parent's global transform matrix and use it to transform our local matrix
-   localMat.preApply(parent.getGlobalTransformMatrix());
-   // return our globalized matrix
-   return localMat;
+    // create copy of our local transform matrix so we don't modify the original
+    PMatrix3D localMat = getLocalTransformMatrix().get();
+    // get our parent's global transform matrix and use it to transform our local matrix
+    localMat.preApply(parent.getGlobalTransformMatrix());
+    // return our globalized matrix
+    return localMat;
+  }
+
+  public PMatrix3D getGlobalTransformMatrixWithoutTranslations(){
+    Node parent = getParent();
+
+    // no parent? Then our localTransformMatrix IS our globalTransformMatrix
+    if(parent == null)
+      return getLocalTransformMatrixWithoutTranslations();
+
+    // create copy of our local transform matrix so we don't modify the original
+    PMatrix3D localMat = getLocalTransformMatrixWithoutTranslations().get();
+    // get our parent's global transform matrix and use it to transform our local matrix
+    localMat.preApply(parent.getGlobalTransformMatrixWithoutTranslations());
+    // return our globalized matrix
+    return localMat;
   }
 
   public Node enable(boolean _enable){

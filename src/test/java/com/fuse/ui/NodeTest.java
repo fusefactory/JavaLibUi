@@ -133,14 +133,25 @@ public class NodeTest {
 
   }
 
-  @Test public void toLocal(){
+  @Test public void toLocal_vector(){
     Node node = new Node();
     node.setPosition(100f,0f);
     node.setSize(100f, 50f);
     node.rotate(90f / 180.0f * (float)Math.PI); // 90 degrees clockwise around origin (top left corner)
     assertEquals(node.toLocal(new PVector(100f, 0f, 0f)), new PVector(0f, 0f, 0f));
     assertEquals(node.toLocal(new PVector(90f, 120f, 0f)).dist(new PVector(120f, 10f,0f)) < 0.0001f, true);
+  }
 
+  @Test public void toLocal_TouchEvent(){
+    // position shouldn't affect velocity, only rotation and scale
+    Node node = new Node();
+    node.setPosition(100f,200f);
+
+    TouchEvent e1 = new TouchEvent();
+    e1.velocity = new PVector(10,10,0);
+    TouchEvent e2 = node.toLocal(e1);
+
+    assertEquals(e2.velocity, new PVector(10,10,0));
   }
 
   @Test public void isInside_with_rotation(){
