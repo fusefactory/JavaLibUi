@@ -11,6 +11,8 @@ public class ShapeNode extends Node {
   private Integer strokeColor = null;
   private Float strokeWeight = null;
 
+  private Integer blendMode = null;
+
   /** Default constructor; intialized with default values: image=null and mode=NORMAL */
   public ShapeNode(){
     if(pg != null){
@@ -28,6 +30,10 @@ public class ShapeNode extends Node {
 
   /** Draw this node's image at this Node's position */
   @Override public void draw(){
+    this.beforeDraw();
+  }
+  
+  public void beforeDraw() {
     if(fillColor == null && this.fillAlphaColor == null)
       pg.noFill();
     else
@@ -45,6 +51,15 @@ public class ShapeNode extends Node {
 
     // draw shape
     // pg.rect(0,0,getSize().x,getSize().y);
+
+    if(this.blendMode != null) {
+      pg.blendMode(this.blendMode);
+    }
+  }
+  
+  public void afterDraw() {
+    if(this.blendMode != null)
+      pg.blendMode(pg.BLEND);
   }
 
   public Integer getFillColor(){ return fillColor; }
@@ -58,6 +73,9 @@ public class ShapeNode extends Node {
 
   public Float getStrokeWeight(){ return strokeWeight; }
   public ShapeNode setStrokeWeight(Float newWeight){ strokeWeight = newWeight; return this; }
+
+  public ShapeNode setBlendMode(Integer mode) { this.blendMode = mode; return this; }
+  public Integer getBlendMode() { return this.blendMode; }
 
   private void updateAlpha(){
     Integer baseColor = this.fillColor;

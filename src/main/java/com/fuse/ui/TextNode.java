@@ -4,9 +4,9 @@ import processing.core.PVector;
 import processing.core.PApplet;
 import processing.core.PFont;
 
-public class TextNode extends Node {
+public class TextNode extends ShapeNode {
   private String text;
-  private int textColor, textColorAlpha;
+
   private float textSize;
   private PVector textOffset;
   private PFont font;
@@ -37,8 +37,10 @@ public class TextNode extends Node {
   public TextNode setText(String txt){ text = txt == null ? "" : txt; return this; }
   public String getText(){ return text; }
 
-  public TextNode setTextColor(int newColor){ this.textColor = newColor; this.updateAlpha(); return this; }
-  public int getTextColor(){ return textColor; }
+  @Deprecated
+  public TextNode setTextColor(int newColor){ this.setFillColor(newColor); return this; }
+  @Deprecated
+  public int getTextColor(){ return this.getFillColor(); }
 
   public TextNode setTextSize(float newSize){ textSize = newSize; return this; }
   public float getTextSize(){ return textSize; }
@@ -102,11 +104,14 @@ public class TextNode extends Node {
         Math.min(this.textSize+this.framePadding.y*2, this.getSize().y));
     }
 
-    pg.fill(textColorAlpha);
+    super.beforeDraw(); // prepare color settings
+
     if(this.bCropEnabled)
       pg.text(text, textOffset.x, textOffset.y, getSize().x, getSize().y);
     else
       pg.text(text, textOffset.x, textOffset.y);
+
+    super.afterDraw();
   }
 
   public float getDrawWidth(){
@@ -124,7 +129,6 @@ public class TextNode extends Node {
   }
 
   private void updateAlpha(){
-    this.textColorAlpha = Node.alphaColor(this.textColor, this.alphaState.get());
     if(this.frameColor != null)
       this.frameColorAlpha = Node.alphaColor(this.frameColor, this.alphaState.get());
   }
