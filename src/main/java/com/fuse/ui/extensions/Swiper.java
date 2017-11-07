@@ -294,6 +294,10 @@ public class Swiper extends TransformerExtension {
   public boolean isDragging(){
     return bDragging;
   }
+  
+  public TouchEvent getDraggingTouchEvent() {
+	  return this.draggingTouchEvent;
+  }
 
   // velocity/damping methods // // // // //
 

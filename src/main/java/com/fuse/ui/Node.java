@@ -496,7 +496,7 @@ public class Node extends TouchReceiver {
     // OPTIMIZED
     PMatrix3D mat = this.getToLocalMatrix();
     if(event.position != null) mat.mult(event.position, newEvent.position);
-    if(event.startPosition != null) mat.mult(event.position, newEvent.startPosition);
+    if(event.startPosition != null) mat.mult(event.startPosition, newEvent.startPosition);
     mat = this.getToLocalWithoutTranslationsMatrix();
     if(event.velocity != null) mat.mult(event.velocity, newEvent.velocity);
     if(event.velocitySmoothed != null) mat.mult(event.velocitySmoothed, newEvent.velocitySmoothed);
