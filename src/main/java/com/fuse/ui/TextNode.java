@@ -105,13 +105,16 @@ public class TextNode extends ShapeNode {
     }
 
     super.beforeDraw(); // prepare color settings
-
-    if(this.bCropEnabled)
-      pg.text(text, textOffset.x, textOffset.y, getSize().x, getSize().y);
-    else
-      pg.text(text, textOffset.x, textOffset.y);
+    this.drawText(textOffset, bCropEnabled ? getSize() : null);
 
     super.afterDraw();
+  }
+
+  protected void drawText(PVector tetxOffset, PVector cropSize) {
+    if(cropSize != null)
+      pg.text(this.text, textOffset.x, textOffset.y, cropSize.x, cropSize.y);
+    else
+      pg.text(this.text, textOffset.x, textOffset.y);
   }
 
   public float getDrawWidth(){
