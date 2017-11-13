@@ -72,26 +72,26 @@ public class ImageNode extends Node {
 
     switch(mode){
       case NORMAL : {
-        pg.image(image, 0.0f, 0.0f);
+        this.drawImage(0, 0, null);
         break;
       }
       case CENTER : {
         PVector pos = PVector.mult(getSize(), 0.5f);
         pg.imageMode(PApplet.CENTER);
-        pg.image(image, pos.x, pos.y);
+        this.drawImage(pos.x, pos.y, null);
         pg.imageMode(PApplet.CORNERS); // restore default
         break;
       }
       case FIT : {
         pg.imageMode(PApplet.CORNERS);
-        pg.image(image, 0.0f, 0.0f, getSize().x, getSize().y);
+        this.drawImage(0.0f, 0.0f, getSize());
         break;
       }
       case FIT_CENTERED : {
         PVector fitCenteredSize = calculateFitCenteredSize();
         PVector pos = PVector.mult(getSize(), 0.5f);
         pg.imageMode(PApplet.CENTER);
-        pg.image(image, pos.x, pos.y, fitCenteredSize.x, fitCenteredSize.y);
+        this.drawImage(pos.x, pos.y, fitCenteredSize);
         pg.imageMode(PApplet.CORNERS); // restore default
         break;
       }
@@ -99,7 +99,7 @@ public class ImageNode extends Node {
         PVector fillSize = calculateFillSize();
         PVector pos = PVector.mult(getSize(), 0.5f);
         pg.imageMode(PApplet.CENTER);
-        pg.image(image, pos.x, pos.y, fillSize.x, fillSize.y);
+        this.drawImage(pos.x, pos.y, fillSize);
         pg.imageMode(PApplet.CORNERS); // restore default
       }
     }
@@ -109,6 +109,13 @@ public class ImageNode extends Node {
 
     if(tintColor != null)
       pg.noTint();
+  }
+
+  protected void drawImage(float x, float y, PVector siz){
+    if(siz!=null)
+      pg.image(image, x, y, siz.x, siz.y);
+    else
+      pg.image(image, x, y);
   }
 
   // config getter/setter methods // // // // //
