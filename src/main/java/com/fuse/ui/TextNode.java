@@ -110,11 +110,11 @@ public class TextNode extends ShapeNode {
     super.afterDraw();
   }
 
-  protected void drawText(PVector tetxOffset, PVector cropSize) {
+  protected void drawText(PVector textpos, PVector cropSize) {
     if(cropSize != null)
-      pg.text(this.text, textOffset.x, textOffset.y, cropSize.x, cropSize.y);
+      pg.text(this.text, textpos.x, textpos.y, cropSize.x, cropSize.y);
     else
-      pg.text(this.text, textOffset.x, textOffset.y);
+      pg.text(this.text, textpos.x, textpos.y);
   }
 
   public float getDrawWidth(){
