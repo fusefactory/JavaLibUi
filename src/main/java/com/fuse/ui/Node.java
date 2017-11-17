@@ -805,20 +805,20 @@ public class Node extends TouchReceiver {
     return clippingNode;
   }
 
-  /** @return Node First parent iwth clipping content enabled */
-  public Node getFirstClippingParent(){
-    for(Node p = getParent(); p != null; p=p.getParent())
-      if(p.isClippingContent())
-        return p;
+  /** @return Node - first parent (or self) with clipping content enabled */
+  public Node findClippingNode(){
+    for(Node n = this; n != null; n=n.getParent())
+      if(n.isClippingContent())
+        return n;
 
     return null;
   }
 
   private void updateClipping(){
-    this.setClippingNode(this.getFirstClippingParent());
+    this.setClippingNode(this.findClippingNode());
 
     for(Node n : getChildNodes(true /* recursive */)){
-      n.setClippingNode(n.getFirstClippingParent());
+      n.setClippingNode(n.findClippingNode());
     }
   }
 

@@ -335,9 +335,10 @@ public class NodeTest {
     assertEquals(c1_1.getClippingNode(), parent);
 
     // enable clipping on c1
-    // veify c1_1 (child of c1) get c1 as clipping node but c1's clipping node stays parent
+    // verify c1_1 (child of c1) get c1 as clipping node
+    // and c1 becomes its own clipping node
     c1.setClipContent(true);
-    assertEquals(c1.getClippingNode(), parent);
+    assertEquals(c1.getClippingNode(), c1);
     assertEquals(c1_1.getClippingNode(), c1);
 
     // add new child to parent
