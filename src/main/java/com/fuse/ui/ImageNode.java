@@ -50,9 +50,10 @@ public class ImageNode extends Node {
         tex.disposeSourceBuffer();
       }
       pg.removeCache(image);
-      this.image = null;
-    }
 
+    }
+    // must alway be reset so the image can be deallocated!
+    this.image = null;
     super.destroy();
   }
 
