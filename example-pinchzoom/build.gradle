@@ -19,6 +19,7 @@ sourceSets {
     main {
          java {
              srcDir sourceSets.main.java.srcDirs + '../src/main/java'
+             srcDir sourceSets.main.java.srcDirs + '../examples-shared/src/main/java'
         }
     }
 }

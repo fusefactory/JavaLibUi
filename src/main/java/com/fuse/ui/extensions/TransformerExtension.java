@@ -83,12 +83,7 @@ public class TransformerExtension extends ExtensionBase {
         this.node.setPosition(targetPosition);
         targetPosition = null;
       } else {
-        PVector vec = targetPosition.get();
-        // logger.info("TransformExtension update pos smoothing to: "+vec.toString());
-        // delta
-        vec.sub(this.node.getPosition());
-        // smoothed delta
-        vec.mult(1.0f / this.smoothValue);
+        PVector vec = this.getPositionTransformationVelocity();
 
         if(vec.mag() < donePositionDeltaMag){
           // finalize
@@ -465,16 +460,18 @@ public class TransformerExtension extends ExtensionBase {
     return smoothValue;
   }
 
-  public void setSmoothValue(float val){
+  public TransformerExtension setSmoothValue(float val){
     this.smoothValue = val; // <= 1.0f mean disable smoothing
+    return this;
   }
 
   public Float getSmoothValueScale(){
     return smoothValueScale;
   }
 
-  public void setSmoothValueScale(Float val){
+  public TransformerExtension setSmoothValueScale(Float val){
     this.smoothValueScale = val; // <= 1.0f mean disable smoothing
+    return this;
   }
 
   protected float getSmoothValueForScaling(){

@@ -146,10 +146,12 @@ public class TouchManager extends TouchReceiver {
       existing.velocity = event.velocity;
     }
 
-    if(event.velocitySmoothed == null)
+    if(event.velocitySmoothed == null){
       existing.velocitySmoothed.lerp(existing.velocity, velocitySmoothCoeff);
-    else
+    } else {
+      // we got a pre-smoothed event?
       existing.velocitySmoothed = event.velocitySmoothed;
+    }
 
     existing.time = event.time;
     existing.position = event.position;
@@ -174,7 +176,7 @@ public class TouchManager extends TouchReceiver {
         if(event.velocity == null)
           event.velocity = new PVector(0.0f, 0.0f, 0.0f);
         if(event.velocitySmoothed == null)
-          event.velocitySmoothed = new PVector(0.0f, 0.0f, 0.0f);
+          event.velocitySmoothed = event.velocity.get(); //new PVector(0.0f, 0.0f, 0.0f);
         // init target
         event.node = getNodeForTouchPosition(event.position);
         event.startPosition = event.position;
@@ -441,7 +443,7 @@ public class TouchManager extends TouchReceiver {
   }
 
   public void setDoubleClickMaxInterval(long interval){
-	this.doubleClickMaxInterval = interval;
+    this.doubleClickMaxInterval = interval;
   }
 
   public void setClickMaxDistance(float distance){
@@ -474,14 +476,38 @@ public class TouchManager extends TouchReceiver {
 
   public void drawActiveTouches(){
     PGraphics pg = Node.getPGraphics();
-
     pg.colorMode(pg.RGB, 255);
+
+    // circles on all active touch positions
     pg.fill(pg.color(255,100,100,150));
     pg.noStroke();
     pg.ellipseMode(pg.CENTER);
 
     for(TouchEvent event : activeTouchEvents.values())
       pg.ellipse(event.position.x, event.position.y, 25, 25);
+
+    // lines for all active touch velocities
+    pg.strokeWeight(4.0f);
+    pg.stroke(255,100,100,220);
+    for(TouchEvent event : activeTouchEvents.values()){
+      PVector p = event.position.get();
+      PVector offset = event.velocity;
+      if(offset != null){
+        pg.line(p.x, p.y+2.0f, p.x+offset.x, p.y+offset.y+2.0f);
+      }
+    }
+
+    // lines for all active touch smoothed velocities
+    pg.stroke(100,255,100,220);
+    for(TouchEvent event : activeTouchEvents.values()){
+      PVector p = event.position.get();
+      PVector offset = event.velocitySmoothed;
+      if(offset != null){
+        pg.line(p.x, p.y-2.0f, p.x+offset.x, p.y+offset.y-2.0f);
+      }
+    }
+
+    pg.noStroke();
   }
 
   // TouchManager doesn't keep active touch events (like this)

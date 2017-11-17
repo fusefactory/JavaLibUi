@@ -422,19 +422,51 @@ public class Node extends TouchReceiver {
       && localPos.y < size.y;
   }
 
-  public PVector toLocal(PVector pos){
+  public PMatrix3D getToLocalMatrix() {
     // get and copy our global transformation matrix
     PMatrix3D mat = this.getGlobalTransformMatrix().get();
 
     // try to invert the matrix
     if(!mat.invert()){
       System.err.println("could not invert Model's globalTransformMatrix");
-      return pos;
+      mat.reset();
     }
+
+    return mat;
+  }
+
+  public PMatrix3D getToLocalWithoutTranslationsMatrix() {
+    // get and copy our global transformation matrix
+    PMatrix3D mat = this.getGlobalTransformMatrixWithoutTranslations().get();
+
+    // try to invert the matrix
+    if(!mat.invert()){
+      System.err.println("could not invert Model's globalTransformMatrix");
+      mat.reset();
+    }
+
+    return mat;
+  }
+
+  public PVector toLocal(PVector pos){
+    // get and copy our global transformation matrix
+    PMatrix3D mat = this.getToLocalMatrix();
 
     // apply inverted matrix to given position
     PVector localized = new PVector();
     mat.mult(pos, localized);
+
+    // return localised position
+    return localized;
+  }
+
+  public PVector toLocalVelocity(PVector vel) {
+    // get and copy our global transformation matrix
+    PMatrix3D mat = this.getToLocalWithoutTranslationsMatrix();
+
+    // apply inverted matrix to given position
+    PVector localized = new PVector();
+    mat.mult(vel, localized);
 
     // return localised position
     return localized;
@@ -455,14 +487,20 @@ public class Node extends TouchReceiver {
 
   public TouchEvent toLocal(TouchEvent event){
     TouchEvent newEvent = event.copy();
-    if(event.position != null)
-    	newEvent.position = toLocal(event.position);
-    if(event.startPosition != null)
-    	newEvent.startPosition = toLocal(event.startPosition);
-    if(event.velocity != null)
-    	newEvent.velocity = toLocal(event.velocity);
-    if(event.velocitySmoothed != null)
-    	newEvent.velocitySmoothed = toLocal(event.velocitySmoothed);
+
+    // if(event.position != null) newEvent.position = toLocal(event.position);
+    // if(event.startPosition != null) newEvent.startPosition = toLocal(event.startPosition);
+    // if(event.velocity != null) newEvent.velocity = this.toLocalVelocity(event.velocity);
+    // if(event.velocitySmoothed != null) newEvent.velocitySmoothed = this.toLocalVelocity(event.velocitySmoothed);
+
+    // OPTIMIZED
+    PMatrix3D mat = this.getToLocalMatrix();
+    if(event.position != null) mat.mult(event.position, newEvent.position);
+    if(event.startPosition != null) mat.mult(event.startPosition, newEvent.startPosition);
+    mat = this.getToLocalWithoutTranslationsMatrix();
+    if(event.velocity != null) mat.mult(event.velocity, newEvent.velocity);
+    if(event.velocitySmoothed != null) mat.mult(event.velocitySmoothed, newEvent.velocitySmoothed);
+
     return newEvent;
   }
 
@@ -689,6 +727,16 @@ public class Node extends TouchReceiver {
     return localTransformMatrix;
   }
 
+  public PMatrix3D getLocalTransformMatrixWithoutTranslations(){
+    PMatrix3D mat = new PMatrix3D();
+    //mat.translate(position.x, position.y, position.z);
+    mat.rotateX(rotation.x);
+    mat.rotateY(rotation.y);
+    mat.rotateZ(rotation.z);
+    mat.scale(scale.x, scale.y, scale.z);
+    return mat;
+  }
+
   public PMatrix3D getGlobalTransformMatrix(){
     Node parent = getParent();
 
@@ -696,12 +744,27 @@ public class Node extends TouchReceiver {
     if(parent == null)
       return getLocalTransformMatrix();
 
-   // create copy of our local transform matrix so we don't modify the original
-   PMatrix3D localMat = getLocalTransformMatrix().get();
-   // get our parent's global transform matrix and use it to transform our local matrix
-   localMat.preApply(parent.getGlobalTransformMatrix());
-   // return our globalized matrix
-   return localMat;
+    // create copy of our local transform matrix so we don't modify the original
+    PMatrix3D localMat = getLocalTransformMatrix().get();
+    // get our parent's global transform matrix and use it to transform our local matrix
+    localMat.preApply(parent.getGlobalTransformMatrix());
+    // return our globalized matrix
+    return localMat;
+  }
+
+  public PMatrix3D getGlobalTransformMatrixWithoutTranslations(){
+    Node parent = getParent();
+
+    // no parent? Then our localTransformMatrix IS our globalTransformMatrix
+    if(parent == null)
+      return getLocalTransformMatrixWithoutTranslations();
+
+    // create copy of our local transform matrix so we don't modify the original
+    PMatrix3D localMat = getLocalTransformMatrixWithoutTranslations().get();
+    // get our parent's global transform matrix and use it to transform our local matrix
+    localMat.preApply(parent.getGlobalTransformMatrixWithoutTranslations());
+    // return our globalized matrix
+    return localMat;
   }
 
   public Node enable(boolean _enable){

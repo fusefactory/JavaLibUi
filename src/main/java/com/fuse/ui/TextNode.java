@@ -4,15 +4,16 @@ import processing.core.PVector;
 import processing.core.PApplet;
 import processing.core.PFont;
 
-public class TextNode extends Node {
+public class TextNode extends ShapeNode {
   private String text;
-  private int textColor, textColorAlpha;
+
   private float textSize;
   private PVector textOffset;
   private PFont font;
   private int alignX, alignY;
   private Integer frameColor = null, frameColorAlpha = null;
   private PVector framePadding = new PVector(3.0f, 3.0f, 0.0f);
+  private boolean bCropEnabled = true; // TODO: change default to false
 
   public TextNode(){
     text = "";
@@ -36,8 +37,10 @@ public class TextNode extends Node {
   public TextNode setText(String txt){ text = txt == null ? "" : txt; return this; }
   public String getText(){ return text; }
 
-  public TextNode setTextColor(int newColor){ this.textColor = newColor; this.updateAlpha(); return this; }
-  public int getTextColor(){ return textColor; }
+  @Deprecated
+  public TextNode setTextColor(int newColor){ this.setFillColor(newColor); return this; }
+  @Deprecated
+  public int getTextColor(){ return this.getFillColor(); }
 
   public TextNode setTextSize(float newSize){ textSize = newSize; return this; }
   public float getTextSize(){ return textSize; }
@@ -54,11 +57,15 @@ public class TextNode extends Node {
   public TextNode setAlignY(int align){ alignY = align; return this; }
   public int getAlignY(int align){ return alignY; }
 
-  public void setFrameColor(Integer clr) { this.frameColor = clr; this.updateAlpha(); }
+  public TextNode setFrameColor(Integer clr) { this.frameColor = clr; this.updateAlpha(); return this; }
   public Integer getFrameColor() { return this.frameColor; }
 
-  public void setFramePadding(PVector vec) { this.framePadding = vec == null ? new PVector(3.0f,3.0f,0.0f) : vec; }
+  public TextNode setFramePadding(PVector vec) { this.framePadding = vec == null ? new PVector(3.0f,3.0f,0.0f) : vec; return this; }
   public PVector getFramePadding() { return this.framePadding.get(); }
+
+  public TextNode setCropEnabled(boolean enabled){ this.bCropEnabled = enabled; return this; }
+  public boolean getCropEnabled(){ return this.bCropEnabled; }
+  public TextNode noCrop(){ return this.setCropEnabled(false); }
 
   @Override
   public void draw(){
@@ -75,48 +82,56 @@ public class TextNode extends Node {
     pg.noStroke();
 
     if(this.frameColorAlpha != null) {
-    		float x=textOffset.x, y=textOffset.y, w = pg.textWidth(text);
-    		pg.fill(this.frameColorAlpha);
+      float x=textOffset.x, y=textOffset.y, w = pg.textWidth(text);
+      pg.fill(this.frameColorAlpha);
 
-        switch(this.alignX){
-          case PApplet.LEFT: x -= this.framePadding.x; break;
-          case PApplet.RIGHT: x += this.getSize().x - w - this.framePadding.x; break;
-          case PApplet.CENTER: x += this.getSize().x/2.0f - w/2.0f - this.framePadding.x;
-        }
+      switch(this.alignX){
+        case PApplet.LEFT: x -= this.framePadding.x; break;
+        case PApplet.RIGHT: x += this.getSize().x - w - this.framePadding.x; break;
+        case PApplet.CENTER: x += this.getSize().x/2.0f - w/2.0f - this.framePadding.x;
+      }
 
-        // TODO
-        switch(this.alignY){
-          case PApplet.BASELINE:
-          case PApplet.TOP: y -= this.framePadding.y; break;
-          case PApplet.BOTTOM: y += this.getSize().y - this.textSize - this.framePadding.y; break;
-          case PApplet.CENTER: y += this.getSize().y/2.0f - this.textSize/2.0f - this.framePadding.y; break;
-        }
+      // TODO
+      switch(this.alignY){
+        case PApplet.BASELINE:
+        case PApplet.TOP: y -= this.framePadding.y; break;
+        case PApplet.BOTTOM: y += this.getSize().y - this.textSize - this.framePadding.y; break;
+        case PApplet.CENTER: y += this.getSize().y/2.0f - this.textSize/2.0f - this.framePadding.y; break;
+      }
 
-    		pg.rect(x, y,
-    				Math.min(w+this.framePadding.x*2, this.getSize().x),
-    				Math.min(this.textSize+this.framePadding.y*2, this.getSize().y));
+      pg.rect(x, y,
+        Math.min(w+this.framePadding.x*2, this.getSize().x),
+        Math.min(this.textSize+this.framePadding.y*2, this.getSize().y));
     }
 
-    pg.fill(textColorAlpha);
-    pg.text(text, textOffset.x, textOffset.y, getSize().x, getSize().y);
+    super.beforeDraw(); // prepare color settings
+    this.drawText(textOffset, bCropEnabled ? getSize() : null);
+
+    super.afterDraw();
+  }
+
+  protected void drawText(PVector textpos, PVector cropSize) {
+    if(cropSize != null)
+      pg.text(this.text, textpos.x, textpos.y, cropSize.x, cropSize.y);
+    else
+      pg.text(this.text, textpos.x, textpos.y);
   }
 
   public float getDrawWidth(){
-	  if(text.equals(""))
-		  return 0.0f;
+    if(text.equals(""))
+      return 0.0f;
 
-	  if(this.font != null)
-	      pg.textFont(this.font);
+    if(this.font != null)
+        pg.textFont(this.font);
 
-	  pg.noStroke();
-	  //pg.fill(textColor);
-	  pg.textSize(textSize);
-	  pg.textAlign(alignX, alignY);
-	  return pg.textWidth(text);
+    pg.noStroke();
+    //pg.fill(textColor);
+    pg.textSize(textSize);
+    pg.textAlign(alignX, alignY);
+    return pg.textWidth(text);
   }
 
   private void updateAlpha(){
-    this.textColorAlpha = Node.alphaColor(this.textColor, this.alphaState.get());
     if(this.frameColor != null)
       this.frameColorAlpha = Node.alphaColor(this.frameColor, this.alphaState.get());
   }
