@@ -4,7 +4,7 @@
 
     <groupId>com.github.fusefactory</groupId>
     <artifactId>JavaLibUi</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <packaging>jar</packaging>
 
     <name>Fuse UI package</name>
@@ -30,7 +30,7 @@
         <dependency>
             <groupId>com.github.fusefactory</groupId>
             <artifactId>JavaLibEvent</artifactId>
-            <version>1.1.8</version>
+            <version>1.1.9</version>
         </dependency>
     </dependencies>
 
