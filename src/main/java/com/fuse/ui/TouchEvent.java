@@ -91,6 +91,7 @@ public class TouchEvent {
     touchEvent.time = time == null ? null : (long) time;
     touchEvent.startTime = startTime == null ? null : (long) startTime;
     touchEvent.velocity = velocity == null ? null : velocity.get();
+    touchEvent.velocitySmoothed = velocitySmoothed == null ? null : velocitySmoothed.get();
     return touchEvent;
   }
 
@@ -111,7 +112,12 @@ public class TouchEvent {
   public Long getDuration(){
     return time == null || startTime == null ? null : time-startTime;
   }
+
   public boolean isFinished(){
     return this.eventType == EventType.TOUCH_UP;
+  }
+
+  public PVector getSmoothedVelocity() {
+    return this.velocitySmoothed == null ? this.velocity.get() : this.velocitySmoothed.get();
   }
 }

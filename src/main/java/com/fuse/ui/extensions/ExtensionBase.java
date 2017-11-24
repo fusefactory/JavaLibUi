@@ -12,9 +12,34 @@ public class ExtensionBase {
     logger = Logger.getLogger(ExtensionBase.class.getName());
   }
 
+  protected void setup(){
+    // virtual
+  }
+
+  protected void teardown(){
+    // virtual
+  }
+
   public void destroy(){
-    this.disable();
-    // node = null;
+    if(isEnabled())
+      this.disable();
+
+    if(this.node != null)
+      this.node.stopUsing(this);
+  }
+
+  public void enable(){
+    if(!isEnabled()){
+      this.bEnabled = true;
+      this.setup();
+    }
+  }
+
+  public void disable(){
+    if(isEnabled()){
+      this.bEnabled = false;
+      this.teardown();
+    }
   }
 
   public void update(float dt){
@@ -29,19 +54,12 @@ public class ExtensionBase {
     node = newNode;
   }
 
-  public void enable(){
-    this.bEnabled = true;
-  }
-
+  @Deprecated
   public void enable(Node newNode){
     setNode(newNode);
     this.enable();
   }
 
-  // virtual
-  public void disable(){
-    this.bEnabled = false;
-  }
 
   public Node getNode(){
     return this.node;

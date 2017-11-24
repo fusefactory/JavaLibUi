@@ -14,8 +14,7 @@ public class ShrinkToContent extends TransformerExtension {
     this.disableSmoothing(); // by default doesn't smooth
   }
 
-  @Override
-  public void enable() {
+  @Override protected void setup() {
 	  // all future children
 	  this.node.newChildEvent.addListener((Node newChild) -> {
 		  registerChild(newChild);
@@ -31,8 +30,7 @@ public class ShrinkToContent extends TransformerExtension {
 	  }
   }
 
-  @Override
-  public void disable() {
+  @Override protected void teardown() {
 	  this.node.newChildEvent.removeListeners(this);
     this.node.childRemovedEvent.removeListeners(this);
     for(Node child : this.node.getChildNodes()) {

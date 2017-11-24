@@ -28,9 +28,9 @@ public class PinchZoom extends TransformerExtension {
 
   @Override
   public void destroy(){
-    super.destroy();
     startPinchEvent.destroy();
     endPinchEvent.destroy();
+    super.destroy();
   }
 
   @Override public void update(float dt){
@@ -41,10 +41,7 @@ public class PinchZoom extends TransformerExtension {
       super.update(dt);
   }
 
-  @Override public void enable(){
-    if(this.isEnabled() || this.node == null) return;
-    super.enable();
-
+  @Override protected void setup(){
     this.initScale = this.node.getScale();
     this.initPosition = this.node.getPosition();
 
@@ -69,8 +66,7 @@ public class PinchZoom extends TransformerExtension {
     }, this);
   }
 
-  @Override public void disable(){
-    super.disable();
+  @Override protected void teardown(){
     if(this.node == null) return;
     this.node.touchDownEvent.removeListeners(this);
     this.node.touchUpEvent.removeListeners(this);

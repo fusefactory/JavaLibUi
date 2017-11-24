@@ -36,7 +36,7 @@ public class TransformerExtension extends ExtensionBase {
   private boolean bOnlyWhenNotTouched = false;
   private boolean bStopOnTouch = false;
   // endless recursion detection
-  private static int maxTransformationsPerUpdate = 9;
+  protected int maxTransformationsPerUpdate = 9;
   private int transformationsThisUpdate = 0;
 
   // events
@@ -48,20 +48,19 @@ public class TransformerExtension extends ExtensionBase {
     idleEvent = new Event<>();
   }
 
-  @Override
-  public void destroy(){
+  @Override public void destroy(){
     idleEvent.destroy();
     super.destroy();
   }
 
-  @Override public void disable(){
-    super.disable();
+  @Override protected void teardown(){
     targetPosition = null;
     targetScale = null;
     targetRotation = null;
   }
 
   @Override public void update(float dt){
+    // System.out.println("ext update");
     transformationsThisUpdate = 0; // reset endless recursion detection counter
 
     if(this.node.isTouched()){
@@ -84,12 +83,7 @@ public class TransformerExtension extends ExtensionBase {
         this.node.setPosition(targetPosition);
         targetPosition = null;
       } else {
-        PVector vec = targetPosition.get();
-        // logger.info("TransformExtension update pos smoothing to: "+vec.toString());
-        // delta
-        vec.sub(this.node.getPosition());
-        // smoothed delta
-        vec.mult(1.0f / this.smoothValue);
+        PVector vec = this.getPositionTransformationVelocity();
 
         if(vec.mag() < donePositionDeltaMag){
           // finalize
@@ -247,6 +241,9 @@ public class TransformerExtension extends ExtensionBase {
       return;
     }
 
+    if(this.node.getPosition().equals(vec))
+      return;
+
     if(bOnlyWhenNotTouched && this.node.isTouched())
       return;
 
@@ -273,15 +270,20 @@ public class TransformerExtension extends ExtensionBase {
     Node parentNode = this.node.getParent();
     PVector localized;
     if(parentNode == null) {
-    	localized = vec.get();
+      localized = vec.get();
     } else {
-    	localized = parentNode.toLocal(vec);
+      localized = parentNode.toLocal(vec);
     }
     // logger.info("transform ext: global: "+vec.toString()+" to "+localized.toString());
     this.transformPosition(localized);
   }
 
   public void transformRotation(PVector vec){
+    if(vec == null){
+      targetRotation = null;
+      return;
+    }
+
     if(bOnlyWhenNotTouched && this.node.isTouched())
       return;
 
@@ -302,6 +304,14 @@ public class TransformerExtension extends ExtensionBase {
   }
 
   public void transformScale(PVector vec){
+    if(vec == null){
+      targetScale = null;
+      return;
+    }
+
+    if(this.node.getScale().equals(vec))
+      return;
+
     if(bOnlyWhenNotTouched && this.node.isTouched())
       return;
 
@@ -325,6 +335,9 @@ public class TransformerExtension extends ExtensionBase {
   }
 
   public void transformSize(PVector vec){
+    if(this.node.getSize().equals(vec))
+      return;
+
     if(bOnlyWhenNotTouched && this.node.isTouched())
       return;
 
@@ -348,17 +361,17 @@ public class TransformerExtension extends ExtensionBase {
   }
 
   public void transformWidth(float newValue) {
-	  // consider active resize transformation that might be going on
-	  PVector vec = this.targetSize != null ? this.targetSize.get() : this.node.getSize();
-	  vec.x = newValue;
-	  this.transformSize(vec);
+    // consider active resize transformation that might be going on
+    PVector vec = this.targetSize != null ? this.targetSize.get() : this.node.getSize();
+    vec.x = newValue;
+    this.transformSize(vec);
   }
 
   public void transformHeight(float newValue) {
-	  // consider active resize transformation that might be going on
-	  PVector vec = this.targetSize != null ? this.targetSize.get() : this.node.getSize();
-	  vec.y = newValue;
-	  this.transformSize(vec);
+    // consider active resize transformation that might be going on
+    PVector vec = this.targetSize != null ? this.targetSize.get() : this.node.getSize();
+    vec.y = newValue;
+    this.transformSize(vec);
   }
 
   protected PVector limitedPosition(PVector vec){
@@ -426,11 +439,19 @@ public class TransformerExtension extends ExtensionBase {
   }
 
   public PVector getTargetScale() {
-	  return this.targetScale == null ? null : this.targetScale.get();
+    return this.targetScale == null ? null : this.targetScale.get();
+  }
+
+  public PVector getTargetSize() {
+    return this.targetSize == null ? null : this.targetSize.get();
+  }
+
+  public PVector getTargetRotation() {
+    return this.targetRotation == null ? null : this.targetRotation.get();
   }
 
   public boolean isTransformingSize(){
-	  return this.targetSize != null;
+    return this.targetSize != null;
   }
 
   // configuration methods // // // // //
@@ -439,16 +460,18 @@ public class TransformerExtension extends ExtensionBase {
     return smoothValue;
   }
 
-  public void setSmoothValue(float val){
+  public TransformerExtension setSmoothValue(float val){
     this.smoothValue = val; // <= 1.0f mean disable smoothing
+    return this;
   }
 
   public Float getSmoothValueScale(){
     return smoothValueScale;
   }
 
-  public void setSmoothValueScale(Float val){
+  public TransformerExtension setSmoothValueScale(Float val){
     this.smoothValueScale = val; // <= 1.0f mean disable smoothing
+    return this;
   }
 
   protected float getSmoothValueForScaling(){
@@ -489,6 +512,36 @@ public class TransformerExtension extends ExtensionBase {
 
   public void setMaxPosZ(Float value){
     this.maxPos[2] = value;
+  }
+
+  public void setLockX(boolean enable) {
+	  if(enable) {
+		  this.setMinPosX(this.node.getPosition().x);
+		  this.setMaxPosX(this.node.getPosition().x);
+	  } else {
+		  this.setMinPosX(null);
+		  this.setMaxPosX(null);
+	  }
+  }
+
+  public void setLockY(boolean enable) {
+	  if(enable) {
+		  this.setMinPosY(this.node.getPosition().y);
+		  this.setMaxPosY(this.node.getPosition().y);
+	  } else {
+		  this.setMinPosY(null);
+		  this.setMaxPosY(null);
+	  }
+  }
+
+  public void setLockZ(boolean enable) {
+    if(enable) {
+      this.setMinPosZ(this.node.getPosition().z);
+      this.setMaxPosZ(this.node.getPosition().z);
+    } else {
+      this.setMinPosZ(null);
+      this.setMaxPosZ(null);
+    }
   }
 
   public void setMinScale(Float value){
@@ -535,7 +588,7 @@ public class TransformerExtension extends ExtensionBase {
   // static factory methods
 
   public static TransformerExtension resizeTo(Node n, float w, float h){
-	  return resizeTo(n, new PVector(w,h,0.0f));
+    return resizeTo(n, new PVector(w,h,0.0f));
   }
 
   public static TransformerExtension resizeTo(Node n, PVector size){
@@ -551,6 +604,26 @@ public class TransformerExtension extends ExtensionBase {
 
     // start resize transformation
     ext.transformSize(size);
+    return ext;
+  }
+
+  public static TransformerExtension scaleTo(Node n, float w, float h) {
+    return scaleTo(n, new PVector(w,h,1.0f));
+  }
+
+  public static TransformerExtension scaleTo(Node n, PVector scale){
+    // create extension and add to specified node
+    TransformerExtension ext = new TransformerExtension();
+    n.use(ext);
+
+    // when done cleanup this mess
+    ext.idleEvent.whenTriggered(() -> {
+        n.stopUsing(ext);
+        ext.destroy();
+    });
+
+    // start resize transformation
+    ext.transformScale(scale);
     return ext;
   }
 }

@@ -65,7 +65,7 @@ public class TuioInput implements TuioListener {
       e.eventType = TouchEvent.EventType.TOUCH_DOWN;
       e.position = convertVector(new PVector(cursor.positionX(), cursor.positionY(), 0f));
       e.velocity = convertVector(new PVector(cursor.velocityX(), cursor.velocityY(), 0f));
-      e.velocitySmoothed = e.velocity;
+      //e.velocitySmoothed = e.velocity;
       touchManager.submitTouchEvent(e);
     }
 
@@ -81,7 +81,7 @@ public class TuioInput implements TuioListener {
       e.eventType = TouchEvent.EventType.TOUCH_MOVE;
       e.position = convertVector(new PVector(cursor.positionX(), cursor.positionY(), 0f));
       e.velocity = convertVector(new PVector(cursor.velocityX(), cursor.velocityY(), 0f));
-      e.velocitySmoothed = e.velocity;
+      //e.velocitySmoothed = e.velocity;
       touchManager.submitTouchEvent(e);
     }
 
@@ -96,7 +96,7 @@ public class TuioInput implements TuioListener {
       e.eventType = TouchEvent.EventType.TOUCH_UP;
       e.position = convertVector(new PVector(cursor.positionX(), cursor.positionY(), 0f));
       e.velocity = convertVector(new PVector(cursor.velocityX(), cursor.velocityY(), 0f));
-      e.velocitySmoothed = e.velocity;
+      //e.velocitySmoothed = e.velocity;
       touchManager.submitTouchEvent(e);
     }
 

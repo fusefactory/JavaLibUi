@@ -3,6 +3,7 @@ package com.fuse.ui;
 import processing.core.PApplet;
 import processing.core.PImage;
 import processing.core.PVector;
+import processing.opengl.PShader;
 import processing.opengl.Texture;
 
 public class ImageNode extends Node {
@@ -19,24 +20,23 @@ public class ImageNode extends Node {
   protected Mode mode;
   private boolean autoResizeToImage = false;
   private boolean bClearImageOnDestroy = false;
-  protected Integer tintColor = null;
+  protected Integer tintColor = null, tintColorAlpha = null;
+  // shader
+  private String shaderFragPath, shaderVertPath;
+  private PShader shader;
 
   // instance lifecycle methods // // // // //
 
-  private void _init(){
-    image = null;
-    mode = Mode.NORMAL;
-  }
-
   /** Default constructor; intialized with default values: image=null and mode=NORMAL */
   public ImageNode(){
-	super();
-    _init();
+    image = null;
+    mode = Mode.NORMAL;
+    this.alphaState.push((Float v) -> this.updateAlpha());
   }
 
   public ImageNode(String nodeName){
-    super(nodeName);
-    _init();
+    this();
+    super.setName(nodeName);
   }
 
   @Override
@@ -45,13 +45,16 @@ public class ImageNode extends Node {
       // only processing2?
       Object cache = pg.getCache(image);
       if(cache instanceof Texture) {
-    	  Texture tex = (Texture)cache;
-    	  tex.unbind();
-    	  tex.disposeSourceBuffer();
+        Texture tex = (Texture)cache;
+        tex.unbind();
+        tex.disposeSourceBuffer();
       }
       pg.removeCache(image);
-      this.image = null;
+
     }
+    // must alway be reset so the image can be deallocated!
+    this.image = null;
+    super.destroy();
   }
 
   /** Draw this node's image at this Node's position */
@@ -59,31 +62,37 @@ public class ImageNode extends Node {
     if(image == null)
       return;
 
-    if(tintColor != null)
-      pg.tint(tintColor);
+    if(this.tintColorAlpha != null)
+      pg.tint(this.tintColorAlpha);
+
+    // if(this.shader == null && this.shaderFragPath != null)
+    // 		this.shader = pg.loadShader(shaderFragPath); //pg.loadShader("data/eventi/shaders/test.vert.glsl", "data/eventi/shaders/test.frag.glsl");
+
+    if(this.shader != null)
+      pg.shader(this.shader);
 
     switch(mode){
       case NORMAL : {
-        pg.image(image, 0.0f, 0.0f);
+        this.drawImage(0, 0, null);
         break;
       }
       case CENTER : {
         PVector pos = PVector.mult(getSize(), 0.5f);
         pg.imageMode(PApplet.CENTER);
-        pg.image(image, pos.x, pos.y);
+        this.drawImage(pos.x, pos.y, null);
         pg.imageMode(PApplet.CORNERS); // restore default
         break;
       }
       case FIT : {
         pg.imageMode(PApplet.CORNERS);
-        pg.image(image, 0.0f, 0.0f, getSize().x, getSize().y);
+        this.drawImage(0.0f, 0.0f, getSize());
         break;
       }
       case FIT_CENTERED : {
         PVector fitCenteredSize = calculateFitCenteredSize();
         PVector pos = PVector.mult(getSize(), 0.5f);
         pg.imageMode(PApplet.CENTER);
-        pg.image(image, pos.x, pos.y, fitCenteredSize.x, fitCenteredSize.y);
+        this.drawImage(pos.x, pos.y, fitCenteredSize);
         pg.imageMode(PApplet.CORNERS); // restore default
         break;
       }
@@ -91,13 +100,23 @@ public class ImageNode extends Node {
         PVector fillSize = calculateFillSize();
         PVector pos = PVector.mult(getSize(), 0.5f);
         pg.imageMode(PApplet.CENTER);
-        pg.image(image, pos.x, pos.y, fillSize.x, fillSize.y);
+        this.drawImage(pos.x, pos.y, fillSize);
         pg.imageMode(PApplet.CORNERS); // restore default
       }
     }
 
+    if(this.shader != null)
+    		pg.resetShader();
+
     if(tintColor != null)
       pg.noTint();
+  }
+
+  protected void drawImage(float x, float y, PVector siz){
+    if(siz!=null)
+      pg.image(image, x, y, siz.x, siz.y);
+    else
+      pg.image(image, x, y);
   }
 
   // config getter/setter methods // // // // //
@@ -127,11 +146,32 @@ public class ImageNode extends Node {
     }
   }
 
-  public ImageNode setTint(Integer clr){ tintColor = clr; return this; }
+  public ImageNode setTint(Integer clr){ tintColor = clr; this.updateAlpha(); return this; }
   public Integer getTint(){ return tintColor; }
 
   public ImageNode setClearImageOnDestroy(boolean enable){ this.bClearImageOnDestroy = enable; return this; }
   public boolean getClearImageOnDestroy(){ return this.bClearImageOnDestroy; }
+
+  public PShader getShader(){ return this.shader; }
+  public void setShader(PShader shader){ this.shader = shader; }
+
+  public void setShaderPath(String fragPath){
+    this.setShaderPath(fragPath, null);
+  }
+
+  public void setShaderPath(String fragPath, String vertPath){
+    this.shaderFragPath = fragPath;
+    this.shaderVertPath = vertPath;
+
+    if(this.shaderVertPath == null)
+      this.shader = pg.loadShader(this.shaderFragPath);
+    else
+      this.shader = pg.loadShader(this.shaderVertPath, this.shaderFragPath);
+  }
+
+  public String getShaderFragPath(){ return this.shaderFragPath; }
+  public String getShaderVertPath(){ return this.shaderVertPath; }
+
 
   // private helper methods // // // // //
 
@@ -151,4 +191,10 @@ public class ImageNode extends Node {
     return new PVector(factor * image.width, factor * image.height, 0.0f);
   }
 
+  private void updateAlpha(){
+    if(this.tintColor == null)
+        this.tintColorAlpha = pg.color(255,255,255, this.alphaState.get() * 255.0f);
+    else
+      this.tintColorAlpha = Node.alphaColor(this.tintColor, this.alphaState.get());
+  }
 }

@@ -13,17 +13,14 @@ public class DoubleClickZoom extends TransformerExtension {
   private PVector scaleFactor = new PVector(2.0f, 2.0f, 1.0f);
 
   public DoubleClickZoom() {
-	super();
-	// by default this extension aborts all TransformerExtension-based transformations
-	// when its node receives a touch event. This default behaviour can be changed by
-	// call setStopOnTouch again with a different value.
-	super.setStopOnTouch(true);
+    super();
+    // by default this extension aborts all TransformerExtension-based transformations
+    // when its node receives a touch event. This default behaviour can be changed by
+    // call setStopOnTouch again with a different value.
+    super.setStopOnTouch(true);
   }
-  
-  @Override public void enable(){
-    if(this.isEnabled() || this.node == null) return;
-    super.enable();
 
+  @Override protected void setup(){
     this.originalScale = this.node.getScale();
     this.originalPosition = this.node.getPosition();
 
@@ -48,41 +45,47 @@ public class DoubleClickZoom extends TransformerExtension {
     }, this);
   }
 
-  @Override public void disable(){
-    System.out.println("222");
+  @Override protected void teardown(){
     if(this.node != null)
       this.node.touchClickEvent.removeListeners(this);
-    super.disable();
+  }
+
+  public void zoomRestore(){
+    this.transformScale(this.originalScale.get());
+    this.transformPosition(this.originalPosition.get());
+  }
+
+  public void zoomIn(){
+    PVector newScale = new PVector(this.originalScale.x*this.scaleFactor.x, this.originalScale.y*this.scaleFactor.y, this.originalScale.z*this.scaleFactor.z);
+
+    //TouchEvent localEvent = this.node.toLocal(event);
+    //PVector localPos = localEvent.position;
+
+    PVector originalSize = this.node.getSize();
+    originalSize.x = originalSize.x * this.originalScale.x;
+    originalSize.y = originalSize.y * this.originalScale.y;
+
+    PVector originalCenter = this.originalPosition.get();
+    originalSize.mult(0.5f);
+    originalCenter.add(originalSize);
+
+    PVector newSize = this.node.getSize();
+    newSize.x = newSize.x * newScale.x;
+    newSize.y = newSize.y * newScale.y;
+
+    PVector newPos = originalCenter.get();
+    newSize.mult(-0.5f);
+    newPos.add(newSize);
+
+    this.transformScale(newScale); // zoom-in
+    this.transformPosition(newPos);
   }
 
   private void onDoubleClick(TouchEvent event) {
     if(Math.abs(this.node.getScale().x - this.originalScale.x) > 0.03f){
-      this.transformScale(this.originalScale.get());
-      this.transformPosition(this.originalPosition.get());
+      this.zoomRestore();
     } else {
-      PVector newScale = new PVector(this.originalScale.x*this.scaleFactor.x, this.originalScale.y*this.scaleFactor.y, this.originalScale.z*this.scaleFactor.z);
-
-      //TouchEvent localEvent = this.node.toLocal(event);
-      //PVector localPos = localEvent.position;
-
-      PVector originalSize = this.node.getSize();
-      originalSize.x = originalSize.x * this.originalScale.x;
-      originalSize.y = originalSize.y * this.originalScale.y;
-
-      PVector originalCenter = this.originalPosition.get();
-      originalSize.mult(0.5f);
-      originalCenter.add(originalSize);
-
-      PVector newSize = this.node.getSize();
-      newSize.x = newSize.x * newScale.x;
-      newSize.y = newSize.y * newScale.y;
-
-      PVector newPos = originalCenter.get();
-      newSize.mult(-0.5f);
-      newPos.add(newSize);
-
-      this.transformScale(newScale); // zoom-in
-      this.transformPosition(newPos);
+      this.zoomIn();
     }
   }
 

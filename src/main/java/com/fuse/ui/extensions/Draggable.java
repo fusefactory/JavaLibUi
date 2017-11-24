@@ -29,23 +29,20 @@ public class Draggable extends TransformerExtension {
   }
 
   @Override public void destroy(){
-    super.destroy();
     startEvent.destroy();
     endEvent.destroy();
+    super.destroy();
   }
 
-  @Override public void enable(){
-    super.enable();
-
+  @Override protected void setup(){
     node.touchDownEvent.addListener((TouchEvent event) -> {
       if(bDragging) {
-    	  if(bAbortOnSecondTouch) {
-    		  stop();
-    	  }
+        if(bAbortOnSecondTouch) {
+          stop();
+        }
 
-    	  return;
+        return;
       }
-
 
       Node ourNode = this.getNode();
 
@@ -62,9 +59,7 @@ public class Draggable extends TransformerExtension {
     }, this);
   }
 
-  @Override public void disable(){
-    super.disable();
-
+  @Override public void teardown(){
     if(node != null){
       node.touchDownEvent.removeListeners(this);
       node.touchUpEvent.removeListeners(this);
