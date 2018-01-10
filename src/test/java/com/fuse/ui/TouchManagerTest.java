@@ -139,6 +139,39 @@ public class TouchManagerTest {
     // assertEquals(touchEvents.get(0).velocity, new PVector(1000000, 0, 0)); // these touch events weren't performed in human speed but in computer speed, 9999 is the limit
   }
 
+  @Test public void submitTouchMoveEvent_withoutSmoothVelocity( )
+  {
+    TouchManager man = new TouchManager();
+    man.touchEvent.enableHistory();
+    man.touchDownEvent.enableHistory();
+    man.touchMoveEvent.enableHistory();
+
+    // submit (non-touchDOWN) event without velocitySmoothed attribute
+    TouchEvent e = new TouchEvent();
+    e.touchId = 1;
+    e.eventType = TouchEvent.EventType.TOUCH_MOVE;
+    e.position = new PVector(10.0f, 25.0f, 0.0f);
+    e.velocity = new PVector(5.0f, 1.0f, 0.0f);
+    assertEquals(e.velocitySmoothed, null);
+    man.submitTouchEvent(e);
+    assertEquals(e.velocitySmoothed, new PVector(5.0f, 1.0f, 0.0f));
+
+    assertEquals(man.touchEvent.getHistory().size(), 1);
+    assertEquals(man.touchDownEvent.getHistory().size(), 0);
+    assertEquals(man.touchMoveEvent.getHistory().size(), 1);
+
+    e.touchId = 1;
+    e.eventType = TouchEvent.EventType.TOUCH_MOVE;
+    e.position = new PVector(13.0f, 26.0f, 0.0f);
+    e.velocity = new PVector(4.0f, 0.8f, 0.0f);
+    e.velocitySmoothed = null;
+    man.submitTouchEvent(e);
+
+    assertEquals(man.touchEvent.getHistory().size(), 2);
+    assertEquals(man.touchDownEvent.getHistory().size(), 0);
+    assertEquals(man.touchMoveEvent.getHistory().size(), 2);
+  }
+
   @Test public void NodeTouchEvent()
   {
     touchEvents = new ArrayList<TouchEvent>();
@@ -365,7 +398,7 @@ public class TouchManagerTest {
     man.touchUp(0, new PVector(10f, 10f, 0f));
     assertEquals(man.touchClickEvent.getHistory().size(), 4);
     assertEquals(man.touchDoubleClickEvent.getHistory().size(), 1);
-System.out.println("DOUBLECLICK TEST END");
+    System.out.println("DOUBLECLICK TEST END");
   }
 
   @Test public void not_interactive_node(){

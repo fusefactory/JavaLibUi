@@ -147,7 +147,10 @@ public class TouchManager extends TouchReceiver {
     }
 
     if(event.velocitySmoothed == null){
-      existing.velocitySmoothed.lerp(existing.velocity, velocitySmoothCoeff);
+      if(existing.velocitySmoothed == null)
+        existing.velocitySmoothed  = existing.velocity.get(); //new PVector(0.0f, 0.0f, 0.0f);
+      else
+        existing.velocitySmoothed.lerp(existing.velocity, velocitySmoothCoeff);
     } else {
       // we got a pre-smoothed event?
       existing.velocitySmoothed = event.velocitySmoothed;
@@ -158,6 +161,15 @@ public class TouchManager extends TouchReceiver {
     existing.eventType = event.eventType;
 
     return existing;
+  }
+
+  private void saveActiveTouch(TouchEvent event) {
+    // make sure the event has a velocitySmoothed attribute
+    if(event.velocitySmoothed == null)
+      event.velocitySmoothed = event.velocity.get(); //new PVector(0.0f, 0.0f, 0.0f);
+
+    // store (this should be the only place where new events are written into activeTouchEvents)
+    activeTouchEvents.put(event.touchId, event);
   }
 
   /// finds the targeted node and triggers events
@@ -175,13 +187,10 @@ public class TouchManager extends TouchReceiver {
         // init velocity
         if(event.velocity == null)
           event.velocity = new PVector(0.0f, 0.0f, 0.0f);
-        if(event.velocitySmoothed == null)
-          event.velocitySmoothed = event.velocity.get(); //new PVector(0.0f, 0.0f, 0.0f);
         // init target
         event.node = getNodeForTouchPosition(event.position);
         event.startPosition = event.position;
-        // store
-        activeTouchEvents.put(event.touchId, event);
+        this.saveActiveTouch(event);
         break;
 
       case TOUCH_MOVE:
@@ -191,7 +200,7 @@ public class TouchManager extends TouchReceiver {
             event = updateExistingEvent(existing, event);
           } else {
             logger.warning("no existing touch event for touch move event");
-            activeTouchEvents.put(event.touchId, event);
+            this.saveActiveTouch(event);
           }
         }
 
@@ -240,7 +249,7 @@ public class TouchManager extends TouchReceiver {
             event = updateExistingEvent(existing, event);
           } else {
             logger.warning("no existing touch event for touch up event");
-            activeTouchEvents.put(event.touchId, event);
+            this.saveActiveTouch(event);
           }
         }
 
