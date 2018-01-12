@@ -100,18 +100,6 @@ public class Swiper extends TransformerExtension {
     // progress all smoothed transformations
     super.update(dt);
 
-    if(this.snapPosFunc != null){
-      PVector targetPos = snapPosFunc.get();
-      PVector curPos = this.scrollableNode.getPosition();
-      curPos.sub(targetPos);
-
-      if(curPos.mag() <= this.getDonePositionDeltaMag()){
-        this.snapPosFunc = null;
-      } else {
-        this.setSnapPosition(targetPos);
-      }
-    }
-
     if(bDragging){
       this.updateDragging();
       return;
@@ -376,6 +364,18 @@ public class Swiper extends TransformerExtension {
   // 'snapping' methods // // // // //
 
   private void updateSnapping(float dt){
+    if(this.snapPosFunc != null){
+      PVector targetPos = snapPosFunc.get();
+      PVector curPos = this.scrollableNode.getPosition();
+      curPos.sub(targetPos);
+
+      if(curPos.mag() <= this.getDonePositionDeltaMag()){
+        this.snapPosFunc = null;
+      } else {
+        this.doSnapPosition(targetPos, false);
+      }
+    }
+
     if(!super.isTransformingPosition()){ // done?
       // chec if we've snapped beyond offset limit bounds
       PVector p = this.getOffsetLimitSnapPosition();
@@ -472,21 +472,15 @@ public class Swiper extends TransformerExtension {
   }
 
   /**
-   * Uses the values provided by the given PVector Supplier to updateDamping
-   * the snap position each update-iteration until the position it gives matches
-   * the current position.
-   * @param snapPosFunc the PVector Supplier
-   **/
-  public void setSnapPosition(Supplier<PVector> snapPosFunc){
-    this.snapPosFunc = snapPosFunc;
-    this.setSnapPosition(snapPosFunc.get());
-  }
-
-  /**
    * Configures the current snapping-target-position (starts snap-back)
    * @param pos the snapping target-position
    */
   public void setSnapPosition(PVector pos, boolean instant){
+    this.snapPosFunc = null;
+    this.doSnapPosition(pos, instant);
+  }
+
+  private void doSnapPosition(PVector pos, boolean instant){
     if(pos == null){ // abort snapping?
       // abort current snapping operation (if any) and apply
       // offset-limit exceeded snap position if necessary
@@ -494,6 +488,7 @@ public class Swiper extends TransformerExtension {
         this.node.setPosition(this.getOffsetLimitSnapPosition());
       else
         super.transformPosition(this.getOffsetLimitSnapPosition());
+
       return;
     }
 
@@ -519,6 +514,17 @@ public class Swiper extends TransformerExtension {
       this.stepPositionState.set(stepValue);
       newStepPositionEvent.trigger(stepValue);
     }
+  }
+
+  /**
+   * Uses the values provided by the given PVector Supplier to updateDamping
+   * the snap position each update-iteration until the position it gives matches
+   * the current position.
+   * @param snapPosFunc the PVector Supplier
+   **/
+  public void setSnapPosition(Supplier<PVector> snapPosFunc){
+    this.snapPosFunc = snapPosFunc;
+    this.doSnapPosition(snapPosFunc.get(), false);
   }
 
   public float getSnapThrowFactor(){
