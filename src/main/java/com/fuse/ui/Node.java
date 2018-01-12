@@ -559,7 +559,8 @@ public class Node extends TouchReceiver {
   }
 
   public void removeChild(Node n){
-    childNodes.remove(n);
+    if(childNodes.contains(n))
+      childNodes.remove(n);
     newOffspringEvent.stopForward(n.newOffspringEvent);
     childRemovedEvent.trigger(n);
   }
