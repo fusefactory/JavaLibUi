@@ -191,6 +191,9 @@ public class Swiper extends TransformerExtension {
   // dragging methods // // // // //
 
   private void startDragging(TouchEvent event){
+    // stop snapping (even if it wasn't)
+    this.snapPosFunc = null;
+
     this.dragStartNodePositionGlobal = scrollableNode.getGlobalPosition();
     this.draggingTouchEvent = event;
     bDragging = true;
