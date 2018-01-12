@@ -582,6 +582,7 @@ public class TransformerExtension extends ExtensionBase {
 
   public void setDoneScaleDeltaMag(float mag){ doneScaleDeltaMag = mag; }
   public void setDonePositionDeltaMag(float mag){ donePositionDeltaMag = mag; }
+  public float getDonePositionDeltaMag(){ return this.donePositionDeltaMag; }
   public void setDoneRotationDeltaMag(float mag){ doneRotationDeltaMag = mag; }
   public void setDoneSizeDeltaMag(float mag){ doneSizeDeltaMag = mag; }
 
