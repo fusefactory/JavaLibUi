@@ -1,5 +1,6 @@
 package com.fuse.ui.extensions;
 
+import java.util.function.Supplier;
 import processing.core.PVector;
 import processing.core.PGraphics;
 
@@ -27,6 +28,7 @@ public class Swiper extends TransformerExtension {
   private PVector snapInterval = null; // size of a single "cell" in the snapping grid
   private float snapVelocityMag = 75.0f; // when velocity reaches this value (or lower), we start snapping
   private float snapThrowFactor = 2.0f; // multiplier for the smoothed 'throwing' velocity after dragging
+  private Supplier<PVector> snapPosFunc;
   // offset limits
   private PVector minOffset = null;
   private PVector maxOffset = null;
@@ -44,8 +46,6 @@ public class Swiper extends TransformerExtension {
   public State<PVector> stepPositionState = new State<>();
   public Event<PVector> throwEvent = new Event<>();
   public Event<Node> restEvent = new Event<>();
-  
-
 
   // lifecycle methods
 
@@ -99,6 +99,18 @@ public class Swiper extends TransformerExtension {
   @Override public void update(float dt){
     // progress all smoothed transformations
     super.update(dt);
+
+    if(this.snapPosFunc != null){
+      PVector targetPos = snapPosFunc.get();
+      PVector curPos = this.scrollableNode.getPosition();
+      curPos.sub(targetPos);
+
+      if(curPos.mag() <= this.getDonePositionDeltaMag()){
+        this.snapPosFunc = null;
+      } else {
+        this.setSnapPosition(targetPos);
+      }
+    }
 
     if(bDragging){
       this.updateDragging();
@@ -294,7 +306,7 @@ public class Swiper extends TransformerExtension {
   public boolean isDragging(){
     return bDragging;
   }
-  
+
   public TouchEvent getDraggingTouchEvent() {
 	  return this.draggingTouchEvent;
   }
@@ -456,7 +468,18 @@ public class Swiper extends TransformerExtension {
   }
 
   public void setSnapPosition(PVector pos) {
-	  this.setSnapPosition(pos, false);
+    this.setSnapPosition(pos, false);
+  }
+
+  /**
+   * Uses the values provided by the given PVector Supplier to updateDamping
+   * the snap position each update-iteration until the position it gives matches
+   * the current position.
+   * @param snapPosFunc the PVector Supplier
+   **/
+  public void setSnapPosition(Supplier<PVector> snapPosFunc){
+    this.snapPosFunc = snapPosFunc;
+    this.setSnapPosition(snapPosFunc.get());
   }
 
   /**

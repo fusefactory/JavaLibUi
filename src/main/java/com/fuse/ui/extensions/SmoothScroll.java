@@ -8,6 +8,7 @@ import com.fuse.utils.Event;
 import com.fuse.ui.Node;
 import com.fuse.ui.TouchEvent;
 
+/// THIS CLASS IS DEPRECATED IN FAVOUR OF THE NEWER SWIPER EXTENSIONS
 public class SmoothScroll extends ExtensionBase {
   // attributes
   private Node scrollableNode = null;

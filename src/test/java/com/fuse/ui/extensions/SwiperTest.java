@@ -16,4 +16,40 @@ public class SwiperTest {
   @Ignore @Test public void testSwiper(){
     assertEquals("TODO", "test, dragging, snapping, step-offsets, etc.");
   }
+
+  @Test public void setSnapPosition(){
+    Node areaNode = new Node();
+    Node scrollerNode = new Node();
+    Swiper s = Swiper.enableFor(areaNode, scrollerNode);
+
+    s.setSnapPosition(new PVector(-100, 0, 0));
+    assertEquals(scrollerNode.getPosition(), new PVector(0, 0, 0));
+
+    s.update(0.1f);
+    assertEquals(scrollerNode.getPosition(), new PVector(-10.0f, 0, 0));
+
+    for(int i=0; i<100; i+=1) {
+      s.update(0.1f);
+    }
+
+    assertEquals(scrollerNode.getPosition(), new PVector(-100, 0, 0));
+  }
+
+  @Test public void setSnapPosition_with_supplier_arg(){
+    Node areaNode = new Node();
+    Node scrollerNode = new Node();
+    Swiper s = Swiper.enableFor(areaNode, scrollerNode);
+
+    Event<Integer> dummy = new Event<>();
+    dummy.enableHistory();
+    s.setSnapPosition(() -> {
+      dummy.trigger(0);
+      return new PVector(-100.0f - dummy.getHistory().size()*0.5f, 0.0f, 0.0f);
+    });
+
+    for(int i=0; i<1000; i+=1)
+      s.update(0.1f);
+
+    assertEquals(scrollerNode.getPosition(), new PVector(-595.49994f, 0, 0));
+  }
 }
