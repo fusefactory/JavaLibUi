@@ -1,6 +1,7 @@
 package com.fuse.ui.extensions;
 
 import java.util.logging.Logger;
+
 import com.fuse.ui.Node;
 
 public class ExtensionBase {

@@ -1,8 +1,9 @@
 package com.fuse.ui.extensions;
 
+import com.fuse.ui.Node;
+
 import processing.core.PApplet;
 import processing.core.PVector;
-import com.fuse.ui.Node;
 
 public class Constrain extends TransformerExtension {
   private static float scaleIgnoreLimit = 0.001f;

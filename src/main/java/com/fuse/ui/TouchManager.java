@@ -1,16 +1,12 @@
 package com.fuse.ui;
 
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.Collections;
-import java.util.Iterator;
-
-import java.util.logging.*;
-
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.logging.Logger;
 
 import processing.core.PGraphics;
 import processing.core.PVector;
@@ -36,8 +32,8 @@ public class TouchManager extends TouchReceiver {
 
   private ConcurrentLinkedQueue<TouchEvent> touchEventQueue;
   private Map<Integer, TouchEvent> activeTouchEvents;
-  private final static int MAX_CLICK_HISTORY_SIZE = 10; // no need to remember more; only remembering for double-click events, but have to consider multiple simultanous users
-  private ConcurrentLinkedDeque<TouchEvent> clickHistory;
+  //  private final static int MAX_CLICK_HISTORY_SIZE = 10; // no need to remember more; only remembering for double-click events, but have to consider multiple simultanous users
+  //  private ConcurrentLinkedDeque<TouchEvent> clickHistory;
 
   private void _init(){
     logger = Logger.getLogger(TouchManager.class.getName());
@@ -55,6 +51,10 @@ public class TouchManager extends TouchReceiver {
     setNode(sceneNode);
   }
 
+  /**
+   * Updates the time-specific internals with the number of millisecond since the last call to this method.
+   * See also the update(long) method which is invoked by this update method.
+   */
   public void update(){
     if(previousFrameMillis == null)
     previousFrameMillis = System.currentTimeMillis();
@@ -63,6 +63,10 @@ public class TouchManager extends TouchReceiver {
     previousFrameMillis = newMillis;
   }
 
+  /**
+   * Updates all time-specific internals
+   * @params dtMs "delta-time" in milliseconds (amount of time that should be covered in the update)
+   */
   public void update(long dtMs){
     time += dtMs;
 
@@ -81,7 +85,10 @@ public class TouchManager extends TouchReceiver {
     //finalizeIdleTouchEvents();
   }
 
-  @Deprecated
+  /**
+   * Takes an update duration in seconds, converts it to milliseconds and calls the update(long) method
+   * @param dt "delta time" in seconds
+   */
   public void update(float dt){
 	  this.update((long)(1000l * dt));
   }
@@ -485,12 +492,12 @@ public class TouchManager extends TouchReceiver {
 
   public void drawActiveTouches(){
     PGraphics pg = Node.getPGraphics();
-    pg.colorMode(pg.RGB, 255);
+    pg.colorMode(PGraphics.RGB, 255);
 
     // circles on all active touch positions
     pg.fill(pg.color(255,100,100,150));
     pg.noStroke();
-    pg.ellipseMode(pg.CENTER);
+    pg.ellipseMode(PGraphics.CENTER);
 
     for(TouchEvent event : activeTouchEvents.values())
       pg.ellipse(event.position.x, event.position.y, 25, 25);

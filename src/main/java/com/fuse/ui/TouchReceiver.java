@@ -1,8 +1,9 @@
 package com.fuse.ui;
 
-import java.util.logging.*;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
+
 import com.fuse.utils.Event;
 
 /** Base class for both Node and TouchManager; it provides touch events and method for receiving them */

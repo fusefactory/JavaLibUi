@@ -1,6 +1,7 @@
 package com.fuse.ui;
 
 import processing.core.PVector;
+import processing.core.PGraphics;
 
 public class LineNode extends Node {
 
@@ -29,7 +30,7 @@ public class LineNode extends Node {
   @Override public void draw(){
     pg.stroke(lineColor);
     pg.strokeWeight(strokeWeight);
-    pg.beginShape(pg.LINES);
+    pg.beginShape(PGraphics.LINES);
 
     PVector from = coordinates[0];
     for(int i=1; i<coordinates.length; i++){

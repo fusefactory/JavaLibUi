@@ -1,12 +1,12 @@
 package com.fuse.ui.extensions;
 
-import processing.core.PVector;
-import processing.core.PGraphics;
-import processing.core.PApplet;
-
-import com.fuse.utils.Event;
 import com.fuse.ui.Node;
 import com.fuse.ui.TouchEvent;
+import com.fuse.utils.Event;
+
+import processing.core.PApplet;
+import processing.core.PGraphics;
+import processing.core.PVector;
 
 public class Draggable extends TransformerExtension {
   private PVector originalNodePosition = null;
@@ -111,9 +111,9 @@ public class Draggable extends TransformerExtension {
     PGraphics pg = Node.getPGraphics();
     pg.textSize(12);
     pg.textAlign(PApplet.LEFT);
-    pg.ellipseMode(pg.CENTER);
+    pg.ellipseMode(PGraphics.CENTER);
     pg.noStroke();
-    pg.colorMode(pg.RGB, 255);
+    pg.colorMode(PGraphics.RGB, 255);
     pg.fill(pg.color(0,0,255));
 
     if(originalNodePosition != null && originalNodePositionGlobal != null){

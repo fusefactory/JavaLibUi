@@ -1,7 +1,8 @@
 package com.fuse.ui;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+
 import processing.core.PVector;
 
 public class TouchGenerator {
@@ -129,7 +130,7 @@ public class TouchGenerator {
   }
 
   private List<TouchEvent> eventsForlinearFromToInSteps(){
-    List<TouchEvent> events = new ArrayList();
+    List<TouchEvent> events = new ArrayList<>();
 
     if(fromPos == null)
       fromPos = new PVector(0,0,0);
@@ -165,7 +166,7 @@ public class TouchGenerator {
   }
 
   private List<TouchEvent> eventsForMixedSources(){
-    List<TouchEvent> events = new ArrayList();
+    List<TouchEvent> events = new ArrayList<>();
 
     // find longest list size
     int max = 0;

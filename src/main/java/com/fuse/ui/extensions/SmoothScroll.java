@@ -1,12 +1,11 @@
 package com.fuse.ui.extensions;
 
-import processing.core.PApplet;
-import processing.core.PVector;
-import processing.core.PGraphics;
-
-import com.fuse.utils.Event;
 import com.fuse.ui.Node;
 import com.fuse.ui.TouchEvent;
+import com.fuse.utils.Event;
+
+import processing.core.PGraphics;
+import processing.core.PVector;
 
 /// THIS CLASS IS DEPRECATED IN FAVOUR OF THE NEWER SWIPER EXTENSIONS
 public class SmoothScroll extends ExtensionBase {
@@ -486,9 +485,8 @@ public class SmoothScroll extends ExtensionBase {
 
   public void step(PVector offset){
     if(this.snapInterval == null) return;
-    PVector current = this.toStepPosition(this.scrollableNode.getPosition());
     PVector delta = offset.get();
-    delta.mult(-1.0f); // invert; step left means offset to right
+    delta.mult(-1.0f); // invert direction; for example "step left" means offset to right
     delta.x = delta.x * this.snapInterval.x;
     delta.y = delta.y * this.snapInterval.y;
     if(this.snapPosition != null){
