@@ -3,19 +3,19 @@
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.function.Consumer;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.function.Consumer;
+
+import com.fuse.ui.extensions.ExtensionBase;
+import com.fuse.ui.extensions.TouchEventForwarder;
+import com.fuse.utils.Event;
+import com.fuse.utils.State;
 
 import processing.core.PApplet;
 import processing.core.PGraphics;
-import processing.core.PVector;
 import processing.core.PMatrix3D;
-
-import com.fuse.utils.Event;
-import com.fuse.utils.State;
-import com.fuse.ui.extensions.ExtensionBase;
-import com.fuse.ui.extensions.TouchEventForwarder;
+import processing.core.PVector;
 
 /**
  * Base class for scenegraph UI functionality, heavily inspired by the ofxInterface
@@ -523,7 +523,7 @@ public class Node extends TouchReceiver {
   }
 
   public static int alphaColor(int color, float alpha){
-    pg.colorMode(pg.RGB, 255);
+    pg.colorMode(PGraphics.RGB, 255);
     return pg.color(
       pg.red(color),
       pg.green(color),
@@ -559,7 +559,8 @@ public class Node extends TouchReceiver {
   }
 
   public void removeChild(Node n){
-    childNodes.remove(n);
+    if(childNodes.contains(n))
+      childNodes.remove(n);
     newOffspringEvent.stopForward(n.newOffspringEvent);
     childRemovedEvent.trigger(n);
   }

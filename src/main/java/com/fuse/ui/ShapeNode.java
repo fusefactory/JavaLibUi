@@ -1,6 +1,6 @@
 package com.fuse.ui;
 
-import processing.core.PVector;
+import processing.core.PGraphics;
 
 public class ShapeNode extends Node {
 
@@ -16,7 +16,7 @@ public class ShapeNode extends Node {
   /** Default constructor; intialized with default values: image=null and mode=NORMAL */
   public ShapeNode(){
     if(pg != null){
-      pg.colorMode(pg.RGB, 255);
+      pg.colorMode(PGraphics.RGB, 255);
       fillColor = pg.color(255);
     }
 
@@ -59,7 +59,7 @@ public class ShapeNode extends Node {
   
   public void afterDraw() {
     if(this.blendMode != null)
-      pg.blendMode(pg.BLEND);
+      pg.blendMode(PGraphics.BLEND);
   }
 
   public Integer getFillColor(){ return fillColor; }

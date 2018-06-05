@@ -1,10 +1,10 @@
 package com.fuse.ui.extensions;
 
-import processing.core.PVector;
-import processing.core.PGraphics;
-
-import com.fuse.utils.Event;
 import com.fuse.ui.Node;
+import com.fuse.utils.Event;
+
+import processing.core.PGraphics;
+import processing.core.PVector;
 
 
 /**
@@ -190,7 +190,7 @@ public class TransformerExtension extends ExtensionBase {
 
   @Override public void drawDebug(){
     PGraphics pg = Node.getPGraphics();
-    pg.colorMode(pg.RGB, 255);
+    pg.colorMode(PGraphics.RGB, 255);
     pg.stroke(pg.color(255,100,255,100));
     pg.strokeWeight(2.0f);
 

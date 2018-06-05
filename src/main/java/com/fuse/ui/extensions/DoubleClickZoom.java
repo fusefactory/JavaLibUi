@@ -1,8 +1,9 @@
 package com.fuse.ui.extensions;
 
-import processing.core.PVector;
 import com.fuse.ui.Node;
 import com.fuse.ui.TouchEvent;
+
+import processing.core.PVector;
 
 public class DoubleClickZoom extends TransformerExtension {
   // attributes

@@ -1,8 +1,9 @@
 package com.fuse.ui;
 
-import processing.core.PVector;
 import processing.core.PApplet;
+import processing.core.PGraphics;
 import processing.core.PFont;
+import processing.core.PVector;
 
 public class TextNode extends ShapeNode {
   private String text;
@@ -18,8 +19,8 @@ public class TextNode extends ShapeNode {
   public TextNode(){
     text = "";
     if(pg != null){
-      pg.colorMode(pg.RGB, 255);
-      this.setTextColor(pg.color(255));
+      pg.colorMode(PGraphics.RGB, 255);
+      this.setFillColor(pg.color(255));
     }
     textSize = 20f;
     textOffset = new PVector(0.0f, 0.0f, 0.0f);
@@ -37,8 +38,15 @@ public class TextNode extends ShapeNode {
   public TextNode setText(String txt){ text = txt == null ? "" : txt; return this; }
   public String getText(){ return text; }
 
+  /**
+   * @deprecated use {@link #setFillColor(int)}
+   */
   @Deprecated
   public TextNode setTextColor(int newColor){ this.setFillColor(newColor); return this; }
+
+  /**
+   * @deprecated use {@link #getFillColor()}
+   */
   @Deprecated
   public int getTextColor(){ return this.getFillColor(); }
 
@@ -91,7 +99,6 @@ public class TextNode extends ShapeNode {
         case PApplet.CENTER: x += this.getSize().x/2.0f - w/2.0f - this.framePadding.x;
       }
 
-      // TODO
       switch(this.alignY){
         case PApplet.BASELINE:
         case PApplet.TOP: y -= this.framePadding.y; break;

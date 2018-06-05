@@ -1,9 +1,10 @@
 package com.fuse.ui.extensions;
 
 import java.util.function.Consumer;
+
 import com.fuse.ui.Node;
-import com.fuse.ui.TouchReceiver;
 import com.fuse.ui.TouchEvent;
+import com.fuse.ui.TouchReceiver;
 
 public class TouchEventForwarder extends ExtensionBase {
 

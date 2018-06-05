@@ -2,18 +2,16 @@ package com.fuse.ui.extensions;
 
 import java.util.List;
 
-import processing.core.PVector;
-import processing.core.PGraphics;
-
-import com.fuse.utils.Event;
 import com.fuse.ui.Node;
 import com.fuse.ui.TouchEvent;
+import com.fuse.utils.Event;
+
+import processing.core.PGraphics;
+import processing.core.PVector;
 
 public class PinchZoom extends TransformerExtension {
   // attributes
   private PinchMath math = null;
-  private PVector initScale = null;
-  private PVector initPosition = null;
   private PVector originalScale, originalPosition;
   // configurables
   private boolean bRestore = false;
@@ -42,9 +40,6 @@ public class PinchZoom extends TransformerExtension {
   }
 
   @Override protected void setup(){
-    this.initScale = this.node.getScale();
-    this.initPosition = this.node.getPosition();
-
     this.node.touchDownEvent.addListener((TouchEvent event) -> {
       if(!this.isPinching()){
         TouchEvent[] events = this.getPinchZoomTouchEvents();
@@ -196,10 +191,10 @@ public class PinchZoom extends TransformerExtension {
     if(math == null) return;
 
     PGraphics pg = Node.getPGraphics();
-    pg.colorMode(pg.RGB, 255);
+    pg.colorMode(PGraphics.RGB, 255);
     pg.fill(pg.color(100,100,255,150));
     pg.noStroke();
-    pg.ellipseMode(pg.CENTER);
+    pg.ellipseMode(PGraphics.CENTER);
 
     PVector localPos = node.toLocal(math.getEvents()[0].position);
     pg.ellipse(localPos.x, localPos.y, 30, 30);

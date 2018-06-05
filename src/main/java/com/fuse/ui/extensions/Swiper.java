@@ -1,13 +1,14 @@
 package com.fuse.ui.extensions;
 
 import java.util.function.Supplier;
-import processing.core.PVector;
-import processing.core.PGraphics;
 
-import com.fuse.utils.State;
-import com.fuse.utils.Event;
 import com.fuse.ui.Node;
 import com.fuse.ui.TouchEvent;
+import com.fuse.utils.Event;
+import com.fuse.utils.State;
+
+import processing.core.PGraphics;
+import processing.core.PVector;
 
 public class Swiper extends TransformerExtension {
   // attributes
@@ -191,6 +192,9 @@ public class Swiper extends TransformerExtension {
   // dragging methods // // // // //
 
   private void startDragging(TouchEvent event){
+    // stop snapping (even if it wasn't)
+    this.snapPosFunc = null;
+
     this.dragStartNodePositionGlobal = scrollableNode.getGlobalPosition();
     this.draggingTouchEvent = event;
     bDragging = true;
@@ -235,8 +239,6 @@ public class Swiper extends TransformerExtension {
 
   /** should only be called when it is already verified that we're dragging (this.draggingTouchEvent can't be null) */
   private void updateDragging(){
-    TouchEvent localEvent = this.touchAreaNode.toLocal(this.draggingTouchEvent);
-
     PVector globPos = dragStartNodePositionGlobal.get();
     globPos.add(this.draggingTouchEvent.offset());
     // use TransformationExtension's smoothing options
@@ -611,7 +613,6 @@ public class Swiper extends TransformerExtension {
 
   public Swiper step(PVector offset){
     if(this.snapInterval == null) return this;
-    PVector current = this.toStepPosition(this.scrollableNode.getPosition());
     PVector delta = offset.get();
     delta.mult(-1.0f); // invert; step left means offset to right
     delta.x = delta.x * this.snapInterval.x;

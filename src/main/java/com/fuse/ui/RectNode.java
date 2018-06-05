@@ -1,7 +1,5 @@
 package com.fuse.ui;
 
-import java.lang.Deprecated;
-
 public class RectNode extends ShapeNode {
 
   /** Draw this node's image at this Node's position */
