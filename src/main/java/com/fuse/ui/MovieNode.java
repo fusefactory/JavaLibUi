@@ -2,6 +2,7 @@ package com.fuse.ui;
 
 import com.fuse.ui.Node;
 import com.fuse.utils.Event;
+import com.fuse.utils.State;
 
 import ddf.minim.AudioPlayer; // for separate audio tracks
 import processing.core.PApplet;
@@ -34,6 +35,7 @@ public class MovieNode extends Node {
   private boolean bPaused = false;
 
   public Event<MovieNode> autoStartEvent = new Event<>();
+  public State<Boolean> initializedState = new State<Boolean>(false);
 
   /** Default constructor; intialized with default values: movie=null and mode=NORMAL */
   public MovieNode(){
@@ -99,6 +101,7 @@ public class MovieNode extends Node {
       // lazy-initialize video image which to which we'll copy individual frames for rendering
       if (this.videoImage == null && this.papplet != null) {
         this.videoImage = this.papplet.createImage(this.vlcplayer.width(), this.vlcplayer.height(), PApplet.ARGB);
+        this.initializedState.set(true);
       }
 
       if (this.videoImage != null) {
