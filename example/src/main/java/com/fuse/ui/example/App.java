@@ -195,11 +195,6 @@ public class App extends PApplet {
         bDrawDebug = !bDrawDebug;
         return;
       }
-      case 'm': {
-        touchManager.setMirrorNodeEventsEnabled(!touchManager.getMirrorNodeEventsEnabled());
-        logger.info("touchManager mirroring is: "+Boolean.toString(touchManager.getMirrorNodeEventsEnabled()));
-        return;
-      }
     }
   }
 }
