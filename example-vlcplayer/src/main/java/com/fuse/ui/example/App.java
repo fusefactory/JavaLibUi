@@ -24,6 +24,7 @@ public class App extends PApplet {
   private TouchManager touchManager;
   private Node sceneNode;
   private MovieNode movieNode;
+  private String loadNext = null;
 
   public static void main( String[] args )
   {
@@ -81,14 +82,21 @@ public class App extends PApplet {
     }
 
     // load movie
-    VLCPlayer player = new VLCPlayer(dataPath("vid.mp4"));
-    player = new VLCPlayer(dataPath("vid.mp4"));
-    player = new VLCPlayer(dataPath("vid.mp4"));
-    player = new VLCPlayer(dataPath("vid.mp4"));
+    this.loadMovie(dataPath("vid.mp4"));
+  }
+
+  private void loadMovie(String filePath) {
+    VLCPlayer player = new VLCPlayer(filePath);
+    player.loop();
     this.movieNode.setMovie(player, (PApplet)this);
   }
 
   private void update(float dt){
+    if (this.loadNext != null) {
+      this.loadMovie(this.loadNext);
+      this.loadNext = null;
+    }
+
     // run update on all UI nodes
     sceneNode.updateSubtree(dt);
   }
@@ -137,6 +145,8 @@ public class App extends PApplet {
         bDrawDebug = !bDrawDebug;
         return;
       }
+      case 'l':
+        this.loadNext = dataPath("vid.mp4");
     }
   }
 }

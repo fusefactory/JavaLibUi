@@ -22,6 +22,7 @@ public class MovieNode extends Node {
   private Movie movie = null;
   private AudioPlayer audioPlayer = null;
 
+  private PApplet papplet;
   private VLCPlayer vlcplayer = null;
   private PImage videoImage = null;
 
@@ -47,6 +48,7 @@ public class MovieNode extends Node {
   public void destroy(){
     super.destroy();
     autoStartEvent.destroy();
+    this.papplet = null;
 
     if(this.movie!=null){
       if(this.movie.playbin != null) {
@@ -55,6 +57,11 @@ public class MovieNode extends Node {
         this.movie.dispose();
       }
       this.movie = null;
+    }
+
+    if (this.vlcplayer != null) {
+      this.vlcplayer.close();
+      this.vlcplayer = null;
     }
 
     if(this.audioPlayer!=null){
@@ -81,14 +88,24 @@ public class MovieNode extends Node {
       if(this.audioPlayer!=null) this.audioPlayer.pause();
     }
 
-    if (this.vlcplayer != null && this.vlcplayer.available() && videoImage != null) {
-        // if (videoImage == null)  videoImage = this.pg.
-            //videoImage = //this.pg.textureImage()
-              //papplet.createImage(player.width(), player.height(), ARGB);
-        // }
+    if (this.vlcplayer != null && this.vlcplayer.available()) {
+
+      if (this.videoImage != null && (
+          this.videoImage.width != this.vlcplayer.width()
+          || this.videoImage.height != this.vlcplayer.height())) {
+        this.videoImage = null;
+      }
+
+      // lazy-initialize video image which to which we'll copy individual frames for rendering
+      if (this.videoImage == null && this.papplet != null) {
+        this.videoImage = this.papplet.createImage(this.vlcplayer.width(), this.vlcplayer.height(), PApplet.ARGB);
+      }
+
+      if (this.videoImage != null) {
         System.arraycopy(vlcplayer.textureBuffer(), 0, videoImage.pixels, 0, vlcplayer.textureBuffer().length);
         videoImage.updatePixels();
       }
+    }
   }
 
   /** Draw this node's movie at this Node's position */
@@ -183,8 +200,8 @@ public class MovieNode extends Node {
   }
 
   public void setMovie(VLCPlayer player, PApplet applet){
-    this.vlcplayer = vlcplayer;
-    if (applet != null) this.videoImage = applet.createImage(player.width(), player.height(), PApplet.ARGB);
+    this.vlcplayer = player;
+    this.papplet = applet;
   }
 
   private void autoStart() {
