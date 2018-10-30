@@ -13,6 +13,8 @@ import com.fuse.ui.MovieNode;
 
 
 public class App extends PApplet {
+  private final String RUNTIME_LIBS_PATH = "../modules/VLCPlayer/lib";
+
   Logger logger;
   private PApplet papplet;
   private PGraphics pg;
@@ -40,6 +42,11 @@ public class App extends PApplet {
   }
 
   public void setup(){
+    String existing = System.getProperty("java.library.path");
+    String updated = existing + ":" + RUNTIME_LIBS_PATH;
+    System.out.println("Updating System property 'java.library.path' from "+existing+" to "+updated);
+    System.setProperty("java.library.path", updated);
+
     papplet.frameRate(30.0f);
     timeBetweenFrames = 1.0f / papplet.frameRate;
     bDrawDebug = false;
@@ -75,6 +82,9 @@ public class App extends PApplet {
 
     // load movie
     VLCPlayer player = new VLCPlayer(dataPath("vid.mp4"));
+    player = new VLCPlayer(dataPath("vid.mp4"));
+    player = new VLCPlayer(dataPath("vid.mp4"));
+    player = new VLCPlayer(dataPath("vid.mp4"));
     this.movieNode.setMovie(player, (PApplet)this);
   }
 

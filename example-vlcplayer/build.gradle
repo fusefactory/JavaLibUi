@@ -40,6 +40,9 @@ dependencies {
 
     // https://mvnrepository.com/artifact/uk.co.caprica/vlcj
     compile group: 'uk.co.caprica', name: 'vlcj', version: '3.10.1'
+
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-log4j12
+    compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.10'
 }
 
 // avoid windows error when running the generated distribution's .bat script
