@@ -4,10 +4,13 @@ import java.util.logging.*;
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PVector;
+import com.fuse.vlcplayer.VLCPlayer;
 
 import com.fuse.ui.TouchManager;
 import com.fuse.ui.Node;
 import com.fuse.ui.MovieNode;
+
+
 
 public class App extends PApplet {
   Logger logger;
@@ -18,6 +21,7 @@ public class App extends PApplet {
 
   private TouchManager touchManager;
   private Node sceneNode;
+  private MovieNode movieNode;
 
   public static void main( String[] args )
   {
@@ -55,7 +59,11 @@ public class App extends PApplet {
       MovieNode n = new MovieNode();
       n.setPosition(0, 0);
       n.setSize(sceneNode.getSize());
+      n.setAutoStart(true);
       sceneNode.addChild(n);
+
+      // save to attach video later
+      this.movieNode = n;
 
       // TextNode tx = new TextNode();
       // tx.setText("RectNode");
@@ -64,6 +72,10 @@ public class App extends PApplet {
       // tx.setTextColor(pg.color(0,0,0));
       // n.addChild(tx);
     }
+
+    // load movie
+    VLCPlayer player = new VLCPlayer(dataPath("vid.mp4"));
+    this.movieNode.setMovie(player, (PApplet)this);
   }
 
   private void update(float dt){
