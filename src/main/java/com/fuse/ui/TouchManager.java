@@ -523,6 +523,10 @@ public class TouchManager extends TouchReceiver {
       }
     }
 
+    for(TouchEvent event : activeTouchEvents.values()){
+      pg.fill(pg.color(0,0,0));
+      pg.text(event.touchId, event.position.x, event.position.y);
+    }
     pg.noStroke();
   }
 
