@@ -1,6 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'application'
+apply plugin: 'eclipse'
 
 mainClassName = 'com.fuse.ui.example.App'
 group = 'com.fuse.ui.example'
