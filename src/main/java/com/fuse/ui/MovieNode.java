@@ -37,6 +37,14 @@ public class MovieNode extends Node {
   public Event<MovieNode> autoStartEvent = new Event<>();
   public State<Boolean> initializedState = new State<Boolean>(false);
 
+  private String audioOutput = null;
+  private String audioDevice = null;
+  
+  public void setAudioOutput(String output, String device) {
+	    this.audioOutput = output == null || output.equals("") ? null : output;
+	    this.audioDevice = device == null || device.equals("") ? null : device;
+	  }
+
   /** Default constructor; intialized with default values: movie=null and mode=NORMAL */
   public MovieNode(){
     super();
@@ -227,6 +235,8 @@ public class MovieNode extends Node {
 
     // VLC-player
     if (this.vlcplayer != null) {
+    this.configureAudioOutput(this.vlcplayer);
+      this.vlcplayer.stop();
       this.vlcplayer.play();
 
       if(this.audioPlayer != null) { // never happens
@@ -340,7 +350,7 @@ public class MovieNode extends Node {
       } else {
         try {
           //if(this.movie.available() || this.moviei) {
-          this.vlcplayer.play();
+          this.vlcplayer.resume();
           if(this.audioPlayer != null) {
             this.vlcplayer.mute();
             this.audioPlayer.play();
@@ -398,4 +408,11 @@ public class MovieNode extends Node {
       }
     }
   }
+
+  private void configureAudioOutput(VLCPlayer player) {
+	    if (this.audioOutput == null) return;
+	    player.setAudioOutput(this.audioOutput);
+	    player.setAudioOutputDevice(this.audioOutput,  this.audioDevice);
+	  }
+
 }
